@@ -287,7 +287,7 @@ This ``Best Practices'' guide aims to provide current recommendations and tips f
 %%%%%%%%%%%%%%%%%%%%
 % Prerequesites    %
 %%%%%%%%%%%%%%%%%%%%
-\section{Prerequisites and Scope}
+\section{Prerequisites and scope of this best practices guide}
 \label{sec:pre}
 
 This ``Best Practices'' guide is intended as both a good starting point for new practitioners and a reference for experienced practitioners. 
@@ -300,7 +300,8 @@ We also assume a basic familiarity with the principles of molecular mechanics, m
  While reading this ``Best Practices'' guide, it is important to bear in mind \emph{this is not a review of all free energy calculation methods} at the cutting edge of current research.
 Instead, this guide aims to answer the following questions:
 \begin{itemize}
-    \item Is my problem suitable for an alchemical calculation? (Sec.~\ref{subsec:suitability}) 
+     \item What are alchemical free energy calculations attempting to do? (Sec.~\ref{subsec:XXXX})
+     \item Is my problem suitable for an alchemical calculation? (Sec.~\ref{subsec:suitability}) 
      \item How do I prepare my system to carry out an alchemical calculation? (Sec.~\ref{subsec:binding})
      \item How do I select an appropriate simulation protocol? (Sec.~\ref{sec:simulation_protocol_choice})
      \item What software tools are available to perform alchemical calculations? (Sec.~\ref{sec:software}) 
@@ -389,12 +390,14 @@ $\zeta$ --- external coordinates of the solute
 %%%%%%%%%%%%%%%%%%%%
 % Theory basics    %
 %%%%%%%%%%%%%%%%%%%%
-\section{Statistical mechanics demonstrates why alchemical free energy calculations work}
+\section{Free energy differences are defined using statistical mechanics}
 %\section{Statistical mechanics theory of solvation, solvent partitioning, and binding}
 \label{sec:theory}
 
+In this section, we introduce the necesarry statistical mechanics theory of dilute solutions to define the quantities we are trying to calculate using alchemical methods. 
 
-In this section, we use the statistical mechanics theory of dilute solutions to derive free energy expressions that form the basis of alchemical computational protocols for modeling noncovalent molecular binding, solvation, and solvent partitioning equilibria. The emphasis here is placed on bridging theoretical foundations and intuition. Since chemical equilibria are governed by the chemical potentials of the species involved, we begin by considering a statistical mechanics expression for the chemical potential of a solute in a solvent. We will then combine chemical potentials to develop models for each process.
+
+derive free energy expressions that form the basis of alchemical computational protocols for modeling noncovalent molecular binding, solvation, and solvent partitioning equilibria. The emphasis here is placed on bridging theoretical foundations and intuition. Since chemical equilibria are governed by the chemical potentials of the species involved, we begin by considering a statistical mechanics expression for the chemical potential of a solute in a solvent. We will then combine chemical potentials to develop models for each process.
 
 \subsection{The chemical potential}
 \label{sec:chemical_potential}
@@ -801,7 +804,7 @@ where
 \end{equation}
 is the perturbation energy for displacing the two ligands in opposite directions, and the ensemble average $\langle \ldots \rangle_{RA+B}$ is carried out with $A$ bound and $B$ in the solvent. Except for the coordinate displacement, Eq.~(\ref{eq:atm-partfunc-ratio-rbfe-average}) is implemented similarly to the alchemical transfer ABFE protocol, including the use of the symmetric alchemical intermediate as in Eq.~(\ref{eq:atm-average-abfe-intermediate}).
 
-\subsection{Numerical Implementations of Alchemical Transformations}
+\subsection{How does one use alchemical transformations to calculate free energy differences}
 \label{subsec:numerical-implementations}
 
 \paragraph{How are alchemical transformations performed in practice?}
@@ -2260,8 +2263,8 @@ It is important to carefully examine output data for common problems. Some of th
 
 
 
-Alchemical Free Energy calculations have primarily been applied to simulate the stoichiometric, reversible binding of organic molecules to well-structured proteins. However, several areas of drug discovery involve other classes of binding events. While the underlying theory of alchemical free energy calculations is generally applicable, additional work may be required to develop efficient protocols suited to systems beyond the traditional small molecule–protein complex.
-For example, there is growing interest in identifying small molecules that directly bind to RNA or DNA, with recent preliminary studies showing promising results using specialized simulation protocols.~\cite{Abramyan2025,Rasouli2024} In contrast, there has been limited investigation into the applicability of alchemical free energy methods to small-molecule ligands targeting intrinsically disordered proteins (IDPs),\cite{Papadourakis2024} or proteins containing intrinsically disordered regions (IDRs) that undergo disorder-to-order transitions upon ligand binding.~\cite{MendozaMartinez2022, kalpokas2025accurate}
+Alchemical gree energy calculations have primarily been applied to simulate the stoichiometric, reversible binding of organic molecules to well-structured proteins. However, several areas of drug discovery involve other classes of binding events. While the underlying theory of alchemical free energy calculations is generally applicable, additional work may be required to develop efficient protocols suited to systems beyond the traditional small molecule–protein complex. For example, there is growing interest in identifying small molecules that directly bind to RNA or DNA, with recent preliminary studies showing promising results using specialized simulation protocols.~\cite{Abramyan2025,Rasouli2024} In contrast, there has been limited investigation into the applicability of alchemical free energy methods to small-molecule ligands targeting intrinsically disordered proteins (IDPs),\cite{Papadourakis2024} or proteins containing intrinsically disordered regions (IDRs) that undergo disorder-to-order transitions upon ligand binding.~\cite{MendozaMartinez2022, kalpokas2025accurate}
+
 The treatment of covalent binders has also received some attention.~\cite{luo2021,zhang2019} However, robust protocols for handling datasets of irreversible covalent binders containing diverse ‘warheads’ have not yet achieved widespread adoption.~\cite{Yu2019} A variety of other applications are less traditional and may be possible but raise new practical issues; for example, if multiple copies of a ligand bind at once in the same site, this could pose challenges, as could handling of binding and function prediction for molecular glues and related categories of molecules. 
 
 Relative free energy calculations carry with them additional unsettled practices relating to the use and careful treatment of dummy atoms (see Sec.~\ref{subsec: Dummy Atoms} on ``Dummy Atoms''). In particular, as the work of~\cite{Fleck_2021} highlighted, valence terms for dummy atoms for dummy atoms must be treated far more carefully than previously appreciated in order for dummy atoms' contributions to the free energy to rigorously cancel. Less careful treatments may leave dummy atom terms only approximately canceling, or, worse, introducing uncharacterized errors in relative binding free energies. Indeed, such issues might have impeded previous attempts at reproducing free energy calculations across simulation engines~\cite{loeffler2018reproducibility}. 
@@ -2526,7 +2529,7 @@ see the GitHub issue tracking and changelog at \githubrepository.
 %%%%%%%
 JM is a current member of the Scientific Advisory Board of Cresset. 
 SK is employed by SandboxAQ.
-MK is employed by Cresset who commercially distribute a software for performing alchemical free energy calculations. MRS is a Open Science Fellow and consultant for Silicon Therapeutics.
+MK is employed by Cresset who commercially distribute a software for performing alchemical free energy calculations.
 JDC is a current member of the Scientific Advisory Board of OpenEye Scientific Software and a consultant to Foresite Laboratories.
 JWE receives research funding from AZ, Astex Pharmaceuticals, Exscientia, GSK, dstl, UCB, Diamond Light Source. Astex Pharmaceuticals part funds WGP., where he is now employed.
 MS is currently employed by D. E. Shaw Research. Any contributions do not represent those of the company. 
