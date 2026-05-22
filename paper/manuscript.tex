@@ -1523,9 +1523,6 @@ To deal with prospective ligands with unknown binding modes, discovery projects 
 This is not necessarily always the case~\cite{kaus2015how}, as reviewed elsewhere~\cite{mobley2009binding} and in some cases unexpected binding mode changes can be the origin of apparent non-additivity in structure-activity relationships~\cite{calabro2016elucidation}.
 Binding modes also tend to be particularly variable in the case of fragments, which often may have multiple relevant binding modes~\cite{steinbrecher2015accurate}.
 
-
-This means that researchers performing absolute binding free energy calculations will have to pay particular attention to generating reasonable putative binding modes.
-
 In some cases, it is tempting to simply use docking techniques to generate initial bound structures for starting molecular dynamics simulations. Docking techniques are good at identifying sterically reasonable potential binding modes, but still perform relatively poorly at identifying which of several allowable binding modes is the most dominant \emph{a priori}~\cite{macdermott-opeskinComputationalCommunityBlind2026}. Such allowable binding modes often represent metastable states. The timescales for binding mode interconversion between metastable binding states are usually slow compared to MD/free energy timescales, meaning that simulations started from different potential binding modes are likely to yield disparate computed binding free energies~\cite{mobley2006use, palma2012computation, mobley2012perspective, gill2018binding}. 
 
 
@@ -1537,7 +1534,7 @@ While free energy calculations on this set had some success, many of the failure
 One approach which has shown some success in identifying accurate binding modes \emph{de novo} is to retain diverse potential binding modes from docking, perform short MD simulations of these to identify distinct stable binding modes, and then consider only these stable modes in subsequent calculations~\cite{gallicchio2014virtual, mobley2006use,rocklin2013blind, boyce2009predicting, mobley2007predicting}.
 
 
-Routes to handle multiple potential binding modes differ depending on whether absolute or relative calculations will be performed. If a method is available to estimate the relative populations of different stable binding modes in advance (e.g. such as the BLUES approach currently in development~\cite{gill2018binding}), such an approach could be applied to assist both types of calculations.
+Routes to handle multiple potential binding modes differ depending on whether absolute or relative calculations will be performed. If a method is available to estimate the relative populations of different stable binding modes in advance, such an approach could be applied to assist both types of calculations.
 
 \paragraph{Handling multiple potential binding modes within absolute binding free energy calculations.}
 When performing absolute binding free energy calculations, multiple potential binding modes can be handled by two main strategies: Considering each binding mode separately (a separation of states strategy) or sampling all binding modes within a single simulation~\cite{mobley2012perspective}.
@@ -1673,7 +1670,13 @@ Jarzynski's equality relates the work ($W$) obtained from a one-directional non-
 \langle e^{-\beta W} \rangle =e^{-\beta\Delta F}
 \end{eqnarray}\label{eqn.jarzynski}
 
-Expressing $\Delta F$ gives an estimator for the free energy difference, which is equivalent to Zwanzig's estimator when a transition is performed instantaneously:
+The work of an alchemical transition can be calculated by integrating $\partial H(\vec{q},\vec{p})/\partial(\lambda)$ over the transition path:
+
+\begin{equation}
+W   = \int_{0}^{1} \frac{\partial H(\vec{q},\vec{p})}{\partial\lambda} d\lambda.  
+\end{equation}\label{eqn.work_value}
+
+Expressing $\Delta F$ directly from Jarzynski's equality gives an estimator for the free energy difference, which is equivalent to Zwanzig's estimator when a transition is performed instantaneously:
 
 \begin{eqnarray}
 \Delta F = -\beta^{-1} \ln\langle e^{-\beta W} \rangle
@@ -1712,7 +1715,7 @@ There is one important thing to note about the uncertainty estimates when summin
 
 \subsubsection{Bennett Acceptance Ratio for non-equilibrium transitions}
 Similarly to the analogy between Zwanzig's and Jarzynski's equations, Bennet Acceptance Ratio can be applied to estimate free energy differences from non-equilibrium transitions as well.
-Replacing $U_{ij}(\vec{q})$ in equation~\ref{eq:bar} by work values $W_k$ and $W_l$ corresponding to the work monitored during the forward and reverse transitions, BAR can be written as follows~\cite{shirts2003equilibrium}:
+Replacing $U_{ij}(\vec{q})$ in equation~\ref{eq:bar} by work values $W_k$ and $W_l$ corresponding to the work observed for the forward and reverse transitions, BAR can be written as follows~\cite{shirts2003equilibrium}:
 
 \begin{eqnarray}
  \sum_{k=1}^{n_F} \frac{1}{1 + \exp[\ln(\frac{n_F}{n_R}) + \beta W_{k} - \beta\Delta F)]} \nonumber \\
@@ -1779,6 +1782,7 @@ One important point is that the bootstrap samples use to estimate the standard e
 \item TI usually gives similar values as MBAR implemented with sufficient numbers of intermediates, but quadrature errors that are hard to estimate beforehand  can occur if one does not carefully select $\lambda$ values such that the overlap between states is sufficiently high~\cite{paliwal2011benchmark}.
 \item WHAM is an approximation to MBAR, and there are no compelling reasons it should be used. If bin widths are carefully chosen and there are sufficient samples, it can given similar quality results to the other methods, but it always introduces some degree of binning error, and determining when errors might occur can be challenging. 
 \item Other variants, especially ones that adaptively determine the free energies can be useful in certain circumstances but beyond the scope of a Best Practices article.
+\item For free energy estimation from bi-directional non-equilibrium transitions, BAR is the preferred estimator. The analytical BAR error estimate in this case needs to be taken with caution: uncertainties may become unrealistically large when the overlap between work distributions becomes low; thus, bootstrapped error estimates may be more reliable. 
 \end{itemize}
 
 % \subsection{Detecting the boundary between equilibrated and production regions}
