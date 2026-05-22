@@ -371,7 +371,7 @@ $T$ --- temperature \\
 $t_0$ --- equilibration time \\
 $U$ --- potential energy\\
 $u$ --- reduced (dimensionless) potential describing a thermodynamic state \\
-$w(b, \vec{\lambda})$ --- perturbation energy function \\
+$w(b, \lambda)$ --- perturbation energy function \\
 $x_u$ --- internal coordinates of the solute \\
 $z_u$ --- intramolecular configurational partition function of the solute \\
 $Z$ --- partition function \\
@@ -804,45 +804,183 @@ where
 \end{equation}
 is the perturbation energy for displacing the two ligands in opposite directions, and the ensemble average $\langle \ldots \rangle_{RA+B}$ is carried out with $A$ bound and $B$ in the solvent. Except for the coordinate displacement, Eq.~(\ref{eq:atm-partfunc-ratio-rbfe-average}) is implemented similarly to the alchemical transfer ABFE protocol, including the use of the symmetric alchemical intermediate as in Eq.~(\ref{eq:atm-average-abfe-intermediate}).
 
-\subsection{How does one use alchemical transformations to calculate free energy differences}
+\subsection{How does one use alchemical transformations to calculate free energy differences?}
 \label{subsec:numerical-implementations}
+\paragraph{How can we get free energies from molecular simulations?}
+
+When we carry out a properly run molecular dynamcs or Monte Carlo
+simulation in, for example, the canonical (constant particle number
+$N$, constant temperature $T$, constant volume $V$) ensemble, then we
+are generating samples consistent with the Boltzmann distrbution
+$p(\vec{q}) \propto e^{-U(\vec{q})/k_BT}$, where $U$ is the total
+energy of the system (including both potential and kinetic energies).
+Note that this the probability distribution leaves out the constant
+needed to make this a true probability distribution, i.e. one that
+integrates to 1, also termed a \textit{normalized} probability
+distribution.  That constant of proportionality is the partition
+function $Z=\int e^{-U(\vec{q})/k_BT}$, so we can then write
+$p(\vec{x}) = \frac{e^{-U(\vec{q})/k_BT}}{Z}$
+
+We can define the \textit{expectation value} of some quantity like
+energy or volume with respect to a probability distribution $p(q)$ as
+the average of some quantity from many, many samples from the that
+distribution. For example, the expectaton function of the energy is
+$\langle U \rangle_p = \frac{1}{N}\sum_{n=1}^N U(\vec{q}_n$, as $N$ gets
+very large, and the $x_n$'s are generated from the distribution
+$p(x)$. But in the limit of enough samples, this will also eventually
+become equal to $\int p(\vec{q}) U(\vec{q})d\vec{q}$.  Now, for a box
+of 30,000 atoms, this is a $3\times30,000 = 90,000$ dimensional
+integral, which is pretty much impossible to do without severe
+aproximations. So it is clear how much easier it might be to compute
+expectation values of complicated systems with simulations rather than
+integrals.  So what we will do is find ways to turn the integrals we
+need to carry out to calculate ratio of partition functions into
+expectation values.
+
+One nice thing about expectation values is we don't actually have to
+know the normalizing constant for the probability distribution we are
+carrying out. We will get the same average regardless.  %MRS: clarify
+
+We talked above about using the canonical ensemble, but there are
+other ensembles as well. Thermodynamic parameters such as changes in
+volume $V$ when simulating at constant pressure $p$ or changes in
+number of molecules $N_i$ of species $i$ at constant chemical
+potential $\mu_i$ (e.g., number of waters or ions) by introducing the
+\textit{reduced potential}~\cite{shirts2008statisticallya}
+\begin{equation}\label{eq:reduced-potential}
+u(\vec{q};\lambda) \equiv \beta \left[ U(\vec{q};\lambda) + p \, V(\vec{q}) + \sum_i \mu_i \, N_i(\vec{q}) + \cdots \right] \, .
+\end{equation}
+Here, the collection of thermodynamic and alchemical parameters $\{\beta, \lambda, p, \mu, \ldots\}$ defines a \emph{thermodynamic state}.
+In the context of alchemical calculations, in which the thermodynamic states vary only in their value of $\lambda$, these are also referred to as \emph{alchemical states}.
+The free energy of mutating $A$ to $B$ in any environment ($\Delta G_{\mathrm{env}}$ e.g., binding site, solvent) can then be computed as
+\begin{equation}\label{eq:delta-G-env}
+    \Delta G_{\mathrm{env}} = - k_BT \ln \frac{Z(\lambda_B)}{Z(\lambda_A)} = - k_BT \ln \frac{\int_{\Gamma_{\mathrm{env}}} \exp\left( u(\vec{q}; \lambda_B) \right) \, d\vec{q}}{\int_{\Gamma_{\mathrm{env}}} \exp\left( u(\vec{q}; \lambda_A) \right) \, d\vec{q}} \, ,
+\end{equation}
+over the configurational space of the environment ($\Gamma_{\mathrm{env}}$). 
+While it is generally not feasible to compute the two partition functions $Z(\lambda)$, several estimators have been devised to robustly estimate the ratio of partition functions in Eq.~\ref{eq:delta-G-env} (see Sec.~\ref{subsec:estimators}) from a set of configurations usually collected with MD simulations from the thermodynamic states defined at $\lambda_A$ and $\lambda_B$ and intermediates in between these two. 
+
+\paragraph{Zwanzig relationship or exponential averaging connects ratios of partition functions to expectation values of energy differences}
+
+Let's say we have some probablity function $p_A(\vec{q})$ that we
+know, expect perhaps we don't know the partition function. This is of
+course the situation we are usually in with molecular simulations,
+since we know that $p_A \propto e^{-u(\vec{q})}$, but we don't know
+the partition function $Z_A$.
+
+We have by the definition of the partition function that $\int
+\frac{p_A(\vec{q})}{Z_A} = 1$ We are making this general, so I won't
+define $p(x)$ just yet.  I can always divide and multiply by one, so
+we have.
+
+  \begin{eqnarray*}
+    1 &=& \int \frac{p_A(\vec{q})}{Z_A} d\vec{q} \\
+      &=& \int p_B(\vec{q})/Z_B \frac{p_A(\vec{q})/Z_A}{p_B(\vec{q})/Z_B} d\vec{q} \\
+   \langle 1 \rangle_B &=& \langle \frac{p_A(\vec{q})/Z_A}{p_B(\vec{q})/Z_B} \rangle_B \\
+           1  &=& \frac{Z_B}{Z_A} \langle \frac{p_A(\vec{q})}{p_B(\vec{q})} \rangle_B \\
+           \frac{Z_A}{Z_B}  &=& \langle \frac{p_A(\vec{q})}{p_B(\vec{q})} \rangle_B \\
+  \end{eqnarray*}
+
+  We take advantage of the fact that the expectation value of a
+  constant is just that constant.  1 is just 1, and $Z_A$ and $Z_B$
+  don't depend on $q$ either. We do have to make sure $p_B(\vec{q})$
+  isn't zero anywhere, which usually isn't a problem, but can crop up
+  occasionally if the energy goes to infinity.
+
+  At this point, we now say that $p_A(\vec{q}) = e^{-u_A(\vec{q}}$,
+  and $p_B(\vec{q}) = e^{-u_B(\vec{q}}$, meaning that $Z_A = e^{-f_a}$
+  and $Z_B = e^{-f_b}$.   So we can say that 
+
+  \begin{eqnarray}  
+    \frac{Z_A}{Z_B}  &=& \langle \frac{p_A(\vec{q})}{p_B(\vec{q})} \rangle_B \nonumber \\
+    \frac{e^{-f_A}}{e^{-f_B}}  &=& \langle \frac{ e^{-u_A(\vec{q})}}{ e^{-u_B(\vec{q}}} \rangle_B \nonumber \\
+      e^{-(f_A-f_B)}  &=& \langle e^{-(u_A(\vec{q})-u_B(\vec{q}))}\rangle_B \nonumber \\
+      e^{-\Delta f}  &=& \langle e^{-\Delta u(\vec{q}))}\rangle_B \nonumber \\
+    \Delta f  &=& - \ln \langle e^{-\Delta u(\vec{q}))}\rangle_B \label{eq:zwanzig}
+  \end{eqnarray}
+
+Where $\Delta f = f_A - f_B$ and $\Delta U(\vec{q}) =
+u_A(\vec{q})-u_B(\vec{q})$.  This equation is often known as the
+Zwanzig equation~\cite{zwanzig}, or exponential averaging, since we
+exponentiate our $\delta u$, then average.
+
+So we have now changed the problem of calculating the ratio of two
+partition functions between states $A$ and $B$ (seemingly impossible
+to do by calculus) to the calculation of the expectation value during
+a simulation of state $B$ of the difference of energies between states
+$A$ and $B$.  This \textit{seems} manageable, though clearly there's a
+lot of difficulties in doing this caculation accurately and reliably.
+
+We didn't make ant distinction between $A$ and $B$, so we can just
+swap the labels $A$ and $B$, and compute a free energy difference by
+doing a simulation of state $A$ as well.  We will get out $\Delta f =
+f_B - f_A$, or minus the free energy we get by doing the simulation
+from state $B$.
+
+The key to this working well is that we need $\delta_u(\vec{q}$ not to
+vary too much during the simulation.  If it does, then it means some
+values of $\vec{q}$ are much more probable in one state than the
+other, and simulations of $A$ and $B$ don't really visit the same
+configurations at all.  This is frequently called poor phase space
+overlap, or poor configuration space overlap.  In that case, just a
+few simulation points contribute to the average and it will be very
+noisy. If on the other hand, $\vec{q}$ has similar probability in
+states $A$ and $B$, then we have good phase space overap, all of the
+numbers we average in the expectation value are similar in size, and
+the average converges quickly.
+
+\paragraph{Thermodynamic integration shows }
+
+The Z
+
+Once we have defined $u(\vec{q},\lambda)$, as a function of $\lambda$,
+then we can compute the derivative $\frac{du}{d\lambda}$. Although we
+will not prove it here, a page or so of algebra and statistical
+mechancis shows that, if $\lambda=0$ corresponds to state $B$ and
+$\lambda=1$ correspond to state $A$, then:
+
+\begin{eqnarray}
+  \delta f = \int_0^1 \left \langle \frac{du}{d\lambda} \right \langle \label{eq:TI_defn}
+\end{eqnarray}
+
+In other words, we keep track of $\frac{du}{d\lambda}$ as we run the
+simulation, average that to get an estimate of the expectation value,
+and then integrate this expecation over all values of $\lambda$.
+
+Clearly we do not want to run simulations at an infinite number of
+$\lambda$ values, so we will have to approximate this integral
+somehow. We'll discuss how to make that choice in
+section~\ref{sec:???}. But yet, again we have turned a calculation of
+free energies (or equivalently, ratios of partition functions) into
+calculations of expectation values of some quantity.
+
 
 \paragraph{How are alchemical transformations performed in practice?}
 
-As discussed below, because of poor ensemble overlap, in most cases of interest, alchemical free energy calculations cannot be carried out directly by ensemble averages collected only at the reference or target states. Instead, in a process called stratification,~\cite{chipot2007free} we take advantage of the state function property of the free energy and break up the transformation into a series of manageable steps, distributed along an alchemical pathway, whose combination is equivalent to the desired transformation (see Section \ref{sec:important_path}). Intermediate alchemical states are typically defined in terms of one or more alchemical progress parameters $\vec{\lambda}$ controlling the potential energy function $U(\vec{q};\vec{\lambda})$ such that the potential energies of the initial and final states are recovered at two particular values $\vec{\lambda}_0$ and $\vec{\lambda}_1$.
+As discussed below, because of poor ensemble overlap, in most cases of interest, alchemical free energy calculations cannot be carried out directly by ensemble averages collected just at the reference or target states. Instead, in a process sometimes called stratification,~\cite{chipot2007free} we take advantage of fact that the free energy is a state function and break up the transformation into a series of manageable steps, distributed along a pathway where we gradually morph the system from initial to final state of the desired transformation (see Section \ref{sec:important_path}). Intermediate alchemical states are typically defined in terms of one or more alchemical progress parameters $\lambda$ controlling the potential energy function $U(\vec{q};\lambda)$ such that the potential energies of the initial and final states are recovered at two particular values $\lambda_0$ and $\lambda_1$. We most often parameterize this path with a single numbe ranging from $\lambda=0$ to $\lambda=1$, with $\lambda$ a single scalar.  However, we could define a path that has two different values, such as separate $\lambda$s for the Coulomb, van der Waals, and bonded terms~\cite{naden}.  Usually, we will treat $\lambda$ as a single scalar, as most calculations use this; we will point out where appropriate how the math and treatment are different for a vector of $\lambda$ variables.  
+%MRs: talk more about how even if there is a multiple component vector, for TI we take a path.  But with MBAR, we can take all paths simultaneous. 
 
-In the case of a relative binding free energy calculation, for example, this might be achieved by simulating a ``chimeric'' molecule composed of enough atoms to represent both $A$ and $B$. A subset of the energetic terms in $U(\vec{q};\vec{\lambda})$ is then modulated by $\vec{\lambda}$ so that at $\vec{\lambda}_A$, the atoms that form molecule $A$ are activated and those belonging exclusively to $B$ are non-interacting ``dummy atoms'', while the opposite occurs at $\vec{\lambda}_B$ (see Sec.~\ref{sec:relative-fe-protocol} and Fig.~\ref{fig:fig_topology} for details).
-
-We can rigorously account for fluctuations in other thermodynamic parameters such as changes in volume $V$ when simulating at constant pressure $p$ or changes in number of molecules $N_i$ of species $i$ at constant chemical potential $\mu_i$ (e.g., number of waters or ions) by introducing the \textit{reduced potential}~\cite{shirts2008statisticallya}
-\begin{equation}\label{eq:reduced-potential}
-u(\vec{q};\vec{\lambda}) \equiv \beta \left[ U(\vec{q};\vec{\lambda}) + p \, V(\vec{q}) + \sum_i \mu_i \, N_i(\vec{q}) + \cdots \right] \, .
-\end{equation}
-Here, the collection of thermodynamic and alchemical parameters $\{\beta, \vec{\lambda}, p, \mu, \ldots\}$ defines a \emph{thermodynamic state}.
-In the context of alchemical calculations, in which the thermodynamic states vary only in their value of $\vec{\lambda}$, these are also referred to as \emph{alchemical states}.
-The free energy of mutating $A$ to $B$ in any environment ($\Delta G_{\mathrm{env}}$ e.g., binding site, solvent) can then be computed as
-\begin{equation}\label{eq:delta-G-env}
-    \Delta G_{\mathrm{env}} = - k_BT \ln \frac{Z(\vec{\lambda}_B)}{Z(\vec{\lambda}_A)} = - k_BT \ln \frac{\int_{\Gamma_{\mathrm{env}}} \exp\left( u(\vec{q}; \vec{\lambda}_B) \right) \, d\vec{q}}{\int_{\Gamma_{\mathrm{env}}} \exp\left( u(\vec{q}; \vec{\lambda}_A) \right) \, d\vec{q}} \, ,
-\end{equation}
-over the configurational space of the environment ($\Gamma_{\mathrm{env}}$).
-While it is generally not feasible to compute the two partition functions $Z(\vec{\lambda})$, several estimators have been devised to robustly estimate the ratio of partition functions in Eq.~\ref{eq:delta-G-env} (see Sec.~\ref{subsec:estimators}) from a set of configurations usually collected with MD simulations from the thermodynamic states defined at $\vec{\lambda}_A$ and $\vec{\lambda}_B$ and intermediates thereof.
+In the case of a relative binding free energy calculation, for example, this might be achieved by simulating a ``chimeric'' molecule composed of enough atoms to represent both $A$ and $B$. A subset of the energetic terms in $U(\vec{q};\lambda)$ is then modulated by $\lambda$ so that at $\lambda_A$, the atoms that form molecule $A$ are activated and those belonging exclusively to $B$ are non-interacting ``dummy atoms'', while the opposite occurs at $\lambda_B$ (see Sec.~\ref{sec:relative-fe-protocol} and Fig.~\ref{fig:fig_topology} for details).
 
 \paragraph{Why do alchemical calculations need unphysical intermediate states?}
-While it is theoretically possible to estimate the ratio of partition functions from samples collected only at states $\vec{\lambda}_A$ and $\vec{\lambda}_B$, the efficiency of the free energy estimators rapidly decreases as the phase-space overlap between the two states also decreases~\cite{wu2005phasespace, wu2005phasespacea}.
+While it is theoretically possible to estimate the ratio of partition functions from samples collected only at states $\lambda_A$ and $\lambda_B$, the efficiency of the free energy estimators rapidly decreases as the phase-space overlap between the two states also decreases~\cite{wu2005phasespace, wu2005phasespacea}.
 Roughly, the phase-space overlap between two thermodynamic states measures the degree to which high-probability configurations (i.e., those with low potential energy) in one state are also high-probability configurations in the another state (see Sec.~\ref{sec:are-they-good} and Fig.~\ref{fig:fig_what_is_lambda}).
 
-Equilibrium free energy calculations, solve the problem of having poor overlap between the states of interest by introducing multiple intermediate alchemical states at values $\vec{\lambda}_A = \vec{\lambda}_0, \vec{\lambda}_1, \cdots, \vec{\lambda}_K = \vec{\lambda}_B$ so that each pair of consecutive states $\vec{\lambda}_k, \vec{\lambda}_{k+1}$ share good phase space overlap, meaning, as described above, that there  are decent number of samples that would have moderate probability in both neighboring alchemical states. We make "good overlap" more quantitative in section~\ref{sec:data_analysis}. 
+Equilibrium free energy calculations, solve the problem of having poor overlap between the states of interest by introducing multiple intermediate alchemical states at values $\lambda_A = \lambda_0, \lambda_1, \cdots, \lambda_K = \lambda_B$ so that each pair of consecutive states $\lambda_k, \lambda_{k+1}$ share good phase space overlap, meaning, as described above, that there  are decent number of samples that would have moderate probability in both neighboring alchemical states. We make "good overlap" more quantitative in section~\ref{sec:data_analysis}. 
 Each intermediate state models a ligand that is neither $A$ nor $B$ but an interpolation of the two.
 Many estimators (e.g., exponential reweighting (EXP)~\cite{zwanzig1954hightemperature} and Bennett's acceptance ratio (BAR)~\cite{bennett1976efficient,shirts2003equilibrium}) can then be used to compute the free energy as
 \begin{equation}
-    \Delta G_{\mathrm{env}} = k_BT \sum_{k=0}^{K-1} \Delta f(\vec{\lambda}_k, \vec{\lambda}_{k+1}),
+    \Delta G_{\mathrm{env}} = k_BT \sum_{k=0}^{K-1} \Delta f(\lambda_k, \lambda_{k+1}),
 \end{equation}
-from samples collected at all the alchemical states $\{\vec{\lambda}_k \}$, where $\Delta f$ is the \emph{unitless free energy difference}
+from samples collected at all the alchemical states $\{\lambda_k \}$, where $\Delta f$ is the \emph{unitless free energy difference}
 \begin{equation}
-    \Delta f(\vec{\lambda}_k, \vec{\lambda}_{k+1}) = f(\vec{\lambda}_{k+1}) - f(\vec{\lambda}_k) = - \ln \frac{Z(\vec{\lambda}_{k+1})}{Z(\vec{\lambda}_k)} \, .
+    \Delta f(\lambda_k, \lambda_{k+1}) = f(\lambda_{k+1}) - f(\lambda_k) = - \ln \frac{Z(\lambda_{k+1})}{Z(\lambda_k)} \, .
 \end{equation}
-While this strategy usually results in sampling thermodynamic states whose Boltzmann distributions are very similar, thus collecting information that is to some degree redundant, some estimators, such as the Multistate Bennett acceptance ratio (MBAR)~\cite{shirts2008statisticallya}, can exploit similarities between states to improve the precision of the estimates. This is achieved by using the configurations sampled at all alchemical states $\{\vec{\lambda}_k \}$ to compute the free energy difference $\Delta f(\vec{\lambda}_i, \vec{\lambda}_{j})$ between any pair of states $i,j$ (see Sec.~\ref{subsec:estimators}).
+While this strategy usually results in sampling thermodynamic states whose Boltzmann distributions are very similar, thus collecting information that is to some degree redundant, some estimators, such as the Multistate Bennett acceptance ratio (MBAR)~\cite{shirts2008statisticallya}, can exploit similarities between states to improve the precision of the estimates. This is achieved by using the configurations sampled at all alchemical states $\{\lambda_k \}$ to compute the free energy difference $\Delta f(\lambda_i, \lambda_{j})$ between any pair of states $i,j$ (see Sec.~\ref{subsec:estimators}).
 
 Non-equilibrium free energy techniques provide an alternate approach to this problem, driving $\lambda$ between states (see Sec.~\ref{sec:sampling_schemes})~\cite{jarzynski1997nonequilibrium,jarzynski1998equilibrium,crooks2000pathensemble, gapsys2020large}.
+
+If you like playing with Taylor series, you can also show that Eq.~\label{eq:TI_defn} can be derived by taking the Zwanzig equation,
+and adding together the free energies from an infinte number of simulations that are infinitely closely spaced together. 
 
 \paragraph{How do absolute free energy calculations differ from relative free energy calculations?}
 
@@ -852,9 +990,6 @@ Absolute binding, hydration, and partition free energies still use thermodynamic
 The main difference in these approaches lies instead in the thermodynamic cycle to which this strategy is applied.
 For example, a typical thermodynamic cycle for an alchemical absolute binding free energy calculation is represented in Fig.~\ref{fig:fig_absolute_thermodynamic_cycle}.
 In this case, two independent calculations compute the free energy of removing the interactions between the ligand and its environment in solvent or in the binding site respectively through a series of intermediate states in which the energy terms are only partially deactivated.
-
-
-
 
 %%%%%%%%%%%%
 % Step 0   %
@@ -954,7 +1089,7 @@ Since binding experiments cannot resolve $K_D^\ast$ and $K_C$ individually, such
 % Simulation prerequisites  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-\section{Simulation prerequisites}
+\section{Choices you need to make when setting up free enegy calculations}
 \label{sec:prerequisites}
 Alchemical free energy protocols as discussed below (Sec.~\ref{sec:simulation_protocol_choice}) are defined for a specific type of free energy calculation, i.e. a free energy of solvation or a free energy of binding. Different types of simulations require different choices for ligands, solvent, and host molecules (in the case of the estimation of free energies of binding). 
 
@@ -1250,7 +1385,7 @@ Auxiliary restraints take a variety of forms, such as distance restraints betwee
 For example, the overall ligand RMSD has been used~\cite{woo2005calculation} for this purpose.
 The Boresch variables~\cite{boresch2003absolute,baumann2023broadening} are a popular choice for building auxiliary restraints because they are based on interatomic distances, bond angles, and dihedral angles degrees of freedom already implemented in molecular mechanics codes and do not interfere with intramolecular conformational distributions. Moreover, the free energy of releasing Boresch restraints within the simulation box volume $V$ is easily computed analytically~\cite{boresch2003absolute, boresch2024analytical}.
 
-Auxiliary restraints are designed to reduce the amount of conformational sampling at intermediate $\vec{\lambda}$ values. However, more computational effort is required to compute the free energy when the restraints are turned on and off. Additionally, such restraints can limit the exploration of alternative binding modes. This restriction may be undesirable when using Hamiltonian $\lambda$ exchange or expanded ensemble techniques, where allowing the ligand to exchange binding modes when it is non-interacting could provide sampling benefits~\cite{wang2013identifying}.
+Auxiliary restraints are designed to reduce the amount of conformational sampling at intermediate $\lambda$ values. However, more computational effort is required to compute the free energy when the restraints are turned on and off. Additionally, such restraints can limit the exploration of alternative binding modes. This restriction may be undesirable when using Hamiltonian $\lambda$ exchange or expanded ensemble techniques, where allowing the ligand to exchange binding modes when it is non-interacting could provide sampling benefits~\cite{wang2013identifying}.
 More specifically, using binding site flat-bottom restraints alone allow a ligand to explore multiple binding sites, and harmonic auxiliary restraints in ligand-binding site distances allow the exploration of multiple binding modes within a site. In contrast, full Boresch restraints on distance, angles, and torsions only allow a single binding mode within a single site.
 See additional discussion of the possibility of multiple binding modes in Sec.~\ref{sec:multiple_binding_modes} below.
 
@@ -1308,40 +1443,40 @@ There is currently no single best practice for handling slowly sampling waters, 
 \label{sec:important_path}}
 \begin{figure}
     \includegraphics[width=0.95\linewidth]{figures/fig7_what_is_lam/Figure.pdf}
-    \caption{Alchemical intermediates are created by making the potential energy depend on an additional variable $\vec{\lambda}$ that interpolates between the chemical endpoints. In (\textbf{A}), at $\vec{\lambda}=0$ the molecule is a fully interacting phenol and at $\vec{\lambda}=1$,  a fully interacting benzene. (\textbf{B}) shows an illustration of the probability distribution of the potential energies as the switching function takes values of $\vec{\lambda}=0$ to $\vec{\lambda}=1$. Intermediates states are required for a sufficient overlap in potential energies to estimate a free energy difference between $\vec{\lambda}=0$ and $\vec{\lambda}=1$.
-    Soft-core potentials provide one of the most efficient families of intermediate pathways, with a $\vec{\lambda}$ dependence. In (\textbf{C}) the potential energy surface is coloured according to $\vec{\lambda}$ with blue being $\vec{\lambda}=0$ and $\vec{\lambda}=1$ orange. In (\textbf{D}) the potential is coloured according to the potential energy. Note how as $\vec{\lambda}$ approaches 0, the energy smoothly approaches zero at all $r$, a necessary requirement for efficient and stable calculations.  }
+    \caption{Alchemical intermediates are created by making the potential energy depend on an additional variable $\lambda$ that interpolates between the chemical endpoints. In (\textbf{A}), at $\lambda=0$ the molecule is a fully interacting phenol and at $\lambda=1$,  a fully interacting benzene. (\textbf{B}) shows an illustration of the probability distribution of the potential energies as the switching function takes values of $\lambda=0$ to $\lambda=1$. Intermediates states are required for a sufficient overlap in potential energies to estimate a free energy difference between $\lambda=0$ and $\lambda=1$.
+    Soft-core potentials provide one of the most efficient families of intermediate pathways, with a $\lambda$ dependence. In (\textbf{C}) the potential energy surface is coloured according to $\lambda$ with blue being $\lambda=0$ and $\lambda=1$ orange. In (\textbf{D}) the potential is coloured according to the potential energy. Note how as $\lambda$ approaches 0, the energy smoothly approaches zero at all $r$, a necessary requirement for efficient and stable calculations.  }
     \label{fig:fig_what_is_lambda}
 \end{figure}
 
 Both absolute and relative calculations must choose an alchemical pathway connecting the initial and final states. In principle, because of the path independence of the free energy, any arbitrary pathway will give the correct free energy change.  However, he choice of pathway taken will greatly affect the efficiency of the calculations. Some choices are particularly crucial.  For example, alchemical pathways must avoid ``bare'' infinitely attractive potentials, such as the Coulombic interaction between opposing charges, unless they have an even more rapidly increasing infinitely repulsive term present.  This is because the bare attractive term will result in particles rapidly treating each other as, essentially, black holes, which leads to immediate simulation crashes if contact occurs.  And yet at the same time, transformations involving insertions or deletions of infinitely repulsive terms such as the Lennard-Jones interaction should employ methods (described in more detail in this section) such as a soft-core potential path, as naive choices to bring the potential down from infinity result in highly biased results~\cite{beutler1994avoiding, beutler1994molecular,gapsys2012new, Lee_JChemTheoryComput_2020_v16_p5512}. 
 
 
-The key consideration for choosing alchemical pathways is that the intermediate states that a given pathway produces should sample configurational ensembles that change as slowly as possible as $\vec{\lambda}$ changes, while still managing to go from the initial state to the final state as $\vec{\lambda}$ goes from 0 to 1.
+The key consideration for choosing alchemical pathways is that the intermediate states that a given pathway produces should sample configurational ensembles that change as slowly as possible as $\lambda$ changes, while still managing to go from the initial state to the final state as $\lambda$ goes from 0 to 1.
 
-Another way of stating this is that intermediate states should sample molecular configurations that are as similar as possible to their neighboring states. The more similar the configurations are between intermediate states, the lower the statistical uncertainty is in the estimate of free energy between intervals. This can be proven directly from the BAR and MBAR formulas~\cite{bennett1976efficient,klimovich2015guidelines}, though the exact same principles apply for TI. For a 'good' path to work and give a sequence of states with maximally similar configurations, sufficient similarity in potential energies is required at each intermediate. Fig.~\ref{fig:fig_what_is_lambda}\textbf{A} and \textbf{B} illustrate this. Fig.~\ref{fig:fig_what_is_lambda}\textbf{A} shows in a pictorial way a soft-core potential can be applied across different $\vec{\lambda}$s. Fig.~\ref{fig:fig_what_is_lambda}\textbf{B} illustrates the potential energy distributions at the different $\vec{\lambda}$ intermediates, with sufficient overlap between neighboring $\vec{\lambda}$ states to ensure that reweighting estimators such as MBAR can be used for analysis (see Sec.~\ref{subsec:estimators}). The actual transformation is best handled with soft-core potentials of the form shown in Fig.~\ref{fig:fig_what_is_lambda}\textbf{C} and ~\ref{fig:fig_what_is_lambda}\textbf{B}, with more details given below. 
+Another way of stating this is that intermediate states should sample molecular configurations that are as similar as possible to their neighboring states. The more similar the configurations are between intermediate states, the lower the statistical uncertainty is in the estimate of free energy between intervals. This can be proven directly from the BAR and MBAR formulas~\cite{bennett1976efficient,klimovich2015guidelines}, though the exact same principles apply for TI. For a 'good' path to work and give a sequence of states with maximally similar configurations, sufficient similarity in potential energies is required at each intermediate. Fig.~\ref{fig:fig_what_is_lambda}\textbf{A} and \textbf{B} illustrate this. Fig.~\ref{fig:fig_what_is_lambda}\textbf{A} shows in a pictorial way a soft-core potential can be applied across different $\lambda$s. Fig.~\ref{fig:fig_what_is_lambda}\textbf{B} illustrates the potential energy distributions at the different $\lambda$ intermediates, with sufficient overlap between neighboring $\lambda$ states to ensure that reweighting estimators such as MBAR can be used for analysis (see Sec.~\ref{subsec:estimators}). The actual transformation is best handled with soft-core potentials of the form shown in Fig.~\ref{fig:fig_what_is_lambda}\textbf{C} and ~\ref{fig:fig_what_is_lambda}\textbf{B}, with more details given below. 
 
-So what are the options to adjust the potentials between the two end states based on $\vec{\lambda}$? The simplest possible alchemical pathway is a \textit{linear} pathway:
+So what are the options to adjust the potentials between the two end states based on $\lambda$? The simplest possible alchemical pathway is a \textit{linear} pathway:
 \begin{equation}
-U(\vec{q},\vec{\lambda}) = (1-\vec{\lambda}) U_0(\vec{q}) + \vec{\lambda}U_1(\vec{q}), \end{equation}
+U(\vec{q},\lambda) = (1-\lambda) U_0(\vec{q}) + \lambda U_1(\vec{q}), \end{equation}
 
-so-called because the dependence on $\vec{\lambda}$ is linear. This clearly satisfies the basic requirement that it gives the initial endpoint potential energy $U_0(\vec{q})$ when $\vec{\lambda}=0$ and final endpoint energy $U_1(\vec{q})$ when $\vec{\lambda}=1$. 
+so-called because the dependence on $\lambda$ is linear. This clearly satisfies the basic requirement that it gives the initial endpoint potential energy $U_0(\vec{q})$ when $\lambda=0$ and final endpoint energy $U_1(\vec{q})$ when $\lambda=1$. 
 
 For many energy terms this is a very good approach, \textit{as long as a repulsive core remains on}. For example, it can be shown that if van der Waals repulsions are left on, then the linear approach is very nearly the optimal path possible for changing, removing, or inserting the electrostatic energy terms, with the alchemical path being within about 10--20\% of the minimum possible uncertainty~\cite{naden2015linear} for a fixed amount of simulation time, as well as being nearly optimally efficient for van der Waals attractive terms with repulsion terms turned on~\cite{naden2014linear}. Although we are not aware of any quantitative tests for a linear transformation for dipolar or higher multipole terms, theoretically it should behave equally well for those types of interactions as well.
 
-However, this linear approach ends up being terrible for removing or adding repulsive potentials that go to infinity very quickly at or near the origin. One way to see this problem is to examine how low $\vec{\lambda}$ values must go to reduce the energy at $0.5\sigma$ (the atomic size parameter) down to 1 $k_BT$, where thermal fluctuations make it possible for other atomic sites to easily penetrate routinely that deep. Assume we are trying to go from a particle being present, and desire to make it disappear alchemically. If the repulsive terms are of the form $\epsilon(\frac{\sigma}{r})^{12}$, and if $\epsilon$ is 1 $k_BT$ at the temperature of interest, and we start with the particle present, we may solve for $(1-\vec{\lambda})(1 k_B T)\left(\frac{\sigma}{0.5\sigma}\right)^{12} = 1 k_B T$. This yields $\vec{\lambda} = 1-2^{-12} \sim 0.999976$. At this point,  we have gone virtually all the way to the end of the transformation, but there is still an impenetrable sphere in the middle of our simulation that we are trying to disappear! This is not very much like the desired final state of no interactions between the particle and its environment. One can play around with a few ways of improving the convergence, like simulating many more intermediate states near $\vec{\lambda}=1$. However, various analyses have shown that this is not a very good strategy~\cite{pham2011identifying, beutler1994avoiding, zacharias1994separationshifted, blondel2004ensemble, gapsys2012new}.
+However, this linear approach ends up being terrible for removing or adding repulsive potentials that go to infinity very quickly at or near the origin. One way to see this problem is to examine how low $\lambda$ values must go to reduce the energy at $0.5\sigma$ (the atomic size parameter) down to 1 $k_BT$, where thermal fluctuations make it possible for other atomic sites to easily penetrate routinely that deep. Assume we are trying to go from a particle being present, and desire to make it disappear alchemically. If the repulsive terms are of the form $\epsilon(\frac{\sigma}{r})^{12}$, and if $\epsilon$ is 1 $k_BT$ at the temperature of interest, and we start with the particle present, we may solve for $(1-\lambda)(1 k_B T)\left(\frac{\sigma}{0.5\sigma}\right)^{12} = 1 k_B T$. This yields $\lambda = 1-2^{-12} \sim 0.999976$. At this point,  we have gone virtually all the way to the end of the transformation, but there is still an impenetrable sphere in the middle of our simulation that we are trying to disappear! This is not very much like the desired final state of no interactions between the particle and its environment. One can play around with a few ways of improving the convergence, like simulating many more intermediate states near $\lambda=1$. However, various analyses have shown that this is not a very good strategy~\cite{pham2011identifying, beutler1994avoiding, zacharias1994separationshifted, blondel2004ensemble, gapsys2012new}.
 
 What we need instead is a function that smoothly removes this infinity. A large number of schemes have been tried~\cite{beutler1994avoiding, zacharias1994separationshifted, blondel2004ensemble, pham2011identifying, pham2012optimal, naden2014linear, donnini2005incorporating,isthereagapsysone?}, but the most common strategy is to use a ``soft-core'' potential, of the form:
 
 \begin{equation}
-    U(\vec{r_{ij}},\vec{\lambda}) = 4\epsilon_{ij} \vec{\lambda} \left(\frac{1}{(\alpha(1-\vec{\lambda}) + (r_{ij}/\sigma_{ij})^6)^2} -  \frac{1}{\alpha(1-\vec{\lambda}) + (r_{ij}/\sigma_{ij})^6}\right)
+    U(\vec{r_{ij}},\lambda) = 4\epsilon_{ij} \lambda \left(\frac{1}{(\alpha(1-\lambda) + (r_{ij}/\sigma_{ij})^6)^2} -  \frac{1}{\alpha(1-\lambda) + (r_{ij}/\sigma_{ij})^6}\right)
     \label{eq:softcore},
 \end{equation}
 
-where $r_{ij}$ is the distance between two particles $i$ and $j$, $\epsilon_{ij}$ and $\sigma_{ij}$ are the Lennard-Jones parameters corresponding to the interaction between particles $i$ and $j$, and $\alpha$ is a constant. In particular, $\alpha=0.5$ is statistically optimal for the specific functional form shown above. This functional form has exactly the properties we are looking for: it recovers the Lennard-Jones potential when $\vec{\lambda}=1$, and the at other endpoint ($\vec{\lambda}=0$), it smoothly goes zero for all $r_{ij}$ everywhere when $\vec{\lambda}$ goes to zero, as the $\alpha(1-\vec{\lambda})$ term lowers the infinite energy in the core. 
+where $r_{ij}$ is the distance between two particles $i$ and $j$, $\epsilon_{ij}$ and $\sigma_{ij}$ are the Lennard-Jones parameters corresponding to the interaction between particles $i$ and $j$, and $\alpha$ is a constant. In particular, $\alpha=0.5$ is statistically optimal for the specific functional form shown above. This functional form has exactly the properties we are looking for: it recovers the Lennard-Jones potential when $\lambda=1$, and the at other endpoint ($\lambda=0$), it smoothly goes zero for all $r_{ij}$ everywhere when $\lambda$ goes to zero, as the $\alpha(1-\lambda)$ term lowers the infinite energy in the core. 
 
 There are several different variants of the same functional form~\cite{zacharias1994separationshifted, beutler1994avoiding,pham2011identifying,Lee_JChemTheoryComput_2020_v16_p5512,tsai2023amber}, but the one given in eq.~\ref{eq:softcore} is easy to understand and implement and fairly numerically stable. This functional form is shown in \textbf{C} and \textbf{D} of Fig.~\ref{fig:fig_what_is_lambda}.  One can derive a near minimum variance of pairwise pathways, and can show that all of these forms forms are relatively similar in statistical precision and efficiency and near the global optimum ~\ref{eq:softcore}~\cite{pham2012optimal} when disappearing Lennard-Jones terms in the absence of charge terms. We therefore mildly recommend using the soft-core potential given in eq.~\ref{eq:softcore} for simplicity. However, if your chosen software supports using any similar flavor equation to eq.~\ref{eq:softcore}, it will almost certainly be acceptable and the efficiency in terms of amount of simulation required will be relatively similar.  Again, however, if you are inserting or removing entire atomic sites, we heavily recommend against using the linear approach; it will be very difficult to get correct or converged results. 
 
-So far in this section, we have discussed optimal ways of disappearing or appearing Lennard-Jones interaction sites and turning on and off electrostatics terms. What about performing both transformations at the same time? We cannot turn off the electrostatics linearly at the same time we turn off the Lennard-Jones terms, as it would leave infinitely large attractive and repulsive electrostatic terms ``bare'' at small $\vec{\lambda}$, resulting in the simulation crashing. It \textit{is} possible to apply the same soft-core approach to the Coulomb interaction as to the van der Waals interaction, and this is indeed done in a number of implementations. In this case, it is important that the Coulomb interaction is softened as rapidly or more rapidly than the Lennard-Jones interaction to avoid charge penetration issues into the repulsive core, which  can be tricky to ensure for multiple types of perturbations simultaneously~\cite{steinbrecher2011softcore}. Tsai et al.~\cite{tsai2023amber} show how separate soft-core potentials can be used for electrostatic and Lennard-Jones terms, and appropriately balanced such that they avoid end-point instability, particle collapse and large gradient jump problems~\cite{tsai2023amber}.
+So far in this section, we have discussed optimal ways of disappearing or appearing Lennard-Jones interaction sites and turning on and off electrostatics terms. What about performing both transformations at the same time? We cannot turn off the electrostatics linearly at the same time we turn off the Lennard-Jones terms, as it would leave infinitely large attractive and repulsive electrostatic terms ``bare'' at small $\lambda$, resulting in the simulation crashing. It \textit{is} possible to apply the same soft-core approach to the Coulomb interaction as to the van der Waals interaction, and this is indeed done in a number of implementations. In this case, it is important that the Coulomb interaction is softened as rapidly or more rapidly than the Lennard-Jones interaction to avoid charge penetration issues into the repulsive core, which  can be tricky to ensure for multiple types of perturbations simultaneously~\cite{steinbrecher2011softcore}. Tsai et al.~\cite{tsai2023amber} show how separate soft-core potentials can be used for electrostatic and Lennard-Jones terms, and appropriately balanced such that they avoid end-point instability, particle collapse and large gradient jump problems~\cite{tsai2023amber}.
 
 A safe but potentially more computationally expensive approach is to perform the transformations in sequence; first, turning off all electrostatics for atoms that must be removed, inserting and removing Lennard-Jones sites (both the insertion and removal can be done simultaneously), and then turning electrostatics for the introduced particles on. Again, if there are no removals or additions to atomic sites, then it is reasonable to change the interactions in the first and third steps  linearly. 
 
@@ -1400,20 +1535,20 @@ These challenges are magnified in binding free energy calculations, where sampli
 
 \subsubsection{What $\lambda$-sampling schemes are available?}
 \label{sec:sampling_schemes}
-Though all alchemical simulations must sample from multiple $\vec{\lambda}$ states, different approaches can be used to achieve this sampling. Fig.~\ref{fig:fig_sampling_scheme} illustrates the four most common schemes. The simplest approach involves running an independent simulation at each of the predefined $\vec{\lambda}$ values (see Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}). This type of scheme is currently supported by most contemporary MD engines.
+Though all alchemical simulations must sample from multiple $\lambda$ states, different approaches can be used to achieve this sampling. Fig.~\ref{fig:fig_sampling_scheme} illustrates the four most common schemes. The simplest approach involves running an independent simulation at each of the predefined $\lambda$ values (see Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}). This type of scheme is currently supported by most contemporary MD engines.
 
-However, if these simulations at different $\lambda$s can be run simultaneously with communication between the simulations, a simple extension allows \textit{mixing} between these replicas. In this approach, the simulation at each $\vec{\lambda}$ can undergo periodic exchanges with neighboring $\vec{\lambda}$ values. This form of replica exchange, called \textit{Hamiltonian replica exchange}, is based on ideas developed from Monte Carlo simulations of spin glasses by Swendsen and Wang~\cite{swendsen1986replica}. With the Metropolis-Hastings acceptance criterion for exchanges, the generated ensemble of all replicas still samples from the Boltzmann distribution for each replica. This approach has been used in many different contexts for molecular simulations~\cite{sugita2000multidimensional,sugita1999replicaexchange, woods2003development, jiang2010free}. The basic idea of the replica exchange scheme is shown in Fig.~\ref{fig:fig_sampling_scheme}\textbf{B}. It is supported in various software packages that provide alchemical implementations, such as GROMACS~\cite{aldeghi2015accurate}, GROMOS~\cite{hritz2008hamiltonian,hritz2007optimization},
+However, if these simulations at different $\lambda$s can be run simultaneously with communication between the simulations, a simple extension allows \textit{mixing} between these replicas. In this approach, the simulation at each $\lambda$ can undergo periodic exchanges with neighboring $\lambda$ values. This form of replica exchange, called \textit{Hamiltonian replica exchange}, is based on ideas developed from Monte Carlo simulations of spin glasses by Swendsen and Wang~\cite{swendsen1986replica}. With the Metropolis-Hastings acceptance criterion for exchanges, the generated ensemble of all replicas still samples from the Boltzmann distribution for each replica. This approach has been used in many different contexts for molecular simulations~\cite{sugita2000multidimensional,sugita1999replicaexchange, woods2003development, jiang2010free}. The basic idea of the replica exchange scheme is shown in Fig.~\ref{fig:fig_sampling_scheme}\textbf{B}. It is supported in various software packages that provide alchemical implementations, such as GROMACS~\cite{aldeghi2015accurate}, GROMOS~\cite{hritz2008hamiltonian,hritz2007optimization},
 AMBER~\cite{Lee_JChemInfModel_2020_v60_p5595,Case_JChemInfModel_2025_v65_p7835}, FEP+~\cite{wang2015accurate}, NAMD~\cite{jiang2019computing}, and OpenMM~\cite{rufa2020chemical,azimi2022relative}.
 
 With Hamiltonian replica exchange, one can include additional differences in the Hamiltonians besides just changing $\lambda$, in ways that improve sampling, as long as the end states remain the proper physical states. Such a variant of Hamiltonian replica exchange is FEP/REST2~\cite{rest2, feprest} that involves ``heating'' a small portion of the protein-ligand system to enhance the sampling within the binding pocket. It has been promoted as a great way to enhance sampling and is employed by default in Schr\"{o}dinger's FEP+ package. However, it should be noted that several studies have questioned its reliability and reported that it can degrade the quality of free energy predictions as compared to those based on standard MD simulations without any enhanced sampling~\cite{wan2020fep+, bhati2022}. Therefore, a blind application of this sampling scheme is not recommended and it must be used with caution. 
 
 A variant of this approach of changing intermediate state Hamiltonians to improve sampling that overcomes some of the reported issues with FEP/REST2 is called alchemical enhanced sampling (ACES)~\cite{lee2023aces}. ACES creates localized targeted ``enhanced sampling states'' that are connected to the real state end-points through HREMD.  The method leverages the dual topology framework to produce a concerted ``counter-diffusion'' of alchemical states that leads to minimal rearrangement of the environment along the alchemical path~\cite{York_ACSPhysChemAu_2023_v3_p478}. The computational overhead of the method is negligible relative to more conventional alchemical free energy simulations with HREMD.
 
-A third approach borrows ideas from simulated tempering~\cite{marinari1992simulated}. In this scheme, a single replica rapidly explores all of $\vec{\lambda}$ space by switching between different intermediate $\vec{\lambda}$ values, as seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{C}.  This is referred to as expanded ensemble, extended ensemble or even just simulated tempering (although the temperature is not changed when applied to $\lambda$ changes in alchemical free energy calculations).~\cite{lyubartsev1992new, li2007simulated, tan2017optimally} and is supported OpenMM Tools~\cite{andrearizzi2019choderalab}, GROMACS and AMBER TI~\cite{Lee_JPhysChemB_2025_v129_p13063}.    One can show that the expanded ensemble calculations will move back and forth between replicas faster than replica exchange.~\cite{Zhang:JCP:2008}  
+A third approach borrows ideas from simulated tempering~\cite{marinari1992simulated}. In this scheme, a single replica rapidly explores all of $\lambda$ space by switching between different intermediate $\lambda$ values, as seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{C}.  This is referred to as expanded ensemble, extended ensemble or even just simulated tempering (although the temperature is not changed when applied to $\lambda$ changes in alchemical free energy calculations).~\cite{lyubartsev1992new, li2007simulated, tan2017optimally} and is supported OpenMM Tools~\cite{andrearizzi2019choderalab}, GROMACS and AMBER TI~\cite{Lee_JPhysChemB_2025_v129_p13063}.    One can show that the expanded ensemble calculations will move back and forth between replicas faster than replica exchange.~\cite{Zhang:JCP:2008}  
 
 Although this approach allows multiple states to be simulated in a single simulation, thus removing requirements for multiple parallel simulations, in order to sample all of the states evenly, one must introduce a weight for each state; otherwise, the simulation will remain in the states that are near the free energy minimum. The weights that give exactly equal sampling of all states are just $\exp(-\beta F)$, meaning that one must know the free energies themselves to estimate the free energies!  Since any reasonable estimate of the free energies will give approximately equal sampling of all $\lambda$s, leading to good free energy estimations, the problem is not quite as bad as it first appears. A number of approaches have been proposed to converge the weights more rapidly to the equal sampling weights, including Wang-Landau sampling~\cite{Wang:PRL:2001} and self-adjusted mixture sampling~\cite{tan2017optimally}, and even using metadynamics in $\lambda$ space~\cite{Hsu:JCTC:2023}. A full description of the different methods to adjust the weights is beyond the scope of this review---the interested reader is directed to a more complete review in~\cite{Henin:LJCMS:2022} of the different choices as well as the other $\lambda$-based enhanced sampling methods.  However, at this point, all of these methods require some effort and attention to robustly give equal sampling to all $\lambda$ states and give consistent free energies.
 
-The non-equilibrium (NEQ) switching (Fig.~\ref{fig:fig_sampling_scheme}\textbf{D}) approach makes use of short out-of-equilibrium simulations~\cite{aldeghi2018accurate}. In this protocol, only end state $\vec{\lambda}$ replicas ($\vec{\lambda}$=0, $\vec{\lambda}=1$) are simulated at equilibrium; intermediate information is generated from non-equilibrium simulations that rapidly transition between end states. 
+The non-equilibrium (NEQ) switching (Fig.~\ref{fig:fig_sampling_scheme}\textbf{D}) approach makes use of short out-of-equilibrium simulations~\cite{aldeghi2018accurate}. In this protocol, only end state $\lambda$ replicas ($\lambda$=0, $\lambda=1$) are simulated at equilibrium; intermediate information is generated from non-equilibrium simulations that rapidly transition between end states. 
 Over the course of each transition, Hamiltonian derivative with respect to $\lambda$ is recorded; subsequently the curves are integrated to yield work distributions for the forward and reverse processes. Crooks Fluctuation Theorem~\cite{crooks1999entropy} allows estimating free energy difference between the end states from the generated work distributions~\cite{shirts2003equilibrium}.
 
 The NEQ approaches offer some advantages over the equilibrium sampling based methods. For example, the NEQ protocol allows equilibrium simulations of each end-state to be performed independently without pre-defining a ligand network: the transitions between the ligands can be generated afterwards. This eliminates the redundant equilibrium sampling if one end state is present in multiple perturbations. Equilibrium sampling based approaches would require sampling the central ligand for each edge, while NEQ would sample it once and connect to the other ligands afterwards. The NEQ protocol also provides a simple way to combine different structures in free energy calculations, e.g. simulations in states at $\lambda=0$ and $\lambda=1$ may be initialized with the independently generated ligand coordinates. On the contrary, two recent studies report a direct and systematic comparison of the equilibrium and NEQ approaches at large scales for both RBFE and ABFE calculations~\cite{wan2023eqvsneq, bhati2025}. The authors have cautioned on the use of NEQ approaches by highlighting several of its limitations.
@@ -1432,11 +1567,11 @@ The non-equilibrium approach is available in GROMACS and AMBER. A closely relate
 
 \begin{figure}
     \includegraphics[width=0.88\columnwidth]{figures/fig8_sampl_scheme/Figure.pdf}
-    \caption{\textbf{Four most common sampling strategies.} (\textbf{A}): Multiple replicas in parallel at different lambda states. Each arrow symbolises an independent $\vec{\lambda}$ simulation. (\textbf{B}): Hamiltonian replica exchange scheme. Each arrow represents a short simulation interval before an exchange through Metropolis Hastings acceptance (dice) is attempted. A tick means an accepted exchange, a cross a rejected exchange. (\textbf{C}): Single replica scheme sampling from all $\vec{\lambda}$ states. After a short simulation time symbolised by the arrow, the lambda-state is attempted to change until all N lambda states will be sampled. (\textbf{D}): Non-equilibrium sampling scheme, where two equilibrium simulations at the end states are run as indicated by the blue and pink arrow. Non-equilibrium simulations are attempted at intervals to switch between the two end states.}
+    \caption{\textbf{Four most common sampling strategies.} (\textbf{A}): Multiple replicas in parallel at different lambda states. Each arrow symbolises an independent $\lambda$ simulation. (\textbf{B}): Hamiltonian replica exchange scheme. Each arrow represents a short simulation interval before an exchange through Metropolis Hastings acceptance (dice) is attempted. A tick means an accepted exchange, a cross a rejected exchange. (\textbf{C}): Single replica scheme sampling from all $\lambda$ states. After a short simulation time symbolised by the arrow, the lambda-state is attempted to change until all N lambda states will be sampled. (\textbf{D}): Non-equilibrium sampling scheme, where two equilibrium simulations at the end states are run as indicated by the blue and pink arrow. Non-equilibrium simulations are attempted at intervals to switch between the two end states.}
     \label{fig:fig_sampling_scheme}
 \end{figure} 
 
-%Currently, we recommend using Hamiltonian replica exchange type sampling schemes (Fig.~\ref{fig:fig_sampling_scheme} \textbf{B}). If these are not available in the code of choice, running independent simulations at different $\vec{\lambda}$ values can be acceptable, especially when configurational sampling is fast (Fig.~\ref{fig:fig_sampling_scheme} \textbf{A}). Single replica schemes and non-equilibrium schemes are not as established yet because of potential failure modes, but are very promising for use in the near future. 
+%Currently, we recommend using Hamiltonian replica exchange type sampling schemes (Fig.~\ref{fig:fig_sampling_scheme} \textbf{B}). If these are not available in the code of choice, running independent simulations at different $\lambda$ values can be acceptable, especially when configurational sampling is fast (Fig.~\ref{fig:fig_sampling_scheme} \textbf{A}). Single replica schemes and non-equilibrium schemes are not as established yet because of potential failure modes, but are very promising for use in the near future. 
 %MRS: doesn't below here. 
 %Further, ensemble simulations are recommended irrespective of the choice of sampling scheme to ensure reliability of results~\cite{bhati2018, bhati2019, wan2020fep+, wade2022, wan2021uq, bhati2025, wan2023eqvsneq}.
 
@@ -1460,7 +1595,7 @@ The condition of minimizing the statistical uncertainty of different free energy
 A target statistical uncertainty should be chosen at the onset of the simulation to avoid excessively long simulations, or falling into the trap of running until the free energy estimate is "good enough," which is subjective and has no defined criteria. This could be a fixed value such as $0.20$ kcal/mol, or a functional quantity such as "below $0.5$ kcal/mol and $10\%$ of the free energy estimate." The user does not need to monitor this information in real-time and can choose to run simulations for fixed duration (either time or number of samples) and run analysis on the data collected thus far. If more samples are needed, the simulations can be resumed, or, started again in different initial conditions enlarging the overall simulation ensemble. 
 Bhati et al. recommended such a scheme for RBFE and ABFE calculations using TIES~\cite{bhati2022, bhati2025, wan2023eqvsneq, coveney2022corners}. They suggest a set of optimal parameters (ensemble size, simulation length, number of lambda-states, number and length of NEQ transitions, etc.) to be used initially and suggest pre-defined criteria (uncertainties below 0.5 kcal/mol and overlap between forward and reverse work values in case of NEQ calculations) to decide on the need of additional calculations (in the way suggested) until these criteria are met.
 
-Convergence in other alchemical observables should also be monitored to determine if the defined phase space has been sufficiently sampled and enough decorrelated samples have been drawn. These additional observables include, but are not limited to, the variance in $\frac{dU}{d\vec{\lambda}}$ across all $\vec{\lambda}$ values, calculating the variance in free energy using bootstrap analysis, and comparing differences in free energies calculated using different percentages of the simulation in both the forward and reverse directions~\cite{klimovich2015guidelines} (see Fig.~\ref{fig:convergence_forward_reverse}).
+Convergence in other alchemical observables should also be monitored to determine if the defined phase space has been sufficiently sampled and enough decorrelated samples have been drawn. These additional observables include, but are not limited to, the variance in $\frac{dU}{d\lambda}$ across all $\lambda$ values, calculating the variance in free energy using bootstrap analysis, and comparing differences in free energies calculated using different percentages of the simulation in both the forward and reverse directions~\cite{klimovich2015guidelines} (see Fig.~\ref{fig:convergence_forward_reverse}).
 
 \begin{figure}
     \centering
@@ -1480,8 +1615,8 @@ The confidence a user should have in a free energy estimate is significantly imp
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/fig_pmf/pmf.png}
-    \caption{{\bf Potential of mean force with respect to $\vec{\lambda}$ for TI and MBAR}
-    The estimated PMF for a bound calculation of a Tyk2 ligand pair of Wang et al.~\cite{wang2015accurate} with respect to $\vec{\lambda}$ estimated from TI and MBAR and showing agreement within errorbars. 
+    \caption{{\bf Potential of mean force with respect to $\lambda$ for TI and MBAR}
+    The estimated PMF for a bound calculation of a Tyk2 ligand pair of Wang et al.~\cite{wang2015accurate} with respect to $\lambda$ estimated from TI and MBAR and showing agreement within errorbars. 
     }
     \label{fig:pmf}
 \end{figure}
@@ -1490,14 +1625,14 @@ The uncertainty in the free energy, for example, can be estimated in multiple wa
 %However, as we have repeatedly pointed out, only ensemble simulations can capture the true uncertainty in MD based predictions. All other methods underestimate the true uncertainty as reported by several authors~\cite{wan2020fep+, wan2021uq, vassaux2021, gapsys2020large, wade2022, bhati2017, bhati2022, bhati2025, wan2023eqvsneq, bhati2018, bhati2019}. 
 Independent of how the property is estimated, it is important to remember that results of any free energy analysis are \textit{estimations of the given property}, not the true underlying value of the property itself. 
 These estimators are usually consistent estimators, meaning they will converge to the true answer in the limit of sufficient sampling, not necessarily unbiased ones though.
-As such, it is a good idea to subject different estimators to the same data to see if they yield either the same estimate (within error and bias), or if they fluctuate wildly. See, for example, the potential of mean force with respect to $\vec{\lambda}$ estimated from a bound simulation of a Tyk2 ligand pair of Wang et al.~\cite{wang2015accurate} for both the MBAR and TI estimators, as seen in Fig.~\ref{fig:pmf}.
+As such, it is a good idea to subject different estimators to the same data to see if they yield either the same estimate (within error and bias), or if they fluctuate wildly. See, for example, the potential of mean force with respect to $\lambda$ estimated from a bound simulation of a Tyk2 ligand pair of Wang et al.~\cite{wang2015accurate} for both the MBAR and TI estimators, as seen in Fig.~\ref{fig:pmf}.
 This is not a perfect method as some estimators, such as exponential averaging, will converge significantly more slowly, relative to more accurate estimators like MBAR. 
 Therefore, it is a good idea to apply the estimators to different fractions of the data to see if the main estimator of free energy you have chosen is stable.
 
-Each method requires different data from the simulation be collected. If, for instance, the free energy estimator selected is thermodynamic integration, then values of $\frac{dU}{d\vec{\lambda}}$ at uncorrelated data points must be collected. Once you have made a choice of the combination of the type of simulation you will run, which alchemical topology you will simulate, what alchemical path you will simulate along, and what your stopping conditions are, then you are ready to enumerate the information you should capture. Below is a sample of the minimal information you need for a set of common estimators (discussed in more detail in Sec.~\ref{subsec:estimators}):
+Each method requires different data from the simulation be collected. If, for instance, the free energy estimator selected is thermodynamic integration, then values of $\frac{dU}{d\lambda}$ at uncorrelated data points must be collected. Once you have made a choice of the combination of the type of simulation you will run, which alchemical topology you will simulate, what alchemical path you will simulate along, and what your stopping conditions are, then you are ready to enumerate the information you should capture. Below is a sample of the minimal information you need for a set of common estimators (discussed in more detail in Sec.~\ref{subsec:estimators}):
 
 \begin{itemize}
-    \item Thermodynamic Integration (TI) requires $\frac{\partial u(\vec{q})}{\partial\vec{\lambda}}$.
+    \item Thermodynamic Integration (TI) requires $\frac{\partial u(\vec{q})}{\partial\lambda}$.
     \item Exponential Averaging (EXP) needs \textit{either} $\Delta u_{k,k+1}(\vec{q})$ or $\Delta u_{k,k-1}(\vec{q})$, depending on the direction its being evaluated in.
     \item Bennett Acceptance Ratio (BAR) needs \textit{both} $\Delta u_{k,k+1}(\vec{q})$ and $\Delta u_{k,k-1}(\vec{q})$.
     \item Weighted Histogram Analysis Method (WHAM) and Multistate Bennett Acceptance Ratio (MBAR) both need the complete set of $\Delta u_{k,j} \, \forall \, j=\{1...K\}$. WHAM must have this same information binned with some choice of bin width small enough not to affect the results.
@@ -1508,7 +1643,7 @@ If that option is unavailable, you can estimate it through finite difference (if
 
 The potential energy differences required for EXP, BAR, MBAR, and WHAM can be calculated either during the simulation or in post-processing. It is recommended to calculate the potential differences in code when possible to avoid extra overhead and possible errors produced by evaluating the energy of the configuration twice, and to reduce the amount of stored information. 
 Although potential energy derivatives must usually be calculated in code, they can sometimes be easily computed in post-simulation analysis. 
-For example, if the alchemical path you have chosen is a linear alchemical path, then $\frac{du}{d\vec{\lambda}} = u_1(\vec{q}) - u_0(\vec{q}) = u(\vec{q})$, which is the perturbation energy $u$--the potential energy difference between the initial and final states. These values are already calculated by the simulation and can be recorded easily without additional computational expense. As discussed earlier, linear paths are inefficient. However, methods such as EDS and ATM, based on optimized non-linear energy interpolation alchemical energy functions $W_\lambda(u)$ that depend on atomic coordinates only through the perturbation function,~\cite{konig2021efficient,azimi2022relative} can achieve high computational efficiency by sampling and storing only perturbation energy values. The stored values can then be analyzed in post-processing to, for example, evaluate algebraically the $\Delta u_{k,j}$ quantities needed by multistate analysis (see above). 
+For example, if the alchemical path you have chosen is a linear alchemical path, then $\frac{du}{d\lambda} = u_1(\vec{q}) - u_0(\vec{q}) = u(\vec{q})$, which is the perturbation energy $u$--the potential energy difference between the initial and final states. These values are already calculated by the simulation and can be recorded easily without additional computational expense. As discussed earlier, linear paths are inefficient. However, methods such as EDS and ATM, based on optimized non-linear energy interpolation alchemical energy functions $W_\lambda(u)$ that depend on atomic coordinates only through the perturbation function,~\cite{konig2021efficient,azimi2022relative} can achieve high computational efficiency by sampling and storing only perturbation energy values. The stored values can then be analyzed in post-processing to, for example, evaluate algebraically the $\Delta u_{k,j}$ quantities needed by multistate analysis (see above). 
 
 Free energy information should generally be saved more frequently than coordinate data, approximately at the rate that uncorrelated samples are produced.  
 The on-disk size of the data for free energy estimation is often significantly smaller than full atomic coordinates, so the information can easily be collected frequently. 
@@ -1659,7 +1794,7 @@ This allows focusing on configurational partition function and express free ener
 \Delta F_{01} & = &  -\beta^{-1}\ln \expect{e^{-\Delta U(\vec{q})} }_0
 \end{eqnarray}\label{eqn.zwanzig_configurational}
 ------
-Described in words, we take the samples generated during our run with the potential energy function $U_0(\vec{q})$ and calculate what the difference in energy would be if we switched instantaneously to the potential energy function $U_1(\vec{q})$, and average the exponential of the negative energy difference to get the negative of the exponential of the free energy difference. The original distributions, P($U_0$) as generated at $\vec{\lambda}=0$ and P($U_1$) would look like those seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}-\textbf{C} on the right hand side. Reevaluating requires almost no extra code functionality to perform; one need only to save a full precision trajectory, and run an unmodified molecular simulation code using the $U_1$ in order to calculate the new energies of stored snapshots. The analysis can be written in a line of code.
+Described in words, we take the samples generated during our run with the potential energy function $U_0(\vec{q})$ and calculate what the difference in energy would be if we switched instantaneously to the potential energy function $U_1(\vec{q})$, and average the exponential of the negative energy difference to get the negative of the exponential of the free energy difference. The original distributions, P($U_0$) as generated at $\lambda=0$ and P($U_1$) would look like those seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}-\textbf{C} on the right hand side. Reevaluating requires almost no extra code functionality to perform; one need only to save a full precision trajectory, and run an unmodified molecular simulation code using the $U_1$ in order to calculate the new energies of stored snapshots. The analysis can be written in a line of code.
 
 Although the Zwanzig equation is formally correct as long as the two states considered sample the same phase space volume, which is true for standard molecular models, it has some very important numerical issues that mean that it often performs badly for standard free energy calculations, even for small molecules~\cite{shirts2005comparison,lu2003appropriate}. One can show that if the standard deviation of the difference $\Delta U(\vec{q}) = U_1(\vec{q})-U_2(\vec{q})$ over all sampled $\vec{q}$ is large, which in this case, means only several times $k_BT$, then very few samples contribute to the average, and the answer will be both biased and extremely noisy~\cite{lelievre2010free}. Essentially, the method is dominated by contributions of rare snapshots~\cite{jarzynski2006rare, wu2005phasespace, wu2005phasespacea}. 
 
@@ -1737,26 +1872,26 @@ For the case of $\sigma_f=\sigma_r$, free energy difference is estimated as $\De
 
 \subsubsection{Thermodynamic integration (TI)}
 By taking the derivative of the free energy with respect to the
-variable $\vec{\lambda}$, we find that:
+variable $\lambda$, we find that:
 \begin{equation}
-\frac{df}{d\vec{\lambda}} = \frac{d}{d\vec{\lambda}} \left[-\ln \int \frac{\exp{-u(\vec{\lambda},\vec{q})}}{Z(\vec{\lambda})} d\vec{q}\right] = \expect{\frac{du(\vec{\lambda},\vec{q})}{d\vec{\lambda}}\
-}_{\vec{\lambda}} .
+\frac{df}{d\lambda} = \frac{d}{d\lambda} \left[-\ln \int \frac{\exp{-u(\lambda,\vec{q})}}{Z(\lambda)} d\vec{q}\right] = \expect{\frac{du(\lambda,\vec{q})}{d\lambda}\
+}_{\lambda} .
 \end{equation}
-And then we can numerically integrate $df/d\vec{\lambda}$ over an alchemical transformation, using a range of different well-established techniques, to obtain:
+And then we can numerically integrate $df/d\lambda$ over an alchemical transformation, using a range of different well-established techniques, to obtain:
 \begin{equation}
-\Delta f    = \int_{0}^{1} \expect{\frac{du(\vec{\lambda},\vec{q})}{d\vec{\lambda}}}_{\vec{\lambda}}  d\vec{\lambda}.    
+\Delta f    = \int_{0}^{1} \expect{\frac{du(\lambda,\vec{q})}{d\lambda}}_{\lambda}  d\lambda.    
 \end{equation}
-This approach to calculating the free energy is called thermodynamic integration (TI). Averaging over $\expect{\frac{du}{d\vec{\lambda}}}$ requires fewer uncorrelated samples to reach a given level of relative error
+This approach to calculating the free energy is called thermodynamic integration (TI). Averaging over $\expect{\frac{du}{d\lambda}}$ requires fewer uncorrelated samples to reach a given level of relative error
 than averaging $e^{-u(\vec{q})}$, as the distribution of values is usually narrower, with a more Gaussian shape to the distribution. Rather than being limited by overlap, as in the case of BAR and MBAR (see below), we are instead limited by the bias in the numerical quadrature, which must be minimized sufficiently to be beneath the level of statistical noise.
 
 %Various numerical integration schemes are possible, but the trapezoid
 %rule provides a simple and robust scheme. 
 All types of numerical integration can be written as:
 \[ \Delta f \approx \sum_{k=1}^{K} w_k
-\expect{\frac{du(\vec{\lambda},\vec{q})}{d\vec{\lambda}}}_{k}, \] where the weights $w_k$ correspond to a particular choice of numerical integration.
-Researchers have tried different integration schemes~\cite{resat1993studies,jorge2010effect,shyu2009reducing,Bruckner2010}. Several of them, e.g., Gauss-Legendre quadrature, require specific choices of $\vec{\lambda}$, i.e., one needs to calculate $\langle\partial u/\partial \lambda\rangle$ at the particular $\lambda$-values required by the integration method, making them inflexible. The trapezoidal rule is often recommended; it has the advantage of simplicity, both equidistant and non-equidistant $\lambda$-values can be used, and one can include simulations at additional $\lambda$-values if deemed necessary. However, considerably more $\lambda$-values than for more advanced integration methods may be needed. Simpson's rule gives higher accuracy and almost the same flexibility~\cite{Bruckner2010}. An alternative to these numerical integration schemes is to fit the  $\langle\partial u/\partial \lambda\rangle$ values to a piecewise continuous function, e.g., by cubic spline interpolation, and carry out the integration between $\lambda=0$ and 1 analytically. While certainly more complicated than the trapezoidal rule or Simpson integration,  this approach retains the flexibility with regard to choice of $\lambda$ values while giving accuracy comparable to more advanced integration methods. E.g., in recent work requiring very precise free energy calculations~\cite{Fleck_2021}, thermodynamic integration by cubic spline interpolation, followed by analytic integration  was used in parallel with Bennett's acceptance ratio method and gave equivalent results.
+\expect{\frac{du(\lambda,\vec{q})}{d\lambda}}_{k}, \] where the weights $w_k$ correspond to a particular choice of numerical integration.
+Researchers have tried different integration schemes~\cite{resat1993studies,jorge2010effect,shyu2009reducing,Bruckner2010}. Several of them, e.g., Gauss-Legendre quadrature, require specific choices of $\lambda$, i.e., one needs to calculate $\langle\partial u/\partial \lambda\rangle$ at the particular $\lambda$-values required by the integration method, making them inflexible. The trapezoidal rule is often recommended; it has the advantage of simplicity, both equidistant and non-equidistant $\lambda$-values can be used, and one can include simulations at additional $\lambda$-values if deemed necessary. However, considerably more $\lambda$-values than for more advanced integration methods may be needed. Simpson's rule gives higher accuracy and almost the same flexibility~\cite{Bruckner2010}. An alternative to these numerical integration schemes is to fit the  $\langle\partial u/\partial \lambda\rangle$ values to a piecewise continuous function, e.g., by cubic spline interpolation, and carry out the integration between $\lambda=0$ and 1 analytically. While certainly more complicated than the trapezoidal rule or Simpson integration,  this approach retains the flexibility with regard to choice of $\lambda$ values while giving accuracy comparable to more advanced integration methods. E.g., in recent work requiring very precise free energy calculations~\cite{Fleck_2021}, thermodynamic integration by cubic spline interpolation, followed by analytic integration  was used in parallel with Bennett's acceptance ratio method and gave equivalent results.
 
-TI has two drawbacks: First, it requires derivatives with respect to $\vec{\lambda}$ to be calculated directly in the code. Unfortunately, many problems of interest require using pathways (such as the soft-core pathways, for removing repulsive interactions) that are not linear, as we discuss, making this more complex. However, most programs contain the necessary code for the derivatives with respect to $\lambda$. Second, the difficulty of the numerical integration step is tied to the shape (i.e., variation) of the integrand $\langle\frac{du(\lambda)}{d\vec{\lambda}}\rangle$. Specifically, the shape depends on the nature of the alchemical transformation and the functional form of the soft-core potentials used. Both cannot be controlled by the user, so regions where the integrand varies rapidly cannot be avoided. If this is the case, TI typically requires more $\lambda$-states for accurate results than the BAR or MBAR estimators~\cite{Bruckner2010}.
+TI has two drawbacks: First, it requires derivatives with respect to $\lambda$ to be calculated directly in the code. Unfortunately, many problems of interest require using pathways (such as the soft-core pathways, for removing repulsive interactions) that are not linear, as we discuss, making this more complex. However, most programs contain the necessary code for the derivatives with respect to $\lambda$. Second, the difficulty of the numerical integration step is tied to the shape (i.e., variation) of the integrand $\langle\frac{du(\lambda)}{d\lambda}\rangle$. Specifically, the shape depends on the nature of the alchemical transformation and the functional form of the soft-core potentials used. Both cannot be controlled by the user, so regions where the integrand varies rapidly cannot be avoided. If this is the case, TI typically requires more $\lambda$-states for accurate results than the BAR or MBAR estimators~\cite{Bruckner2010}.
 
 \subsubsection{The multistate Bennett acceptance ratio (MBAR)}
 One can generalize Bennett's logic from two states to multiple states to obtain a free energy estimator that uses energy differences between configurations at all intermediate states to compute free energy differences between all states. MBAR gives a system of implicit equations for the free energies $f_i$:
@@ -1781,7 +1916,7 @@ One important point is that the bootstrap samples use to estimate the standard e
 \subsubsection{Recommendations}
 \begin{itemize}
 \item We recommend MBAR if all energy differences are available. It is the lowest variance unbiased free energy estimate given samples from multiple states.
-\item BAR is essentially just as good as MBAR for highly optimized $\vec{\lambda}$ intermediates. Specifically, if the $\vec{\lambda}$s are chosen such that intermediate states have moderate overlap with their neighbors (i.e. between $i$ and $i+1$ and between $i$ and $i-1$), they will \textit{not} have significant overlap with their next nearest neighbors $i+2$ and $i-2$. Thus MBAR does not actually get significant information from these energy differences, so one might as well not even calculate them, and just perform BAR between nearest neighbors~\cite{paliwal2011benchmark}. 
+\item BAR is essentially just as good as MBAR for highly optimized $\lambda$ intermediates. Specifically, if the $\lambda$s are chosen such that intermediate states have moderate overlap with their neighbors (i.e. between $i$ and $i+1$ and between $i$ and $i-1$), they will \textit{not} have significant overlap with their next nearest neighbors $i+2$ and $i-2$. Thus MBAR does not actually get significant information from these energy differences, so one might as well not even calculate them, and just perform BAR between nearest neighbors~\cite{paliwal2011benchmark}. 
 \item TI usually gives similar values as MBAR implemented with sufficient numbers of intermediates, but quadrature errors that are hard to estimate beforehand  can occur if one does not carefully select $\lambda$ values such that the overlap between states is sufficiently high~\cite{paliwal2011benchmark}.
 \item WHAM is an approximation to MBAR, and there are no compelling reasons it should be used. If bin widths are carefully chosen and there are sufficient samples, it can given similar quality results to the other methods, but it always introduces some degree of binning error, and determining when errors might occur can be challenging. 
 \item Other variants, especially ones that adaptively determine the free energies can be useful in certain circumstances but beyond the scope of a Best Practices article.
@@ -1818,10 +1953,10 @@ One important point is that the bootstrap samples use to estimate the standard e
 % For additional discussion of working with correlated data and autocorrelation analysis, please refer to the work on Best Practices for Quantification of Uncertainty and Sampling Quality in Molecular Simulations~\cite{grossfield2018best}.
 
 % \paragraph{Computing the timeseries for equilibration detection}
-% Typically, the timeseries of note $a_t$ analyzed in automated equilibration detection is the negative logarithm of the probability density ($\pi(x_t; \vec{\lambda}$)) sampled by the MCMC algorithm (up to an irrelevant additive constant).
-% For simple independent simulations that sample $x_t \sim \pi(x ; \vec{\lambda})$, this is given by the reduced potential
+% Typically, the timeseries of note $a_t$ analyzed in automated equilibration detection is the negative logarithm of the probability density ($\pi(x_t; \lambda$)) sampled by the MCMC algorithm (up to an irrelevant additive constant).
+% For simple independent simulations that sample $x_t \sim \pi(x ; \lambda)$, this is given by the reduced potential
 % \begin{eqnarray}
-% a_t &\equiv& - \ln \pi(x_t; \vec{\lambda}) + c = u(x_t; \vec{\lambda}) .
+% a_t &\equiv& - \ln \pi(x_t; \lambda) + c = u(x_t; \lambda) .
 % \end{eqnarray}
 
 % Note that the use of the effective reduced potential is not guaranteed to detect all slow relaxation processes that may be coupled to the alchemical free energy, but the simplicity of its computation means it is generally appropriate for most cases.
@@ -1867,7 +2002,7 @@ One important point is that the bootstrap samples use to estimate the standard e
 % We don't need to use all of the data to recover the remaining correlation.  In practice, if one subsamples the data with a
 % correlation interval of $g/10$, where $g$ is the correlation time, this will recover the missing correlation.  Thus, if $g=3.0$ in units of timesteps, it is best to use all of the data.  If $g=100.0$, then one loses essentially no information by subsampling with $g=10.0$ in estimating the free energies, and still saves significant time by not using all of the now-completely duplicative data.  Note that subsampling with correlation time $g$ should still be used for estimating the uncertainties, perhaps requiring two passes of the simulation analysis code. 
 
-% If independent simulations at each $\lambda$ are used, the alchemical state $\vec{\lambda}$ may have a significant impact on the correlation time, and these simulations should be subsampled independently using a separate estimate of the statistical inefficiency $g$ for each alchemical state. If coupled simulations are used (such as a Hamiltonian replica exchange simulation), the replicas should undergo equivalent random walks in alchemical space, and the replicas can be subsampled with the same $g$ to generate an equal number of uncorrelated samples at each alchemical state. Conveniently, maximizing the effective sample size for automated equilibration detection produces an appropriate estimate of $g$ over the production region for automating this process.
+% If independent simulations at each $\lambda$ are used, the alchemical state $\lambda$ may have a significant impact on the correlation time, and these simulations should be subsampled independently using a separate estimate of the statistical inefficiency $g$ for each alchemical state. If coupled simulations are used (such as a Hamiltonian replica exchange simulation), the replicas should undergo equivalent random walks in alchemical space, and the replicas can be subsampled with the same $g$ to generate an equal number of uncorrelated samples at each alchemical state. Conveniently, maximizing the effective sample size for automated equilibration detection produces an appropriate estimate of $g$ over the production region for automating this process.
 
 % Our overall recommendations are therefore to determine the subsampling period $g$, either use all of the data or subsample with something like $g/10$ (i.e. more frequently than specified by $g$) to compute the free energy estimates, and then use fully subsampled data (with subsampling interval $g$) to estimate the uncertainties of the estimates.  Uncertainties calculated with the full data set will be significant underestimates if $g > 1$.
 
@@ -2112,10 +2247,10 @@ For additional discussion of working with correlated data and autocorrelation an
 
 
 \paragraph{Computing the timeseries for equilibration detection}
-Typically, the timeseries of note $a_t$ analyzed in automated equilibration detection is the negative logarithm of the probability density ($\pi(X_t; \vec{\lambda}$)) sampled by the MCMC algorithm (up to an irrelevant additive constant).
-For simple independent simulations that sample $x_t \sim \pi(x ; \vec{\lambda})$, this is given by the reduced potential
+Typically, the timeseries of note $a_t$ analyzed in automated equilibration detection is the negative logarithm of the probability density ($\pi(X_t; \lambda$)) sampled by the MCMC algorithm (up to an irrelevant additive constant).
+For simple independent simulations that sample $x_t \sim \pi(x ; \lambda)$, this is given by the reduced potential
 \begin{eqnarray}
-a_t &\equiv& - \ln \pi(x_t; \vec{\lambda}) + c = u(x_t; \vec{\lambda}) .
+a_t &\equiv& - \ln \pi(x_t; \lambda) + c = u(x_t; \lambda) .
 \end{eqnarray}
 
 Note that the use of the effective reduced potential is not guaranteed to detect all slow relaxation processes that may be coupled to the alchemical free energy, but the simplicity of its computation means it is generally appropriate for most cases.
@@ -2163,17 +2298,17 @@ The function $J(T)$ thus quantifies the tradeoff between trajectory length and t
 
 %Statistical mechanics provides a route to calculate macroscopic thermodynamic properties of a system from \textit{ensemble averaging} over microstates. Hitherto, MD practitioners have been assuming the validity of the ergodic hypothesis that allows one to equate ensemble averaging to time averaging in the limit of time approaching infinity to predict thermodynamic properties using one-off simulations. . In more rigorous terms, ergodic theory necessitates that, if a dynamical system is to approach equilibrium, it is not sufficient for it to be ``ergodic'' but it must also be ``mixing'' (these terms refer to the different classes of dynamical systems provided by ergodic theory; please see the references for details)~\cite{coveney2016, MDbook2025}. Rate processes (a course of change within a system that occurs over time) and equilibration times are a property of the distribution function, not of individual trajectories. Consequently, neighbouring trajectories in the underlying phase space diverge exponentially which means that a single trajectory can never capture the true behaviour of a system. Rather, one must perform true ensemble averaging through running sufficiently large number of replicas, termed ``ensemble simulations''. This is manifest in the numerous published reports where authors have highlighted the non-reproducibility of results obtained from one-off simulations and that single simulations heavily underestimate the true uncertainty in predictions~\cite{wan2020fep+, wan2021uq, vassaux2021, gapsys2020large, wade2022, bhati2017, bhati2022, bhati2025, wan2023eqvsneq, bhati2018, bhati2019}. The uncertainty is calculated as the standard error of the mean for estimates obtained from each replica in the ensemble. The ensemble size is a parameter that needs to be determined empirically for the system of interest and may need to be adjusted; however, some general recommendations (for both EQ and NEQ approaches) based on systematic analyses on a large and diverse dataset of protein-ligand complexes are available in a series of papers published by the Coveney group~\cite{bhati2017, bhati2018, bhati2019, bhati2022, wan2023eqvsneq, bhati2025}. Further, ensemble simulations are also necessary in case of enhanced sampling methods~\cite{bhati2018} as well as microsecond long simulations~\cite{bhati2023}. It is the influence of these reports that journals such as \textit{JCIM} and \textit{Communications Biology} have now mandated the use of ensemble simulations in computational studies~\cite{wan2023}. 
 
-Computing free energies using TI (Sec.n~\ref{subsec:estimators}) is straightforward and the trapezoidal rule is often recommended. The trapezoid rule easily allows unequal spacing of $\vec{\lambda}$ states, which is often required to minimize the variance in the free energy estimate, but in principle any good numerical integration method can be used if care is taken.  
-Determining of regions of high curvature when estimating the integral is helpful to determine regions of phase space where more sampling and/or more $\vec{\lambda}$ states are necessary to obtain the best approximation of the integral. Plotting $\vec{\lambda}$ with respect to the gradients at each of the $\vec{\lambda}$ values, which can be done automatically with tools such as alchemlyb,  can be a helpful diagnostic. 
+Computing free energies using TI (Sec.n~\ref{subsec:estimators}) is straightforward and the trapezoidal rule is often recommended. The trapezoid rule easily allows unequal spacing of $\lambda$ states, which is often required to minimize the variance in the free energy estimate, but in principle any good numerical integration method can be used if care is taken.  
+Determining of regions of high curvature when estimating the integral is helpful to determine regions of phase space where more sampling and/or more $\lambda$ states are necessary to obtain the best approximation of the integral. Plotting $\lambda$ with respect to the gradients at each of the $\lambda$ values, which can be done automatically with tools such as alchemlyb,  can be a helpful diagnostic. 
 Additionally, computing the overall variance of TI requires the calculation of the overall variance of the integration, rather than each individual $\Delta$G$_{i,i+1}$ and assuming variances add independently. 
-Therefore, $\mathrm{var}$($\Delta$f) = $\sum_{i=1}^{K}w_{k}^2 \mathrm{var}(\frac{du}{d\vec{\lambda}})_{k}$, where the $w_k$ are the integration weights (see Sec~\ref{subsec:estimators} for more discussion of $w_k$).
+Therefore, $\mathrm{var}$($\Delta$f) = $\sum_{i=1}^{K}w_{k}^2 \mathrm{var}(\frac{du}{d\lambda})_{k}$, where the $w_k$ are the integration weights (see Sec~\ref{subsec:estimators} for more discussion of $w_k$).
 
-%The TIES method~\cite{bhati2017} employs a different scheme to obtain the overall variance of the integral. It assumes that the integrand is a Gaussian random process and hence the thermodynamic integral can be viewed as a so-called stochastic integral, which forms the basis of uncertainty propagation in this integral. The following equation is used to compute the overall variance of the integral combining variance at each $\lambda$ state. $\mathrm{var}$($\Delta$f) = $\sum_{i=1}^{K}\Delta\lambda_{k}^2 \mathrm{var}(\frac{du}{d\vec{\lambda}})_{k}$. 
+%The TIES method~\cite{bhati2017} employs a different scheme to obtain the overall variance of the integral. It assumes that the integrand is a Gaussian random process and hence the thermodynamic integral can be viewed as a so-called stochastic integral, which forms the basis of uncertainty propagation in this integral. The following equation is used to compute the overall variance of the integral combining variance at each $\lambda$ state. $\mathrm{var}$($\Delta$f) = $\sum_{i=1}^{K}\Delta\lambda_{k}^2 \mathrm{var}(\frac{du}{d\lambda})_{k}$. 
 
 Beyond thermodynamic integration, the TIES method\cite{bhati2017} uses an It\^{o} integral with Iso isomoetry for error propogation.
 
-For alchemical changes that result in smooth, low curvature sets of $\expect{\frac{dU}{d\vec{\lambda}}}$, a relatively small number of $\vec{\lambda}$ states is necessary for sufficient accuracy and low variance in the free energy estimate. 
-Depending on the difficulty of the perturbation, the bias introduced by discretization of the integral can become large due to increased curvature, and more $\vec{\lambda}$ intermediate states become necessary to reduce error.
+For alchemical changes that result in smooth, low curvature sets of $\expect{\frac{dU}{d\lambda}}$, a relatively small number of $\lambda$ states is necessary for sufficient accuracy and low variance in the free energy estimate. 
+Depending on the difficulty of the perturbation, the bias introduced by discretization of the integral can become large due to increased curvature, and more $\lambda$ intermediate states become necessary to reduce error.
 It is recommended that researchers verify that a sufficient number of states are included such that the free energy is essentially invariant to the number of lambda intermediate states chosen. Good heuristics or measures to assess the 'difficulty' of a given perturbation is still an ongoing research topic. 
 
 Compared with TI, the MBAR method (Sec.~\ref{subsec:estimators}) discussed above provides uncertainty estimation directly from solving a set of linear equations to compute the variances between all states. 
@@ -2209,8 +2344,8 @@ In this case, one can extend the simulations or try an approach that requires si
 \end{figure}
 
 \paragraph{Overlap matrix}
-One way of assessing reliability of the calculations is checking the phase space overlap between neighboring $\vec{\lambda}$-windows~\cite{wu2005phasespace, wu2005phasespacea}. For this purpose, a so-called overlap matrix $\mathcal{O}$ can be used. $\mathcal{O}$ is a $K\times K$ matrix, with $K$ being the number of simulated states, i.e. values of $\vec{\lambda}$. Sufficient overlap is important for reweighting estimators such as BAR or MBAR, but cannot help assess reliability of estimates when using TI. 
-These matrices are graphical representations of the phase space overlap. This is defined as the average probability over the simulation that a sample generated at state $\vec{\lambda}_{j}$ can be observed at state $\vec{\lambda_{i}}$. As this probability is computed considering the samples from all states, and not just the adjacent states, the values in each row and column add up to 1. By examining this matrix, one can check that every state has overlap with its neighbors in both directions, indicated by off-diagonal elements that are sufficiently larger than zero. For accurate calculations, the matrix must be be at least tridiagonal.
+One way of assessing reliability of the calculations is checking the phase space overlap between neighboring $\lambda$-windows~\cite{wu2005phasespace, wu2005phasespacea}. For this purpose, a so-called overlap matrix $\mathcal{O}$ can be used. $\mathcal{O}$ is a $K\times K$ matrix, with $K$ being the number of simulated states, i.e. values of $\lambda$. Sufficient overlap is important for reweighting estimators such as BAR or MBAR, but cannot help assess reliability of estimates when using TI. 
+These matrices are graphical representations of the phase space overlap. This is defined as the average probability over the simulation that a sample generated at state $\lambda_{j}$ can be observed at state $\vec{\lambda_{i}}$. As this probability is computed considering the samples from all states, and not just the adjacent states, the values in each row and column add up to 1. By examining this matrix, one can check that every state has overlap with its neighbors in both directions, indicated by off-diagonal elements that are sufficiently larger than zero. For accurate calculations, the matrix must be be at least tridiagonal.
 
 Details on the calculation and properties of these matrices can be found elsewhere~\cite{klimovich2015guidelines}.
 In an overlap matrix $\mathcal{O}$, the off-diagonal values (${O}_{i,j,i\ne j}$) are negatively correlated with the variance of the free energy difference. Accordingly, the uncertainty of the free energy difference between the states $i$ and $j$ will be smaller when ${O}_{i,j,i\ne j}$ is larger (and thus the values in the main diagonal (${O}_{i,j,i=j}$) are smaller). 
@@ -2220,13 +2355,13 @@ However, due to the mathematical derivation it is difficult to explicitly descri
 
 \begin{figure}
 \includegraphics[width=0.90\columnwidth]{figures/fig12_overlap/Figure.pdf}
-\caption{\label{fig:overlap} \textbf{Overlap matrices:} Visualizing overlap matrices can help with assessing the quality of simulation data. (\textbf{A}) shows good overlap with all first off-diagonal entries well above 0.03, the suggested threshold, (\textbf{B}) is an example of mediocre overlap with good overlap at lower $\vec{\lambda}$ values and poor overlap at high $\vec{\lambda}$ values. (\textbf{C}) shows poor overlap resulting in disconnected simulations with unreliable MBAR estimates.}
+\caption{\label{fig:overlap} \textbf{Overlap matrices:} Visualizing overlap matrices can help with assessing the quality of simulation data. (\textbf{A}) shows good overlap with all first off-diagonal entries well above 0.03, the suggested threshold, (\textbf{B}) is an example of mediocre overlap with good overlap at lower $\lambda$ values and poor overlap at high $\lambda$ values. (\textbf{C}) shows poor overlap resulting in disconnected simulations with unreliable MBAR estimates.}
 \end{figure}
 
-Fig.~\ref{fig:overlap}\textbf{A}, \textbf{B}, and \textbf{C} shows examples of good, mediocre, and poor overlap respectively. For Fig.~\ref{fig:overlap} \textbf{A}, the probability to find a sample from state $i$ in its neighboring state $j$ is about 0.2 for all states adjacent to the main diagonal, and hence the overall connectivity is good. In the case of Fig.~\ref{fig:overlap} \textbf{B}, the overlap is strongly diminishing in the lower right corner, raising concerns regarding the reliability of the free energy estimate obtained. For Fig.~\ref{fig:overlap} \textbf{C}, the state at $\vec{\lambda}$ index = 6 is connected to neither of its neighboring states. While this does not necessarily imply that the result for this perturbation is wrong, the energy estimate must at least be considered as highly unreliable.
-In order to overcome the issue of poor overlap in this example, additional sampling should be performed by introducing additional states, i.e. $\vec{\lambda}$ values.
+Fig.~\ref{fig:overlap}\textbf{A}, \textbf{B}, and \textbf{C} shows examples of good, mediocre, and poor overlap respectively. For Fig.~\ref{fig:overlap} \textbf{A}, the probability to find a sample from state $i$ in its neighboring state $j$ is about 0.2 for all states adjacent to the main diagonal, and hence the overall connectivity is good. In the case of Fig.~\ref{fig:overlap} \textbf{B}, the overlap is strongly diminishing in the lower right corner, raising concerns regarding the reliability of the free energy estimate obtained. For Fig.~\ref{fig:overlap} \textbf{C}, the state at $\lambda$ index = 6 is connected to neither of its neighboring states. While this does not necessarily imply that the result for this perturbation is wrong, the energy estimate must at least be considered as highly unreliable.
+In order to overcome the issue of poor overlap in this example, additional sampling should be performed by introducing additional states, i.e. $\lambda$ values.
 
-Interestingly, as the variance is inversely correlated with the number of states~\cite{klimovich2015guidelines}, it can in principle be reduced below any arbitrary threshold with enough simulation time and a large enough number of $\vec{\lambda}$ windows. However, decreasing the variance to a value close to 0 is not feasible, as this approach would significantly increase the calculation time. While variance can be decreased by increasing simulation length, if the overlap between states is known to be poor, increasing the number of $\vec{\lambda}$ values, or adjusting the spacing of those values to better cover regions of poor overlap will likely provide a larger immediate impact. Different approaches are described in Sec.~\ref{sec:simulation_protocol_choice} and more details can be found in the literature~\cite{dakka2018concurrent, hahn2019alchemical}.
+Interestingly, as the variance is inversely correlated with the number of states~\cite{klimovich2015guidelines}, it can in principle be reduced below any arbitrary threshold with enough simulation time and a large enough number of $\lambda$ windows. However, decreasing the variance to a value close to 0 is not feasible, as this approach would significantly increase the calculation time. While variance can be decreased by increasing simulation length, if the overlap between states is known to be poor, increasing the number of $\lambda$ values, or adjusting the spacing of those values to better cover regions of poor overlap will likely provide a larger immediate impact. Different approaches are described in Sec.~\ref{sec:simulation_protocol_choice} and more details can be found in the literature~\cite{dakka2018concurrent, hahn2019alchemical}.
 
 The precision of NEQ calculations is determined by the overlap between the forward and reverse work distributions corresponding to out-of-equilibrium transitions between the two end-points. To estimate the overlap, Wu \& Kofke suggest using dissipated work values which can be shown to correspond to the relative entropies of the densities in the phase space.~\cite{wu2005phase} Another approach to assess NEQ convergence relies on calculating the first two moments of the Fermi function in Bennett Acceptance Ratio estimator.~\cite{hahn2010measuring} Since the second order estimate converges slower than the first, the overall convergence of the free energy estimate can be quantified as the normalized difference between the two moments of the Fermi function. 
 
@@ -2244,10 +2379,10 @@ It is important to carefully examine output data for common problems. Some of th
 \item \textbf{Sampling of the binding site by the ligand:} Make sure the ligand samples the binding site reasonably tightly for its expected potency and fit, and that it does not depart out of binding site in the coupled end state if it is a moderate to strong binder. 
 \item \textbf{Consistency of free energy estimates across different estimators} Significant discrepancies, meaning results that further outside the mutual error estimates than would be plausible statistically, between free energies calculated with different free energy estimators such as TI, BAR, and MBAR. All of these estimators converge to the same results with sufficient sampling. Reports have shown that the use of ensemble simulations can ensure good agreement between different estimators as well as MD engines~\cite{wade2022}. Differences between them indicate poor overlap or errors in processing.
 \item \textbf{Have replicas mixed well?} Poor replica mixing (for replica-exchange) or $\lambda$-space sampling for single-replica methods. If the system is not mixing between states, then the states are insufficiently close for mixing, or else there are bottlenecks in the configurational sampling that limit the accuracy.
-\item \textbf{Behavior of correlation times:} Correlation time that does not vary relatively smoothly as a function of $\vec{\lambda}$. Discontinuities in correlation time with $\vec{\lambda}$ indicate that the system is sampling significantly different configurations with only small changes to the Hamiltonian changes. This usually indicates sampling problems.
+\item \textbf{Behavior of correlation times:} Correlation time that does not vary relatively smoothly as a function of $\lambda$. Discontinuities in correlation time with $\lambda$ indicate that the system is sampling significantly different configurations with only small changes to the Hamiltonian changes. This usually indicates sampling problems.
 \item \textbf{Dependence of the free energy on initial configuration of the system.} Ensemble average properties should not depend on the starting point.  This is a particular instance of the utility of running multiple independent simulations; if there is statistically significant differences between the independently run simulations, there is likely a lack of sampling. 
 \item \textbf{Torsional sampling} Torsions with multiple low-energy minima where some of these minima are visited rarely or not at all. Which torsions have low energy minima can best be found by comparing to the simulation in the solvent. There should be clear physical reasons that simulation in the complex has different torsional distributions than the ligand in the solvent. 
-\item \textbf{Free energy dependence on $\vec{\lambda}$} The free energy difference between states should vary relatively smoothly with $\vec{\lambda}$. If it varies drastically, then either there needs to be finer sampling in $\vec{\lambda}$ in this region, or there are sampling problems present in at least these simulations (if not simulations at other $\lambda$.
+\item \textbf{Free energy dependence on $\lambda$} The free energy difference between states should vary relatively smoothly with $\lambda$. If it varies drastically, then either there needs to be finer sampling in $\lambda$ in this region, or there are sampling problems present in at least these simulations (if not simulations at other $\lambda$.
 \item \textbf{Convergence of free energy} The free energy should clearly converge as a function of simulation time (Fig. ~\ref{fig:convergence_forward_reverse}). Convergence of the free energy as a function of time is necessary, but not sufficient.  It does not guarantee that simulations have run long enough, but lack of convergence means they certainly have not sampled the relevant configuration space.
 \item If using non-equilibrium methods, \textbf{is the result independent of the speed at which the non-equilibrium change is performed}? Non-equilibrium methods are in theory independent of the switching time in the limit of good sampling unless the switching time is simply too short. 
 %\item Other Diagnostics for non-equilibrium methods, robustness for switching time etc.?
