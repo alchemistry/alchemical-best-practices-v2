@@ -312,7 +312,7 @@ Instead, this guide aims to answer the following questions:
 Notably, this document---version 2.0 of the original guide---focuses specifically on best practices on ``single'' alchemical free energy calculations where the quantity of interest is a single free energy difference (or difference of differences). A companion guide, \textit{Best Practices for Multiple Alchemical Free Energy Calculations}~\cite{mey_largescale_inprep}, covers the considerations involved in high-throughput or large-scale campaigns, such as automation, perturbation network design, and campaign-level data management and analysis. Readers aiming to scale up to multiple calculations will find many important suggestions and ideas relevant to those problems in that document.
 
 In this guide, some additional background information may be needed depending on the nature of the alchemical project. For example, if binding poses are not known, docking calculations or co-folding models can be used to generate an initial small molecule binding pose to start alchemical simulations\cite{scheen2025leveraging, thaler2026boltz, coskun_2023, beuming_2022}. This will require some basic familiarity with how to perform docking or use generative models to generate reasonable simulation starting points~\cite{grinter2014challenges}. 
-As some of the theoretical background can be daunting to beginners, we do, however, provide a guide to the essential theory behind alchemical free energy calculations in Sec.~\ref{sec:theory}.
+As some of the theoretical background can be daunting to beginners, we do, however, provide a guide to the essential theory behind alchemical free energy calculations in Sec.~\ref{sec:theory}, with more in-depth derivations in Sec.~\ref{sec:derivations}.
 
 In the remainder of this paper, we will cover topics that are key to the preparation of the simulation (Sec.~\ref{sec:prerequisites}), the choice and use of correct simulation protocols (Sec.~\ref{sec:simulation_protocol_choice}), and finally the best practices that should be used in the analysis of alchemical calculations (Sec.~\ref{sec:data_analysis}). 
 We will give particular focus to aspects of the molecular simulations which are unique to alchemical calculations---in particular, the calculation of transfer free energies (hydration free energies, partition coefficients, etc.) and binding free energies (absolute and relative). 
@@ -328,6 +328,7 @@ Below, we provide a non-exhaustive list of topics we have \emph{not} addressed, 
 \item Free energy methods that extract the ligand using geometric order parameters and potential of mean force methods~\cite{heinzelmann2017attachpullrelease}
 \item Forcefield dependence for protein, ligand, ions, co-solvents, and co-factors. A number of different studies have looked at the influence of force fields and it is assumed the user has made an appropriate choice of force field for the system under study~\cite{loeffler2018reproducibility, vassetti2019assessment, lopes2015current, hahn2024current}. 
 \item Free energy calculations using QM/MM methods~\cite{beierlein2011simple,dybeck2016comparison,cave-ayland2015direct,Schoeller2023}
+\item Free energy calculations that combine both thermodynamic and kinetic data~\cite{wu2016multiensemble, mey2014xtram, wu2014statistically,dtram???}
 \item Free energy calculations using machine learning methods~\cite{rufa2020chemical, scheen2020hybrid, cole2020machine,Karwounopoulos2024}
 \end{itemize}
 
@@ -348,6 +349,7 @@ For convenience, we have also compiled a list of common acronyms and common symb
 \end{tcolorbox}
 
 
+%MRS: this should be reviewed at the end.
 \begin{tcolorbox}[title=List of Symbols, colback=green!10!white]
 $A$ --- Helmholtz free energy (free energy in the canonical ensemble) or Helmholtz function, with Helmholtz free energy used in the text.\\
 %$b$ --- reduced binding energy function \\
@@ -394,7 +396,7 @@ $\zeta$ --- external coordinates of the solute
 %\section{Statistical mechanics theory of solvation, solvent partitioning, and binding}
 \label{sec:theory}
 
-In this section, we introduce the necessarery thermodynamic and statistical mechanics theory of dilute solutions to define the quantities we are trying to calculate using alchemical methods, specifically, solvation, solvent partitioning equilibria and noncovalent molecular binding. The emphasis here is placed on bridging theoretical foundations and intuition. We cover these derivation in more detail in section~\ref{sec:derivations}, as there are important subtleties in the definitions that require very careful analysis.  This section is intended as an overview, and will involve a little bit of handwaving.
+In this section, we introduce the necessarery thermodynamic and statistical mechanics theory of dilute solutions to define the quantities we are trying to calculate using alchemical methods, specifically, solvation, solvent partitioning equilibria and noncovalent molecular binding. The emphasis here is placed on bridging theoretical foundations and intuition. We cover these derivation in more detail in Sec.~\ref{sec:derivations}, as there are important subtleties in the definitions that require very careful analysis.  This section is intended as an overview, and will involve a little bit of handwaving.
 
 \subsection{The chemical potential}
 \label{sec:chemical_potential}
@@ -406,7 +408,7 @@ The chemical potential of a solute $u$ in an ideally diluted solution in a solve
   \label{eq:chemical-potential-definition}
 \end{equation}
 where $k_B$ is Boltzmann's constant, $T$ is the absolute temperature, $C_u = N_u/V$ is the number concentration of the solute, $\Lambda_u = h/\sqrt{2 \pi M_u k_B T}$ is the thermal de Broglie wavelength of the solute, where $h$ is Planck's constant and $M_u$ is the solute's total mass. 
-An ideally dilute solution is a potentially non-physically realizable solution in which solute molecules interact only with the solvent, and solute-solute interactions are negligible.~\cite{levine2009physicalchemistrybook6ed}
+An ideally dilute solution is a potentially non-physically realizable solution in which solute molecules interact only with the solvent, and solute-solute interactions are negligible~\cite{levine2009physicalchemistrybook6ed}.
 
 The quantity $q'_u$ in Eq.~(\ref{eq:chemical-potential-definition}) is the molecular partition function of the solute at rest in the solvent
 \begin{equation}
@@ -415,7 +417,7 @@ The quantity $q'_u$ in Eq.~(\ref{eq:chemical-potential-definition}) is the molec
 \end{equation}
 where $\beta = (k_B T)^{-1}$, $\lambda_i$ is the thermal De Broglie wavelength of the $i$-th atom of the solute (not the alchemical parameter as used elsewhere in this document), and $z_u$ is the intramolecular configurational partition function of the solute. See a more complete definiion of $z_u$ in Sec.~\ref{sec:derivations}.
 
-Eq.~(\ref{eq:chemical-potential-definition}) is derived using \textit{classical} statistical mechanics theory~\cite{hill1986statthermo}. Classical mechanics is considered an excellent approximation for the room temperature, aqueous processes studied here, which involve only changes in intermolecular interactions. A quantum-mechanical treatment is necessary for processes not covered here, such as covalent binding, that involve breaking and forming chemical bonds. Classically, equilibrium thermodynamic properties, such as gas solubilities and binding constants, do not depend on atomic masses. Hence, while they are included in Eqs.~\ref{eq:chemical-potential-definition} and Eq.~\ref{eq:intra-qpu-def} for completeness, the thermal De Broglie wavelength terms coming from the partition functions of the momenta cancel in the resulting expressions below, and we will no longer consider them.
+Eq.~(\ref{eq:chemical-potential-definition}) is derived using \textit{classical} statistical mechanics theory~\cite{hill1986statthermo}. Classical mechanics is considered an excellent approximation for the room temperature, aqueous processes studied here, which involve only changes in intermolecular interactions. A quantum-mechanical treatment is necessary for processes not covered here, such as covalent binding, that involve breaking and forming chemical bonds. At a classical level, equilibrium thermodynamic properties, such as gas solubilities and binding constants, do not depend on atomic masses. Hence, while they are included in Eqs.~\ref{eq:chemical-potential-definition} and Eq.~\ref{eq:intra-qpu-def} for completeness, the thermal De Broglie wavelength terms coming from the partition functions of the momenta cancel in the resulting expressions below, and we need not conisder them.
 
 The standard chemical potential of a solute in an ideally dilute solution is obtained from Eq.~(\ref{eq:chemical-potential-definition}) by setting the concentration to the standard concentration $C^\circ$, generally $1$ mol/L equivalent to $1/1661$ particles/\AA$^{3}$, 
 \begin{equation}
@@ -439,7 +441,7 @@ is
   \Delta G^\circ_{\mathrm{slv}} = \mu^\circ_{A(v)}  - \mu^\circ_{A(g)} = -k_B T \ln \frac{P^\circ}{C^\circ k_B T} - k_B T \ln \frac{z_{A(v)}}{z_{A(\mathrm{g})}}
   \label{eq:DG0-solvation-def}
 \end{equation}
-where we use Eq.~(\ref{eq:chemical-potential-standard}) for the solution, Eq.~(\ref{eq:chemical-potential-definition}) for the gas (assumed ideal) at the standard gas concentration $C = P^\circ/k_B T$ where $P^\circ = 1$ bar is the standard pressure, and Eq.~(\ref{eq:intra-qpu-def}) noting that all momentum terms cancel. The first term in Eq.~(\ref{eq:DG0-solvation-def}) is an ideal term $\Delta G^\circ_{\mathrm{slv,ideal}}$ that accounts for the difference of standard states for solution and gases. The second term is the excess solvation free energy $\Delta G_{\mathrm{slv, exc.}}$ that can be evaluated by numerical alchemical calculations as described in this document. Hence Eq.~(\ref{eq:chemical-potential-standard}) can be used to compare calculated and experimental standard free energies of solvation\cite{thompson2004new}.
+where we use Eq.~(\ref{eq:chemical-potential-standard}) for the solution, Eq.~(\ref{eq:chemical-potential-definition}) for the gas (assumed ideal) at the standard gas concentration $C = P^\circ/k_B T$ where $P^\circ = 1$ bar is the standard pressure, and Eq.~(\ref{eq:intra-qpu-def}) noting that all momentum terms cancel. The first term in Eq.~(\ref{eq:DG0-solvation-def}) is an ideal term $\Delta G^\circ_{\mathrm{slv,ideal}}$ that accounts for the difference of standard states for solution and gases. The second term is the excess solvation free energy $\Delta G_{\mathrm{slv, exc.}}$ that can be evaluated by numerical alchemical calculations as described in this document. Hence Eq.~(\ref{eq:chemical-potential-standard}) can be used to compare calculated and experimental standard free energies of solvation~\cite{thompson2004new}.
 
 However, equilibrium experimental gas solvation data are most often reported in terms of Henry's constants $k_H$. Setting $\Delta G_{\mathrm{slv}} = 0$ when the gas partial pressure and the solute's concentrations are equal to their equilibrium values $P_A$ and $C_A$, respectively, we obtain
 \begin{equation}
@@ -456,7 +458,7 @@ The relation above is used to connect alchemical calculations to Henry's constan
 \Delta G_{\mathrm{slv, exc.}} = - k_B T \ln \frac{z_{A(v)}}{z_{A(\mathrm{g})}} = k_B T \ln \frac{k_H}{k_B T} \, .
 \label{eq:DG-solvation-excess}
 \end{equation}
-Eq.~(\ref{eq:DG-solvation-excess}), which involves only intramolecular partition functions (as described above),  states that the excess free energy of solvation corresponds to the process of moving the solute from a fixed position and orientation in the gas to a fixed position and orientation in the solvent. This is sometimes referred to as the solvation free energy in the Ben-Naim standard state~\cite{bennaim1984solvation}.  We have now expressed the thermodynamic process in terms of ratios of partition functions.
+Eq.~(\ref{eq:DG-solvation-excess}), which involves only intramolecular partition functions (as described above),  states that the excess free energy of solvation corresponds to the process of moving the solute from a fixed position and orientation in the gas to a fixed position and orientation in the solvent. However, because in a bulk solvent, the solvent is the same in all translational and rotational directions, this is the same as the free energy of a freely tumbling and moving ligand. This is sometimes referred to as the solvation free energy in the Ben-Naim standard state~\cite{bennaim1984solvation}.  We have now expressed the thermodynamic process in terms of ratios of partition functions.
 
 \subsection{Free energy of solvent partitioning}\label{sec:theory-partitioning}
 
@@ -475,7 +477,7 @@ immediately identifies the partition coefficient with the ratio of intramolecula
   P_{sv} = \frac{z_{A(v)}}{z_{A(s)}} \, .
   \label{eq:partition-coefficient}
 \end{equation}
-This relation connects calculated ratios of partition functions to experimental partition coefficients. Similarly to Eq.~(\ref{eq:DG-solvation-excess}), Eq.~(\ref{eq:partition-coefficient}) corresponds to the process of transferring the solute from a fixed position and orientation in one solvent to a fixed position and orientation in the other.
+This relation connects calculated ratios of partition functions to experimental partition coefficients. Similarly to Eq.~(\ref{eq:DG-solvation-excess}), Eq.~(\ref{eq:partition-coefficient}) corresponds to the process of transferring the solute from a fixed position and orientation in one solvent to a fixed position and orientation in the other. Again, because in a bulk solvent, the solvent is the same in all translational and rotational directions, this is the same as the free energy of transfer of a freely tumbling and moving ligand.
 
 \subsection{Non-covalent molecular binding}
 \label{sec:non-covalent-molecular-binding}
@@ -497,41 +499,27 @@ where~\cite{gilson1997statisticalthermodynamic,gilson2007calculation}
 \end{equation}
 is the statistical mechanics expression for the binding constant. Eq.~(\ref{eq:DG0-binding-constant-def}) follows from the application of  Eq.~(\ref{eq:chemical-potential-standard}) for each of the three species and noting that the contributions of the momenta cancel. As discussed below, various alchemical protocols exist to evaluate the ratios of partition functions in Eq.~(\ref{eq:DG0-binding-constant-def}), thereby connecting the theory to observed binding affinities.
 
-Eq.~(\ref{eq:intra-zu-def}) describes the intramolecular configurational partition functions $z_{R(v)}$ and $z_{L(v)}$ for the receptor $R$ and ligand $L$. The intramolecular configurational partition function $z_{RL(v)}$ of the complex is similar, but the integration is limited to a chosen range of configurations in which receptor and ligand are considered ``bound''.
+Eq.~(\ref{eq:DG0-binding-constant-def}) includes the intramolecular configurational partition functions $z_{R(v)}$ and $z_{L(v)}$ for the receptor $R$ and ligand $L$, which are defined in the same way as a ligand alone in solvent. Very importantly, however, the intramolecular configurational partition function $z_{RL(v)}$ has an integration over only a chosen range of configurations in which receptor and ligand are considered ``bound''.
 
-To this end, Gilson et al.~\cite{gilson1997statisticalthermodynamic}. introduced an indicator function $I(\zeta)$ equal to one when the six degrees of freedom of the complex that defines the position and orientation of the ligand relative to the receptor, collectively denoted as $\zeta$, are within the specified range of the bound state and equal to zero otherwise:
-\begin{equation}
-  z_{RL(v)} = \int dx_R dx_L d\zeta I(\zeta) e^{-\beta \Psi_v(x_R, x_L, \zeta)} \, .
-  \label{eq:intra-zRL-def}
-\end{equation}
+To this end, Gilson et al.~\cite{gilson1997statisticalthermodynamic}. introduced an indicator function $I(\zeta)$ equal to one when the six degrees of freedom of the complex that define the position (three degrees of translation) and orientation (three degrees of rotation) of the ligand relative to the receptor, the six if which are collectively denoted as $\zeta$, are within the specified range of the bound state and equal to zero otherwise.
 
-The definition of the bound macrostate of the complex is an essential to defining a ligation. Unlike bond lengths, bond angles, and dihedral angles, the three degrees of freedom of the complex that correspond to the position of the ligand relative to the receptor are unbounded. Unless their extent is limited in some fashion, the bound state of the complex cannot be distinguished from the unbound state, and the free energy difference between the two states will be undefined. For example, it is reasonable to insist that the ligand be close to the receptor in configurations regarded as bound. The definition of target macrostates is required in many areas of computational chemistry and biophysics, for example, when specifying the range of backbone angles to measure the relative populations of $\alpha$-helical and $\beta$-strand conformations of peptides.  
+The definition of the bound macrostate of the complex is \textit{essential} to defining ligand binding.  Unlike bond lengths, bond angles, and dihedral angles, the three degrees of freedom of the complex that correspond to the position of the ligand relative to the receptor are unbounded. Unless we define specific limits to these variables, the bound state of the complex cannot be distinguished from the unbound state, and the free energy difference between the two states will be undefined.  In fact, this approximation may be slightly too simple, as there may be cases where only some configurations of a highly flexible ligand actually have experimental affect, so the indicator function $I$ may need to include configurations of the ligand or even protein as well. 
 
-It is very important to recognize that the value of the binding free energy depends on the chosen structural definition of the bound complex. The relationship between the predictions of this theory and experimental reporters (thermochemical, spectroscopic, inhibition kinetics, and others) of complex formation has been discussed.~\cite{gilson1997statisticalthermodynamic,mihailescu2004theory,gallicchio2011recent,simonson2016physical,gallicchio2021comppeptsci} The interpretation of experimental reporters of binding is a complex issue in itself. Still, the consensus is that this theory yields nearly equivalent results when binding is strong and specific, and the definition of the bound complex encompasses the major bound poses while excluding obvious unbound configurations. In some cases, it is valuable to consider specific definitions of the complex, for example, by restricting the ligand's orientation to pinpoint the relative contributions of different binding poses.
+The definition of macrostates that are defined by specific choices of the microstates is required in many areas of computational chemistry and biophysics, for example, when specifying the range of backbone angles to measure the relative populations of $\alpha$-helical and $\beta$-strand conformations of peptides, or even whether a protein is folded or not.  What these definitions have in common is that they are different functionally. Only certain configurations have biological or experimental results, and thus when we analyze any sort of simulation, we should try to figure out what simulation variables correspond to the experimentally identifiable configurations. 
 
-Eq.~(\ref{eq:DG0-binding-constant-def}) is the basis of a variety of alchemical computational implementations that have been developed to study molecular binding by alchemical means. Some of these are discussed in Section \ref{subsec:formulations-abfe-rbfe}. Generally, to formulate the statistical mechanics expression of the binding constant Eq.~(\ref{eq:DG0-binding-constant-def}) as an ensemble average, we first need to ensure that the configurational integrals in the numerator and denominator are over the same set of degrees of freedom. Note that the intramolecular configurational partition function of the complex, $z_{RL(v)}$, includes six more degrees of freedom---the position and orientation of the ligand relative to the receptor collectively described by the variable $\zeta$---than the product of the intramolecular partition functions, $z_{R(v)} z_{L(v)}$, of the separated receptor and ligand. To correct this discrepancy, we multiply and divide the right-hand side of Eq.~(\ref{eq:DG0-binding-constant-def})  by the quantity
-\begin{equation} \label{eq:Vsite-def}
-    V_{\rm site} \Omega = \int d\zeta I(\zeta) \, ,
-\end{equation}
-which measures the extent of the binding pose macrostate, where $V_{\rm site}$ corresponds to the spatial extent and $\Omega$ the orientational extent. The right-hand side of Eq.~(\ref{eq:Vsite-def}) combined with the integrals $z_{R(v)}$ and $z_{L(v)}$ yields a partition function similar to Eq.~(\ref{eq:intra-zRL-def}) but corresponding to a complex in which ligand and receptor are uncoupled~\cite{gallicchio2011recent} as if they were at infinite distance apart. The result is
-\begin{equation}\label{eq:DG0-binding-constant-def-average}
-  K_b = C^\circ V_{\rm site} \frac{\Omega}{8 \pi^2} \langle e^{-\beta \Delta \Psi}  \rangle_0
-\end{equation}
-where, similarly to Eq.~(\ref{eq:zratio-solv-average}),
-\begin{equation}\label{eq:pert-energy-def}
-  \Delta \Psi(x_R, x_L, \zeta) =  \Psi_v(x_R, x_L, \zeta) - \left[  \Psi_v(x_R) + \Psi(x_L) \right]
-\end{equation}
-is the solvent-averaged binding energy of the complex when receptor and ligands are in intramolecular configurations $x_R$ and $x_L$, the ligand is in position and orientation $\zeta$ relative to the receptor (the uncoupled potential energy does not depend on  the position and orientation of the ligand relative to the receptor), and $\langle \ldots \rangle_0$ represents an ensemble average in the uncoupled ensemble. Finally, note that $\Omega = 8 \pi^2$ when the binding pose indicator function does not depend on the orientation of the ligand, and Eq.~(\ref{eq:DG0-binding-constant-def-average}) simplifies to
-\begin{equation}\label{eq:DG0-binding-constant-def-average-noOmega}
-K_b = C^\circ V_{\rm site} \langle e^{-\beta \Delta \Psi}  \rangle_0 
-\end{equation}
-which, expressed in free energy units, yields
-\begin{eqnarray}\label{eq:DG0-def-Vsite}
-  \Delta G^\circ_b &=&  - k_B T \ln K_b = - k_B T \ln C^\circ V_{\rm site} - k_B T \ln \langle e^{-\beta \Delta \Psi}  \rangle_0 \nonumber \\
-{\rm \ }  &=& \Delta G^\circ_{b,{\rm ideal}} + \Delta G_{b,{\rm exc.}}
+The value of the binding free energy depends on the chosen structural definition of the bound complex.
+The interpretation of experimental reporters of binding is a complex issue in itself.  For example, a experimental method that identifies any energetic interaction between a protein and a ligand (such as isothermal titration calorimetry) will recognize a different bound state than one that only detects a ligand that is position in a specific location on the protein (such as changes in polarization upon displacement of a probe ligand). The relationship between the predictions of this theory and experimental reporters (thermochemical, spectroscopic, inhibition kinetics, and others) of complex formation has been discussed.~\cite{gilson1997statisticalthermodynamic,mihailescu2004theory,gallicchio2011recent,simonson2016physical,gallicchio2021comppeptsci} All the different definitions of the bound state yield nearly equivalent values for the free energy when binding is strong and specific, and the definition of the bound complex encompasses the major bound poses while excluding obvious unbound configurations. Weaker, less specific interactions, as discussed in section~\ref{sec:???} require somewhat more work to define.  In some cases, it is valuable to consider specific definitions of the complex, for example, by restricting the ligand's orientation to pinpoint the relative contributions of different binding poses.
+
+%MRS: pick up here.
+Eq.~(\ref{eq:DG0-binding-constant-def}) is the basis of a variety of alchemical computational implementations that have been developed to study molecular binding by alchemical means. Some of these are discussed in Section \ref{subsec:formulations-abfe-rbfe}. Generally, to formulate the statistical mechanics expression of the binding constant Eq.~(\ref{eq:DG0-binding-constant-def}) as an ensemble average, we first need to ensure that the configurational integrals in the numerator and denominator are over the same set of degrees of freedom. Note that the intramolecular configurational partition function of the complex, $z_{RL(v)}$, includes six more degrees of freedom---the position and orientation of the ligand relative to the receptor collectively described by the variable $\zeta$---than the product of the intramolecular partition functions, $z_{R(v)} z_{L(v)}$, of the separated receptor and ligand.
+
+
+We can interpret Eq.~\ref{eq:DG0-binding-constant-def} as: 
+\begin{eqnarray}
+  \Delta G^\circ_b &=&  - k_B T \ln K_b = - k_B T \ln C^\circ V_{\rm site} - k_B T \ln \frac{z_{RL(v)}}{z_{R(v)} z_{L(v)}} \\
+{\rm \ }  &=& \Delta G^\circ_{b,{\rm ideal}} + \Delta G_{b,{\rm exc.}} \label{eq:DG0-def-Vsite}
 \end{eqnarray}
-
-The term $\Delta G^\circ_{b,{\rm ideal}} = - k_B T \ln C^\circ V_{\rm site}$ in Eq.~(\ref{eq:DG0-def-Vsite}) is interpreted as the \emph{ideal} component of the standard binding free energy, the binding free energy that would be observed in the absence of molecular interactions. Conversely, the term $\Delta G_{b,{\rm exc.}} = - k_B T \ln \langle e^{-\beta \Delta \Psi}  \rangle_0 $ is the \emph{excess} component that depends on the specific molecular composition of the system and on the corresponding interactions. The excess component is the target of the alchemical molecular simulations discussed here, in contrast to the ideal term that is generally evaluated analytically~\cite{boresch2003absolute}.
+The term $\Delta G^\circ_{b,{\rm ideal}} = - k_B T \ln C^\circ V_{\rm site}$ in Eq.~(\ref{eq:DG0-def-Vsite}) is interpreted as the \emph{ideal} component of the standard binding free energy, the binding free energy that would be observed in the absence of molecular interactions. Conversely, the term $\Delta G_{b,{\rm exc.}}$ is the \emph{excess} component that depends on the specific molecular composition of the system and on the corresponding interactions. The excess component is the target of the alchemical molecular simulations discussed here, in contrast to the ideal term that is generally evaluated analytically~\cite{boresch2003absolute}.
 
 \subsection{Simulating binding events is computationally expensive}
 
@@ -545,41 +533,17 @@ Once we have defined the bound state by definining our the indicator
 function $I$, then at each time point in the simulation, our ligand is
 either in or out.
 
-%-------------------------
-%MRS: clean this up. 
-
-The computational protocol based on this idea can be formally derived from Eq.~(\ref{eq:DG0-binding-constant-def}) by multiplying and dividing it by
-\begin{equation}
-z_v = \int dx_R dx_L d\zeta e^{-\beta \Psi_v(x_R, x_L, \zeta)}
-\end{equation}
-that, because, unlike Eq.~(\ref{eq:intra-zRL-def}), the position of the ligand is not limited by the indicator function, corresponds to a system in which the ligand $L$ is freely moving in a box of solvent of volume $V$ containing the receptor $R$. The ratio between $z_{RL(v)}$ and $z_v$ is the ensemble average of $I(\zeta)$ or the probability $P(RL)$ that $L$ is in the binding site of the receptor $R$. To measure the probability $P(R+L)$ of the $R+L$ unbound state, we consider an indicator function $I_{\mathrm{out}}(\zeta)$ which is one when the ligand, as measured from the center of mass position for example, is far away from the receptor. The volume of the far away region is
-\begin{equation}
-8 \pi^2 V_{\mathrm{out}} = \int d\zeta I_{\mathrm{out}}(\zeta)
-\end{equation}
-where the $8 \pi^2$ term comes from the integration of the ligand's orientations not limited by $I_{\mathrm{out}}(\zeta)$. Next, multiply the ratio $z_{R(v)} z_{L(v)}/z_v$ by $\int d\zeta I_{\mathrm{out}}(\zeta)$ and divide it by $8 \pi^2 V_{\mathrm{out}}$ yielding
-\begin{equation}
-K_b = C^\circ V_{\mathrm{out}} \frac{P(RL)}{P(R+L)}
-\end{equation}
-where we have used the identity
-\begin{equation}
-P(R+L) = \langle I_{\mathrm{out}}(\zeta) \rangle_v = \frac{\int dx_R dx_L d\zeta I_{\mathrm{out}}(\zeta) e^{-\beta \Psi_v(x_R, x_L, \zeta)}}{\int dx_R dx_L d\zeta e^{-\beta \Psi_v(x_R, x_L, \zeta)}} \, .
-\end{equation}
-
-%------------------------------
-
 While simulating explicit binding events has been used to estimate binding constants~\cite{jong2011determining,pan2017quantitative} or to get insights into the binding pathways and kinetics of receptor-ligand systems~\cite{teo2016adaptive,votapka2017seekr,doerr2014onthefly,plattner2015protein,dixon2018predicting}, the computational cost of these calculations is usually dominated by the rate of dissociation, which can be on the microsecond timescale even for millimolar binders~\cite{pan2017quantitative} and reaches the microsecond to second timescale for a typical drug~\cite{basavapathruni2012conformational,hyre2006cooperative}.
 Depending on system size and simulation settings, common molecular dynamics software packages can reach a few hundreds of ns/day using currently available high-end GPUs~\cite{eastman2017openmm,kutzner2019more}, making these type of calculations unappealing and irrelevant on a pharmaceutical drug discovery timescale.
 Other methods compute the free energy of binding by building potential of mean force profiles along a reaction coordinate~\cite{woo2005calculation,velez-vega2013overcoming,limongelli2013funnel,heinzelmann2017attachpullrelease}, but these methods require prior knowledge of a high-probability binding pathway, which is not easily available, especially in the prospective scenarios typical of the drug development process.
 
-Equivalently, one could calculate $K_b = \frac{k_{on}}{k_{off}}$, as %MRS: add to this
-
-Similarly, because of the long time-scale of transition events and the need to observe many events to extract probabilities, it would be very difficult to estimate solvation free energies and solvent partition coefficients by simulating explicitly the motion of solutes in and out of solutions.
+Equivalently, one could calculate $K_b = \frac{k_{on}}{k_{off}}$. Similarly, because of the long time-scale of transition events and the need to observe many events to extract probabilities, it would be very difficult to estimate solvation free energies and solvent partition coefficients by simulating explicitly the motion of solutes in and out of solutions.
 
 \subsection{Absolute versus relative binding free energies}
 
 What we derived above is termed an ``absolute'' free energy.  It is still a free energy difference, as it is the difference between the ligand being in the same box of solvent as the protein, and the ligand being in it's own solvent box.
 
-However, often what we really need to know is not the free energy of binding, but how much better one ligand is binding than another ligand.  This is really all we need to know in lead design, where we seek to find a new compund somewhat different from a referenc compound that binds more tightly.  Relative free energy calculations avoid the need to simulate binding and unbinding events by making use of the fact that the free energy is a state function and exploiting the thermodynamic cycle illustrated in Fig.~\ref{fig:fig_binding_thermodynamic_cycle}.  Fig.~\ref{fig:fig_binding_thermodynamic_cycle} tell us that the difference in freeenergy of binding between toluene(A)and benzylalcohol(B) can becomputed by running two independent calculations estimating the free energy cost of mutating A into B in the binding pocket($\Delta G_{bound}$) and in solvent($\Delta G_{unbound}$), saving us the need to simulate the physical binding process of the two compounds.  In particular, the secondline of Eq. 9??? is a consequence of $\Delta G_{unbound}$ being independent of the presence of the receptor in the simulation box as the definition of the unbound state assumes receptor and ligand to be sufficiently independent for them to have no energetic interaction.
+However, often what we really need to know is not the free energy of binding, but how much better one ligand is binding than another ligand.  This is really all we need to know in lead design, where we seek to find a new compund somewhat different from a referenc compound that binds more tightly.  Relative free energy calculations avoid the need to simulate binding and unbinding events by making use of the fact that the free energy is a state function and exploiting the thermodynamic cycle illustrated in Fig.~\ref{fig:fig_binding_thermodynamic_cycle}.  Fig.~\ref{fig:fig_binding_thermodynamic_cycle} tell us that the difference in freeenergy of binding between toluene(A)and benzylalcohol(B) can becomputed by running two independent calculations estimating the free energy cost of mutating A into B in the binding pocket($\Delta G_{bound}$) and in solvent($\Delta G_{unbound}$), saving us the need to simulate the physical binding process of the two compounds.  In particular, the second line of Eq. 9??? is a consequence of $\Delta G_{unbound}$ being independent of the presence of the receptor in the simulation box as the definition of the unbound state assumes receptor and ligand to be sufficiently independent for them to have no energetic interaction.
 
 \begin{figure}
     \includegraphics[width=0.95\linewidth]{figures/fig2_therm_cyc/Figure.pdf}
@@ -810,7 +774,7 @@ where
 
 Which we can compute from samples collected at all the alchemical states $\{\lambda_k \}$, and where $\Delta f$ is the \emph{unitless free energy difference}
 
-If you like playing with Taylor series, you can also show that Eq.~\label{eq:TI_defn} can be derived by taking the Zwanzig equation,
+If you like playing with Taylor series, you can also show that Eq.~\ref{eq:TI_defn} can be derived by taking the Zwanzig equation,
 and adding together the free energies from an infinte number of simulations that are infinitely closely spaced together. 
 
 This strategy usually results in sampling thermodynamic states whose Boltzmann distributions are very similar, thus collecting information that is to some degree redundant, some estimators, such as the Multistate Bennett acceptance ratio (MBAR)~\cite{shirts2008statisticallya}, can exploit similarities between states to improve the precision of the estimates, using \textit{all} of the data at the same time, with all of the configurations sampled at all alchemical states $\{\lambda_k \}$ to compute the free energy difference $\Delta f(\lambda_i, \lambda_{j})$ between any pair of states $i,j$ (see Sec.~\ref{subsec:estimators}).
@@ -1026,7 +990,7 @@ In this case, two independent calculations compute the free energy of removing t
 \subsubsection{Absolute binding free energy (ABFE)}
 \label{sec:theory-abfe}
 
-In the alchemical literature, the term ``absolute binding free energy'' is another name for the standard binding free energy $\Delta G^\circ_b = - k_B T \ln K_b$ between a receptor and its ligand.  Here, we discuss two methods, Double-Decoupling (DDM) and Alchemical Transfer (ATM), used to evaluate it by alchemical computer simulations.
+In the alchemical literature, the term ``absolute binding free energy'' is another name for the standard binding free energy $\Delta G^\circ_b = - k_B T \ln K_b$ between a receptor and its ligand.  Here, we discuss two methods, Double-Decoupling (DDM) and Alchemical Transfer (ATM), used to evaluate it by alchemical computer simulations.  In the following analysis, we use the the solvent-averaged solute forms, which is defined more explicitly in the later section of the paper Eq.~\ref{sec:definitions}, digging more deeply into the details of the theory to be formally correct. 
 
 \paragraph{Double Decoupling}
 
@@ -1795,14 +1759,14 @@ relationship}~\cite{zwanzig1954hightemperature}, also called one-sided exponenti
 The (reduced) free energy difference $\Delta f_{01}$ between an initial state 0 and a final state 1 defined by two different potential energy functions 
 $u_0(\vec{q})$ and $u_1(\vec{q})$ over coordinate space $\vec{q}$ can be calculated as:
 \begin{eqnarray}
-\Delta f_{01} & = & -\ln \expect{e^{-(u_1(\vec{q}) - u_0(\vec{q}))}}_0 =  -\ln \expect{e^{-\Delta u(\vec{q})} }_0
-\end{eqnarray}\label{eqn.zwanzig}
+\Delta f_{01} & = & -\ln \expect{e^{-(u_1(\vec{q}) - u_0(\vec{q}))}}_0 =  -\ln \expect{e^{-\Delta u(\vec{q})} }_0 \label{eq:zwanzig}
+\end{eqnarray}
 and the average is over all samples from the simulation performed with $u_0$. In the case of NVT (canonical) sampling and assuming the masses do not change, then $u$ is simply $U/k_BT$, and $f$ is $F/k_BT$, but it can be generalized to other ensembles with the proper definition of $f$ and $u$.
 ------
 The free energy difference $\Delta F_{01}$ between an initial state 0 and a final state 1 in a canonical ensemble defined by two Hamiltonians $H_0(\vec{q},\vec{p})$ and $H_1(\vec{q},\vec{p})$ can be calculated as:
 \begin{eqnarray}
 \Delta F_{01} & = & -\beta^{-1}\ln \expect{e^{-(H_1(\vec{q},\vec{p}) - H_0(\vec{q},\vec{p}))}}_0 =  -\beta^{-1}\ln \expect{e^{-\Delta H(\vec{q},\vec{p})} }_0
-\end{eqnarray}\label{eqn.zwanzig}
+\end{eqnarray}
 and the average is over all samples from the simulation performed with $H_0$.
 The contribution to free energy difference due to the kinetic partition function can be factored out and cancels out in a thermodynamic cycle when calculating double free energy differences, as discussed in Sec~\ref{sec:chemical_potential}.
 This allows focusing on configurational partition function and express free energy estimator using potential energy $\Delta U(\vec{q})$
@@ -2411,12 +2375,12 @@ It is important to carefully examine output data for common problems. Some of th
 \section{Detailed derivations of statistical mechanical results}
 \label{sec:derivations}
 
-In this section, we introduce the necesarry statistical mechanics theory of dilute solutions to define the quantities we are trying to calculate using alchemical methods. We derive free energy expressions that form the basis of alchemical computational protocols for modeling noncovalent molecular binding, solvation, and solvent partitioning equilibria. The emphasis here is placed on bridging theoretical foundations and intuition. Since chemical equilibria are governed by the chemical potentials of the species involved, we begin by considering a statistical mechanics expression for the chemical potential of a solute in a solvent. We will then combine chemical potentials to develop models for each process.  As discussed in Sec.~\ref{sec:theory}, our derivations are entirely classical, and we will repeat some definitions from Sec.~\ref{sec:theory} to avoid having the reader flip back and forth betweens sections.
+In this section, we present the necessary statistical mechanics theory of dilute solutions to define the quantities we are trying to calculate using alchemical methods in more detail than in Sec.~\ref{sec:theory}. We derive free energy expressions that form the basis of alchemical computational protocols for modeling noncovalent molecular binding, solvation, and solvent partitioning equilibria. The emphasis here is placed on bridging theoretical foundations and intuition. Since chemical equilibria are governed by the chemical potentials of the species involved, we begin by considering a statistical mechanics expression for the chemical potential of a solute in a solvent. We will then combine chemical potentials to develop models for each process.  As discussed in Sec.~\ref{sec:theory}, our derivations are entirely classical, and we will repeat some definitions from Sec.~\ref{sec:theory} to avoid having the reader flip back and forth betweens sections.
 
 \subsection{The chemical potential}
-\label{sec:chemical_potential}
+\label{sec:chemical_potential-app}
 
-As before in~\label{sec:theory}, the chemical potential of a solute $u$ in an ideally diluted solution in a solvent $v$ can be written as~\cite{guggenheim1952mixtures504,gilson1997statisticalthermodynamic,gilson2007calculation}
+As described before in~\ref{sec:theory}, the chemical potential of a solute $u$ in an ideally diluted solution in a solvent $v$ can be written as~\cite{guggenheim1952mixtures504,gilson1997statisticalthermodynamic,gilson2007calculation}
 \begin{equation}
   \mu_u = -k_B T \ln \frac{q'_u}{C_u \Lambda_u^3}
   \label{eq:chemical-potential-definition-app}
@@ -2451,18 +2415,18 @@ Eq.~(\ref{eq:chemical-potential-definition-app}) is derived by writing the class
 
 The form Eq.~(\ref{eq:chemical-potential-definition-app}) for the solute chemical potential using the potential of mean force description is useful, as we will see, because it separates the solute's translational motion, which leads to the concentration dependence, from the intramolecular contributions. The potential of mean force description does not introduce approximations. With the exception of the use of classical statistical mechanics and the assumption  that solute-solute interactions are negligible, Eq.~(\ref{eq:chemical-potential-definition-app}) is rigorous. Due to rotation-vibration couplings, the separation of the solute's overall rotational motion leading to the $8 \pi^2$ term in Eq.~(\ref{eq:intra-qpu-def}) is not exact. While it is not a strict theoretical requirement, the separation of rotational degrees of freedom is adopted here because it is considered an excellent approximation at room temperature and a useful simplification.
 
-We derived Eq.~(\ref{eq:chemical-potential-definition}) using the canonical (constant volume) partition function of the solution. Since the chemical potential can be equivalently obtained from the constant-volume differentiation of the Helmholtz free energy or the constant-pressure differentiation of the Gibbs free energy, Eq.~(\ref{eq:chemical-potential-definition}) is correct. However, the volume dependence of the chemical potential has to be considered when modeling the Gibbs free energy change for constant-pressure processes where the system's volume changes significantly~\cite{gilson1997statisticalthermodynamic}. Terms arising from volume variations at constant pressure are generally considered small for solvation, solvent partitioning, and molecular binding processes at atmospheric pressure and are often ignored in alchemical calculations.  This is because when a single molecule is removed, errors scale with the fractional change in the system size.  When one particle in 1000 disappears, this will be negligible with respect to other sources of error. Hence, we will use Eq.~(\ref{eq:chemical-potential-definition}) to derive expressions for $\Delta G$'s.
+We derived Eq.~(\ref{eq:chemical-potential-definition-app}) using the canonical (constant volume) partition function of the solution. Since the chemical potential can be equivalently obtained from the constant-volume differentiation of the Helmholtz free energy or the constant-pressure differentiation of the Gibbs free energy, Eq.~(\ref{eq:chemical-potential-definition-app}) is correct. However, the volume dependence of the chemical potential has to be considered when modeling the Gibbs free energy change for constant-pressure processes where the system's volume changes significantly~\cite{gilson1997statisticalthermodynamic}. Terms arising from volume variations at constant pressure are generally considered small for solvation, solvent partitioning, and molecular binding processes at atmospheric pressure and are often ignored in alchemical calculations.  This is because when a single molecule is removed, errors scale with the fractional change in the system size.  When one particle in 1000 disappears, this will be negligible with respect to other sources of error. Hence, we will use Eq.~(\ref{eq:chemical-potential-definition}) to derive expressions for $\Delta G$'s.
 
-The standard chemical potential of a solute in an ideally dilute solution is obtained from Eq.~(\ref{eq:chemical-potential-definition}) by setting the concentration to the standard concentration $C^\circ$, generally $1$ mol/L equivalent to $1/1661$ particles/\AA$^{3}$, 
+The standard chemical potential of a solute in an ideally dilute solution is obtained from Eq.~(\ref{eq:chemical-potential-definition-app}) by setting the concentration to the standard concentration $C^\circ$, generally $1$ mol/L equivalent to $1/1661$ particles/\AA$^{3}$, 
 \begin{equation}
   \mu_u^\circ = -k_B T \ln \frac{q'_u}{C^\circ \Lambda_u^3} \, .
   \label{eq:chemical-potential-standard-app}
 \end{equation}
 The standard state of a solution is defined as an ideally dilute solution at concentration $C^\circ$.~\cite{levine2009physicalchemistrybook6ed} Hence, Eq.~(\ref{eq:chemical-potential-standard-app}) is formally correct for real solutions.
 
-Next, we outline the application of the chemical potential statistical mechanics formalism to model key biophysical processes: solvation, solvent partitioning, and noncovalent molecular binding. In general, translating statistical-mechanics identities into computable quantities via molecular simulations involves expressing ratios of partition functions in terms of ensemble averages. In the present context, the quantity being averaged often turns out to be the exponential of a perturbation energy function (the \textit{Zwanzig relationship}~\cite{zwanzig1954hightemperature}), which is efficiently evaluated using the stratification algorithms and free energy estimators discussed in Sections \ref{subsec:formulations-abfe-rbfe}, \ref{subsec:numerical-implementations},  and \ref{subsec:estimators} rather than directly. In this section, we assume that an implementation is well-formed when expressed as a combination of exponential averages, assuming they can be evaluated in practice. As in the previous section, we use the solvent potential of mean force to simplify the notation when possible. The solvent degrees of freedom can be restored in the resulting expressions using Eq.~(\ref{eq:solvent-pmf-def}). 
+Next, we outline the application of the chemical potential statistical mechanics formalism to model key biophysical processes: solvation, solvent partitioning, and noncovalent molecular binding. In general, translating statistical-mechanics identities into computable quantities via molecular simulations involves expressing ratios of partition functions in terms of ensemble averages. In the derivations below, we make the choice of using the Zwanzig relationship~\ref{eq:zwanzig}, resulting in the average of the exponential of a perturbation energy function.  However, many other free energy estimators can be used as discussed in Sections \ref{subsec:formulations-abfe-rbfe}, \ref{subsec:numerical-implementations},  and \ref{subsec:estimators}. As in the previous subsection, we use the solvent potential of mean force to simplify the notation when possible. The solvent degrees of freedom can be restored in the resulting expressions using Eq.~(\ref{eq:solvent-pmf-def}). 
 
-\subsection{Solvation free energy}\label{sec:theory-solvation}
+\subsection{Solvation free energy}\label{sec:derivation-solvation}
 
 The standard molar Gibbs free energy of the solvation of a gas species $A$ in a solvent $v$
 \begin{equation}
@@ -2473,24 +2437,7 @@ is
   \Delta G^\circ_{\mathrm{slv}} = \mu^\circ_{A(v)}  - \mu^\circ_{A(g)} = -k_B T \ln \frac{P^\circ}{C^\circ k_B T} - k_B T \ln \frac{z_{A(v)}}{z_{A(\mathrm{g})}}
   \label{eq:DG0-solvation-def-app}
 \end{equation}
-where we use Eq.~(\ref{eq:chemical-potential-standard-app}) for the solution, Eq.~(\ref{eq:chemical-potential-definition-app}) for the gas (assumed ideal) at the standard gas concentration $C = P^\circ/k_B T$ where $P^\circ = 1$ bar is the standard pressure, and Eq.~(\ref{eq:intra-qpu-def}) noting that all momentum terms cancel. The first term in Eq.~(\ref{eq:DG0-solvation-def}) is an ideal term $\Delta G^\circ_{\mathrm{slv,ideal}}$ that accounts for the difference of standard states for solution and gases. The second term is the excess solvation free energy $\Delta G_{\mathrm{slv, exc.}}$ that can be evaluated by numerical alchemical calculations as described in this document. Hence Eq.~(\ref{eq:chemical-potential-standard}) can be used to compare calculated and experimental standard free energies of solvation\cite{thompson2004new}.
-
-However, equilibrium experimental gas solvation data are most often reported in terms of Henry's constants $k_H$. Setting $\Delta G_{\mathrm{slv}} = 0$ when the gas partial pressure and the solute's concentrations are equal to their equilibrium values $P_A$ and $C_A$, respectively, we obtain
-\begin{equation}
-  P_A = k_H C_A
-  \label{eq:Henrys-law}
-\end{equation}
-where
-\begin{equation}
-  k_H = k_B T \frac{z_{A(\mathrm{g})}}{z_{A(v)}} \, .
-  \label{eq:Henrys-constant}
-\end{equation}
-The relation above is used to connect alchemical calculations to Henry's constant values, generally after converting them to the excess free energy scale~\cite{cabani1981group,nicholls2008predicting,mobley2014freesolv}
-\begin{equation}
-\Delta G_{\mathrm{slv, exc.}} = - k_B T \ln \frac{z_{A(v)}}{z_{A(\mathrm{g})}} = k_B T \ln \frac{k_H}{k_B T} \, .
-\label{eq:DG-solvation-excess-app}
-\end{equation}
-Eq.~(\ref{eq:DG-solvation-excess-app}), which involves only intramolecular partition functions (as described above),  states that the excess free energy of solvation corresponds to the process of moving the solute from a fixed position and orientation in the gas to a fixed position and orientation in the solvent. This is sometimes referred to as the solvation free energy in the Ben-Naim standard state~\cite{bennaim1984solvation}.
+where we use Eq.~(\ref{eq:chemical-potential-standard-app}) for the solution, Eq.~(\ref{eq:chemical-potential-definition-app}) for the gas (assumed ideal) at the standard gas concentration $C = P^\circ/k_B T$ where $P^\circ = 1$ bar is the standard pressure, and Eq.~(\ref{eq:intra-qpu-def}) noting that all momentum terms cancel. The first term in Eq.~(\ref{eq:DG0-solvation-def}) is an ideal term $\Delta G^\circ_{\mathrm{slv,ideal}}$ that accounts for the difference of standard states for solution and gases. The second term is the excess solvation free energy $\Delta G_{\mathrm{slv, exc.}}$ that can be evaluated by numerical alchemical calculations as described in this document. Hence Eq.~(\ref{eq:chemical-potential-standard-app}) can be used to compare calculated and experimental standard free energies of solvation~\cite{thompson2004new}.
 
 The next step is to express the ratio of intramolecular configurational partition functions in Eq.~(\ref{eq:DG-solvation-excess-app}) in an ensemble average form amenable to calculation by computer simulation. First, the potential of mean force in $z_{A(v)}$ [Eq.~(\ref{eq:intra-zu-def})] is replaced with its definition from Eq.~(\ref{eq:solvent-pmf-def}) to explicitly expose the coordinates of the solvent:
 \begin{equation}
@@ -2524,9 +2471,9 @@ Combining Eqs.~(\ref{eq:DG-solvation-excess}) and (\ref{eq:zratio-solv-average})
   \Delta G_{\mathrm{slv, exc.}} = - k_B T \ln \langle e^{-\beta \Delta U} \rangle_0 = k_B T \ln \langle e^{\beta \Delta U} \rangle_1
   \label{eq:zratio-solv-dgexc}
 \end{equation}
-The objective of alchemical solvation free energy calculations is to implement Eq.~(\ref{eq:zratio-solv-dgexc}), by means of \emph{coupling} or \emph{decoupling} computational protocols and alchemical intermediate states as discussed in section \ref{subsec:numerical-implementations}.  Subsequent sections will also discuss computationally efficient approaches to calculate this ratio of integrals (Sec.~\ref{subsec:estimators}).
+As descussed earlier, alchemical solvation free energy calculations implement Eq.~(\ref{eq:zratio-solv-dgexc}), by means of \emph{coupling} or \emph{decoupling} computational protocols and alchemical intermediate states as discussed in section \ref{subsec:numerical-implementations}.
 
-\subsection{Free energy of solvent partitioning}\label{sec:theory-partitioning}
+\subsection{Free energy of solvent partitioning}\label{sec:derivations-partitioning}
 
 The standard molar Gibbs free energy of transfer of a solute species $A$ from a  solvent $s$ to a solvent $v$
 \begin{equation}
@@ -2535,23 +2482,23 @@ A(s)  \leftrightharpoons A(v)
 is
 \begin{equation}
   \Delta G^\circ_{\mathrm{part}} = -k_B T \ln P_{sv} = \mu^\circ_{A(v)}  - \mu^\circ_{A(s)} = -k_B T \ln \frac{z_{A(v)}}{z_{A(s)}}
-  \label{eq:DG0-partitioning-def}
+  \label{eq:DG0-partitioning-def-app}
 \end{equation}
-where $P_{sv} = C_{A(v)}/C_{A(s)}$ is the partition coefficient of $A$ for the two solvents~\cite{rustenburg2016measuring}. Eq.~(\ref{eq:DG0-partitioning-def}) 
+where $P_{sv} = C_{A(v)}/C_{A(s)}$ is the partition coefficient of $A$ for the two solvents~\cite{rustenburg2016measuring}. Eq.~(\ref{eq:DG0-partitioning-def-app}) 
 immediately identifies the partition coefficient with the ratio of intramolecular configurational partition functions of solute $A$ in the two solvents:
 \begin{equation}
   P_{sv} = \frac{z_{A(v)}}{z_{A(s)}} \, .
-  \label{eq:partition-coefficient}
+  \label{eq:partition-coefficient-app}
 \end{equation}
-This relation connects calculated ratios of partition functions to experimental partition coefficients. Similarly to Eq.~(\ref{eq:DG-solvation-excess}), Eq.~(\ref{eq:partition-coefficient}) corresponds to the process of transferring the solute from a fixed position and orientation in one solvent to a fixed position and orientation in the other.
+This relation connects calculated ratios of partition functions to experimental partition coefficients. Similarly to Eq.~(\ref{eq:DG-solvation-excess}), Eq.~(\ref{eq:partition-coefficient-app}) corresponds to the process of transferring the solute from a fixed position and orientation in one solvent to a fixed position and orientation in the other.
 
 \subsection{Non-covalent molecular binding}
-\label{sec:non-covalent-molecular-binding}
+\label{sec:non-covalent-molecular-binding-app}
 
 The standard Gibbs free energy of binding between a receptor $R$ and a ligand $L$ to form a complex $RL$ in a solvent $v$
 \begin{equation}
   R(v) + L(v)  \leftrightharpoons RL(v)
-  \label{eq:binding-reaction}
+  \label{eq:binding-reaction-app}
 \end{equation}
 is
 \begin{equation}
@@ -2561,21 +2508,18 @@ is
 where~\cite{gilson1997statisticalthermodynamic,gilson2007calculation}
 \begin{equation}
   K_b = \frac{C^\circ}{8 \pi^2} \frac{z_{RL(v)}}{z_{R(v)} z_{L(v)}}
-  \label{eq:DG0-binding-constant-def}
+  \label{eq:DG0-binding-constant-def-app}
 \end{equation}
-is the statistical mechanics expression for the binding constant. Eq.~(\ref{eq:DG0-binding-constant-def}) follows from the application of  Eq.~(\ref{eq:chemical-potential-standard}) for each of the three species and noting that the contributions of the momenta cancel. As discussed below, various alchemical protocols exist to evaluate the ratios of partition functions in Eq.~(\ref{eq:DG0-binding-constant-def}), thereby connecting the theory to observed binding affinities.
+is the statistical mechanics expression for the binding constant. Eq.~(\ref{eq:DG0-binding-constant-def}) follows from the application of  Eq.~(\ref{eq:chemical-potential-standard-app}) for each of the three species and noting that the contributions of the momenta cancel. As discussed below, various alchemical protocols exist to evaluate the ratios of partition functions in Eq.~(\ref{eq:DG0-binding-constant-def}), thereby connecting the theory to observed binding affinities.
 
 Eq.~(\ref{eq:intra-zu-def}) describes the intramolecular configurational partition functions $z_{R(v)}$ and $z_{L(v)}$ for the receptor $R$ and ligand $L$. The intramolecular configurational partition function $z_{RL(v)}$ of the complex is similar, but the integration is limited to a chosen range of configurations in which receptor and ligand are considered ``bound''. To this end, Gilson et al.~\cite{gilson1997statisticalthermodynamic}. introduced an indicator function $I(\zeta)$ equal to one when the six degrees of freedom of the complex that defines the position and orientation of the ligand relative to the receptor, collectively denoted as $\zeta$, are within the specified range of the bound state and equal to zero otherwise:
 \begin{equation}
   z_{RL(v)} = \int dx_R dx_L d\zeta I(\zeta) e^{-\beta \Psi_v(x_R, x_L, \zeta)} \, .
   \label{eq:intra-zRL-def}
 \end{equation}
+$I{\zeta}$ may sometimes even still be a simplification if internal degrees of the ligand or protein (as may be the case with flexible ligands or binding sites), but we will omit the extension of the theory for now.
 
-The definition of the bound macrostate of the complex is an essential input of the theory. Unlike bond lengths, bond angles, and dihedral angles, the three degrees of freedom of the complex that correspond to the position of the ligand relative to the receptor are unbounded. Unless their extent is limited in some fashion, the bound state of the complex cannot be distinguished from the unbound state, and their free energy difference will be undefined. For example, it is reasonable to insist that the ligand be close to the receptor in configurations regarded as bound. The definition of target macrostates is required in many areas of computational chemistry and biophysics, for example, when specifying the range of backbone angles to measure the relative populations of $\alpha$-helical and $\beta$-strand conformations of peptides.  
-
-Conversely, the value of the binding free energy depends on the chosen structural definition of the bound complex. The relationship between the predictions of this theory and experimental reporters (thermochemical, spectroscopic, inhibition kinetics, and others) of complex formation has been discussed.~\cite{gilson1997statisticalthermodynamic,mihailescu2004theory,gallicchio2011recent,simonson2016physical,gallicchio2021comppeptsci} The interpretation of experimental reporters of binding is a complex issue in itself. Still, the consensus is that this theory yields nearly equivalent results when binding is strong and specific, and the definition of the bound complex encompasses the major bound poses while excluding obvious unbound configurations. In some cases, it is valuable to consider specific definitions of the complex, for example, by restricting the ligand's orientation to pinpoint the relative contributions of different binding poses.
-
-Eq.~(\ref{eq:DG0-binding-constant-def}) is the basis of a variety of alchemical computational implementations that have been developed to study molecular binding by alchemical means. Some of these are discussed in Section \ref{subsec:formulations-abfe-rbfe}. Generally, to formulate the statistical mechanics expression of the binding constant Eq.~(\ref{eq:DG0-binding-constant-def}) as an ensemble average, we first need to ensure that the configurational integrals in the numerator and denominator are over the same set of degrees of freedom. Note that the intramolecular configurational partition function of the complex, $z_{RL(v)}$, includes six more degrees of freedom---the position and orientation of the ligand relative to the receptor collectively described by the variable $\zeta$---than the product of the intramolecular partition functions, $z_{R(v)} z_{L(v)}$, of the separated receptor and ligand. To correct this discrepancy, we multiply and divide the right-hand side of Eq.~(\ref{eq:DG0-binding-constant-def})  by the quantity
+As described in Sec.~\ref{sectheory}, this definition of the bound macrostate of the complex is an essential input of the theory.  Eq.~(\ref{eq:DG0-binding-constant-def-app}) is the basis of a variety of alchemical computational implementations that have been developed to study molecular binding by alchemical means. Some of these are discussed in Section \ref{subsec:formulations-abfe-rbfe}. Generally, to formulate the statistical mechanics expression of the binding constant Eq.~(\ref{eq:DG0-binding-constant-def-app}) as an ensemble average, we first need to ensure that the configurational integrals in the numerator and denominator are over the same set of degrees of freedom. Note that the intramolecular configurational partition function of the complex, $z_{RL(v)}$, includes six more degrees of freedom---the position and orientation of the ligand relative to the receptor collectively described by the variable $\zeta$---than the product of the intramolecular partition functions, $z_{R(v)} z_{L(v)}$, of the separated receptor and ligand. To correct this discrepancy, we multiply and divide the right-hand side of Eq.~(\ref{eq:DG0-binding-constant-def})  by the quantity
 \begin{equation} \label{eq:Vsite-def}
     V_{\rm site} \Omega = \int d\zeta I(\zeta) \, ,
 \end{equation}
@@ -2599,7 +2543,7 @@ which, expressed in free energy units, yields
 
 The term $\Delta G^\circ_{b,{\rm ideal}} = - k_B T \ln C^\circ V_{\rm site}$ in Eq.~(\ref{eq:DG0-def-Vsite}) is interpreted as the \emph{ideal} component of the standard binding free energy, the binding free energy that would be observed in the absence of molecular interactions. Conversely, the term $\Delta G_{b,{\rm exc.}} = - k_B T \ln \langle e^{-\beta \Delta \Psi}  \rangle_0 $ is the \emph{excess} component that depends on the specific molecular composition of the system and on the corresponding interactions. The excess component is the target of the alchemical molecular simulations discussed here, in contrast to the ideal term that is generally evaluated analytically~\cite{boresch2003absolute}.
 
-Eq.~(\ref{eq:DG0-binding-constant-def-average-noOmega}) instructs to collect samples of the solvent-averaged binding energy $\Delta \Psi$ in the ensemble where ligand and receptor are not interacting. This can be done directly for simple solutes when the solvent is modeled implicitly.~\cite{gallicchio2014virtual} However, with explicit solvation, specialized techniques are required. We cover two of them, double-Decoupling and alchemical transfer, in section \ref{subsec:formulations-abfe-rbfe}.
+Eq.~(\ref{eq:DG0-binding-constant-def-average-noOmega}) instructs to collect samples of the solvent-averaged binding energy $\Delta \Psi$ in the ensemble where ligand and receptor are not interacting. This can be done directly for simple solutes when the solvent is modeled implicitly.~\cite{gallicchio2014virtual} However, with explicit solvation, specialized techniques are required. We cover two of them, double-Decoupling and alchemical transfer, in Sec.~\ref{subsec:formulations-abfe-rbfe}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Unsettled practices        %
@@ -2820,7 +2764,7 @@ We hope that the best practice guide provides a set of tools that allow a better
 \textbf{FC}: Coordinated the v2.0 updates to the article (TODO: be more specific?/ mention ABFE updates?). \\
 \textbf{PVC} Contributed updates to the discussion of uncertainty quantification.\\
 \textbf{JWE} Contributed to ``Conserved binding site waters can play an important role in binding free energies'' and ``Handling poorly sampled water networks'' in Sec. ~\ref{subsec:binding}.\\
-\textbf{EG} Wrote the updated Sec.~\ref{sec:theory} and Sec.~\ref{sec:multiple-chemical-states},  updated Sec.~\ref{sec:standardstate-restraints}, and contributed to the discussion and review of many sections.\\
+\textbf{EG} Wrote the updated Sec.~\ref{sec:derivations} and Sec.~\ref{sec:multiple-chemical-states},  updated Sec.~\ref{sec:standardstate-restraints}, and contributed to the discussion and review of many sections.\\
 \textbf{VG} Updated the discussion of non-equilibrium switching throughout the article, and reviewed Sec.~\ref{subsec:net charge}.\\
 \textbf{DFH} Contributed to Sec.~\ref{sec:software}, reviewed the discussion of non-equilibrium switching, and helped edit the paper.\\
 \textbf{W-TH}: Wrote Sec.~\ref{sec:configurational_sampling}, updated Sec.~\ref{sec:prerequisites},~\ref{sec:unsettled}, and~\ref{sec:checklist}, and created Fig. ~\ref{fig:configurational_sampling}.\\
@@ -2837,7 +2781,7 @@ We hope that the best practice guide provides a set of tools that allow a better
 \textbf{AR}: Created figure~\ref{fig:freeenergytrajectories}, contributed to sections~\ref{sec:theory} and~\ref{sec:simulation_protocol_choice}, and helped edit the paper.\\
 \textbf{JS}: Created Figs.~ \ref{fig:fig_what_is_alchemy},~\ref{fig:fig_binding_thermodynamic_cycle},~\ref{fig:fig_topology},~\ref{fig:fig_mcss}, and ~\ref{fig:fig_absolute_thermodynamic_cycle}. Wrote the checklist Sec.~\ref{sec:checklist}, and contributed to general formatting discussions and editing.\\
 \textbf{OJM} Contributed to ``Conserved binding site waters can play an important role in binding free energies'' and ``Handling poorly sampled water networks'' in Sec. ~\ref{subsec:binding}.\\
-\textbf{MRS}: Helped create figure~\ref{fig:fig_what_is_lambda}, wrote Sec.~\ref{sec:important_path} describing choices for alchemical pathways and parts of~\ref{sec:data_analysis} on the analysis for free energy calculations. Reviewed and edited text throughout.\\
+\textbf{MRS}: Helped create figure~\ref{fig:fig_what_is_lambda}, wrote Sec.~\ref{sec:important_path} describing choices for alchemical pathways and parts of~\ref{sec:data_analysis} on the analysis for free energy calculations. Reviewed, organized and edited text throughout.\\
 \textbf{ST}: Created Fig.~\ref{fig:fig_topology} (based on an earlier version by JS).\\
 \textbf{GT}: Contributed to Sec.~\ref{sec:intro} and helped edit the paper.\\
 \textbf{HX}: Contributed to Sec.~\ref{sec:relative-fe-protocol}, and to Sec.~\ref{sec:are-they-good}.\\
