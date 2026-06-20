@@ -2,7 +2,7 @@
 
 ## v2.0 Update
 
-The original best practices guide will be split into two documents: the first will gives best practices for running a single calculation (and give details on theory/ system-specific setup), while the second will give best practices for running multiple calculations (with a focus on automation). The first (this manuscript) will become version 2.0 of the current guide, while the second will be submitted as a new manuscript (see [this repo](https://github.com/alchemistry/largescale-alchemy-best-practices)).
+The original best practices guide will be split into two documents: the first will give best practices for running a single calculation (and give details on theory/ system-specific setup), while the second will give best practices for running multiple calculations (with a focus on automation). The first (this manuscript) will become version 2.0 of the current guide, while the second will be submitted as a new manuscript (see [this repo](https://github.com/alchemistry/largescale-alchemy-best-practices)).
 
 ## Goals
 
@@ -22,20 +22,40 @@ Preparation (focused on aspects unique to alchemical free energies), execution, 
 (As ordered on the paper)
 
 - Antonia S. J. S. Mey
-- Bryce Allen
+- Irfan Alibay
+- Bryce K. Allen
+- Agastya P. Bhati
+- Stefan Boresch
 - Hannah E. Bruce Macdonald
+- Michael Caspary
 - John D. Chodera
+- Finlay Clark
+- Peter V. Coveney
+- Jonathan W. Essex
+- Emilio Gallicchio
+- Vytautas Gapsys
 - David F. Hahn
+- Wei-Tse Hsu
+- Sheenam Khuttan
 - Maximilian Kuhn
+- Oliver J. Melling
 - Julien Michel
 - David L. Mobley
 - Levi N. Naden
+- Chris Oostenbrink
+- Meghan Osato
+- William G. Poole
 - Samarjeet Prasad
-- Andrea Rizzi 
+- Benjamin Ries
+- Andrea Rizzi
 - Jenke Scheen
+- Michael Snarski
+- David R. Slochower
 - Michael R. Shirts
+- Sara Tkaczyk
 - Gary Tresadern
 - Huafeng Xu
+- Darrin M. York
 
 ## List of Contributors
 (non-author list of people who contributed to document)
@@ -50,7 +70,7 @@ Specific changes can be proposed [via pull requests](https://help.github.com/art
 
 
 ## Online Resources
-Original brainstorming document: (https://docs.google.com/document/d/1h7GIyOJykBWz-GPKtYZK-Pv7cbLbX8XTM2xLUpSppoE)
+Original brainstorming document: https://docs.google.com/document/d/1h7GIyOJykBWz-GPKtYZK-Pv7cbLbX8XTM2xLUpSppoE
 
 ## List of Released Versions
 revisions for v 1.0
