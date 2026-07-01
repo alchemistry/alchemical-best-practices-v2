@@ -14845,3 +14845,84 @@ year = {2004}
   abstract = {Systematic and quantitative analysis of the reliability of formally exact methods that in silico calculate absolute protein--ligand binding free energies remains lacking. Here, we provide, for the first time, evidence-based information on the reliability of these methods by statistically studying 853 cases from 34 different research groups through meta-analysis. The results show that formally exact methods approach chemical accuracy (error = 1.58 kcal/mol), even if people are challenging difficult tasks such as blind drug screening in recent years. The geometrical-pathway-based methods prove to possess a better convergence ability than the alchemical ones, while the latter have a larger application range. We also reveal the importance of always using the latest force fields to guarantee reliability and discuss the pros and cons of turning to an implicit solvent model in absolute binding free-energy calculations. Moreover, based on the meta-analysis, an evidence-based guideline for in silico binding free-energy calculations is provided.},
   file = {/Users/nfc78/Zotero/storage/6YW9E7UH/Fu et al. - 2022 - Meta-Analysis Reveals That Absolute Binding Free-Energy Calculations Approach Chemical Accuracy.pdf}
 }
+
+
+@article{CharlieCookABFE,
+author = {Charlie Cook  and Irfan Alibay  and Nithishwer Anand Mouroug  and Ewa Chudyk  and Ron Knegtel  and Philip Biggin },
+title = {Challenges of Absolute Binding Free Energies for Membrane Exposed Binding Pockets },
+journal = {ChemRxiv},
+volume = {2024},
+number = {0813},
+pages = {},
+year = {2024},
+doi = {10.26434/chemrxiv-2024-9hwjs},
+URL = {https://chemrxiv.org/doi/abs/10.26434/chemrxiv-2024-9hwjs},
+eprint = {https://chemrxiv.org/doi/pdf/10.26434/chemrxiv-2024-9hwjs},
+abstract = {Absolute binding free energy (ABFE) calculations are finding increasing use within drug discovery programs, particularly as they can be performed on very different ligand scaffolds and direct comparisons made between them. They also have the potential to provide a route to target selectivity prediction. To date, most work has focused on soluble proteins, with relatively little focus on membrane proteins. Structural studies are increasingly revealing the presence of lipid-exposed allosteric binding sites on membrane proteins. The exposure to lipids rather than water is presumed to make ABFE calculations considerably more challenging. To investigate this and highlight other potential difficulties associated with such binding sites, we explored the performance of ABFE calculations on two G-protein-coupled receptor systems with lipid-exposed binding sites; the P2Y1 receptor and the GCGR receptor. We show that despite both proteins being GPCRs with lipid- exposed binding sites, the performance of ABFE calculations differs significantly. ABFE results for P2Y1R are in excellent agreement with experiment (mean absolute error (MAE) of 1.21 kcal/mol), but the results for GCGR were significantly poorer with the MAE 4.74 kcal/mol being the best we could achieve with current resources. Nevertheless, the GCGR system serves as an excellent vehicle to demonstrate the more problematic issues which can exist, including vastly different apo versus bound state, the presence of lipids solvating the apo state and sampling problems exacerbated by the lipid environment. We discuss how some of these aspects can be dealt with, while others will clearly require more work. We hope this work will help drive the community forward in tackling these problems.}}
+
+@article{ChenggongHuiGCMC,
+author = {Chenggong Hui  and Bert L De Groot },
+title = {Enhancing Relative Binding Free Energy Calculation with Grand Canonical Monte Carlo, Water-Swap Monte Carlo, Terminal-Flip Monte Carlo and Replica Exchange Solute Tempering},
+journal = {ChemRxiv},
+volume = {2026},
+number = {0327},
+pages = {},
+year = {2026},
+doi = {10.26434/chemrxiv.15001198/v2},
+URL = {https://chemrxiv.org/doi/abs/10.26434/chemrxiv.15001198/v2},
+eprint = {https://chemrxiv.org/doi/pdf/10.26434/chemrxiv.15001198/v2},
+abstract = {Alchemical free energy calculations, particularly free energy perturbation (FEP), have become routine in drug design. When molecular dynamics (MD) is employed as the sampling method in FEP, accurately sampling water molecules deeply buried in protein binding pockets remains challenging, despite their critical role in protein-ligand interactions. We implemented three enhanced sampling methods, Grand Canonical Monte Carlo (GCMC), water swap Monte Carlo (water MC), and replica exchange with solute tempering (REST2). GCMC or water MC accelerate the hydration state equilibration in buried pockets and REST2 accelerates the sampling of ligand conformations. Combining REST2 with GCMC or water MC enables accurate calculation of ligand relative binding free energies. In the benchmark on the water set, our package achieved an RMSE of 0.94 kcal/mol, compared to 0.86 kcal/mol from FEP+ and 1.60 kcal/mol from OpenFE. This development provides the scientific community with an open-source sampling engine for robust and accurate FEP calculations.}}
+
+
+@article{SchrodingerApoWindow,
+author = {Liao, Junzhuo and Sergeeva, Alina P. and Harder, Edward D. and Wang, Lingle and Sampson, Jared M. and Honig, Barry and Friesner, Richard A.},
+title = {A Method for Treating Significant Conformational Changes in Alchemical Free Energy Simulations of Protein–Ligand Binding},
+journal = {Journal of Chemical Theory and Computation},
+volume = {20},
+number = {19},
+pages = {8609-8623},
+year = {2024},
+doi = {10.1021/acs.jctc.4c00954},
+    note ={PMID: 39331379},
+URL = { 
+        https://doi.org/10.1021/acs.jctc.4c00954
+},
+eprint = { 
+        https://doi.org/10.1021/acs.jctc.4c00954
+}
+}
+
+@article{SchrodingerVogele,
+author = {V{\"o}gele, Martin and Zhang, Bin W. and Kaindl, Jonas and Wang, Lingle},
+title = {Is the Functional Response of a Receptor Determined by the Thermodynamics of Ligand Binding?},
+journal = {Journal of Chemical Theory and Computation},
+volume = {19},
+number = {22},
+pages = {8414-8422},
+year = {2023},
+doi = {10.1021/acs.jctc.3c00899},
+    note ={PMID: 37943175},
+
+URL = { 
+    
+        https://doi.org/10.1021/acs.jctc.3c00899
+},
+eprint = { 
+    
+        https://doi.org/10.1021/acs.jctc.3c00899
+}
+}
+
+@article{NithishABFE,
+author = {Nithishwer Mouroug Anand  and Antonia-Florina Panescu  and Ronald Knegtel  and Ewa Chudyk  and Fabio Zuccotto  and Philip C. Biggin },
+title = {Improving ABFE Calculations for GPCRs by Addressing Errors in Apo-State Representation},
+journal = {ChemRxiv},
+volume = {2026},
+number = {0610},
+pages = {},
+year = {2026},
+doi = {10.26434/chemrxiv.15004580/v1},
+URL = {https://chemrxiv.org/doi/abs/10.26434/chemrxiv.15004580/v1},
+eprint = {https://chemrxiv.org/doi/pdf/10.26434/chemrxiv.15004580/v1},
+abstract = {Free energy perturbation (FEP) methods provide a robust computational framework for predicting protein–ligand binding affinities and have seen increased adoption in drug discovery workflows. Among these, absolute binding free energy (ABFE) calculations are especially valuable as they enable affinity prediction for novel compounds without prior experimental data. However, their broader adoption is limited by setup complexity, sampling challenges, and variable performance across systems. These challenges are particularly pronounced in therapeutically relevant complex membrane protein systems such as G protein–coupled receptors (GPCRs). This underscores the need to evaluate ABFE performance in GPCR systems and to develop strategies to mitigate these errors. Here, we evaluate ABFE calculations across three GPCR systems: the adenosine A2A receptor (A2AR), dopamine D3 receptor (D3R), and the metabotropic glutamate receptor 5 (mGlu5). We focus on three sources of systematic error in these systems: (i) inadequate resolvation of the binding pocket in apo-like alchemical states, (ii) inconsistent treatment of metal ions, and (iii) insufficient sampling of receptor conformational transitions between holo-like and apo-like ensembles. To address these issues, we introduce two methodological improvements: a biased grand-canonical-like water transport scheme to improve binding pocket resolvation, and a replica-exchange umbrella sampling (REUS)-based framework to quantify and correct the free energy associated with receptor relaxation to apo-like conformations. Together, these approaches reduce the systematic overestimation of binding affinities, improving agreement with experimental data while maintaining ranking performance. Overall, our results highlight the importance of accurately representing the apo state in ABFE calculations and provide a practical framework for applying high-accuracy free energy methods to membrane protein targets.}}
+
