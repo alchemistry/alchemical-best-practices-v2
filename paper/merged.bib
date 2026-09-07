@@ -14964,3 +14964,71 @@ author = {Mouroug Anand, Nithishwer and
   abstract = {Free energy perturbation (FEP) methods provide a robust computational framework for predicting protein--ligand binding affinities and have seen increased adoption in drug discovery workflows. Among these, absolute binding free energy (ABFE) calculations are especially valuable as they enable affinity prediction for novel compounds without prior experimental data. However, their broader adoption is limited by setup complexity, sampling challenges, and variable performance across systems. These challenges are particularly pronounced in therapeutically relevant complex membrane protein systems such as G protein--coupled receptors (GPCRs). This underscores the need to evaluate ABFE performance in GPCR systems and to develop strategies to mitigate these errors. Here, we evaluate ABFE calculations across three GPCR systems: the adenosine A2A receptor (A2AR), dopamine D3 receptor (D3R), and the metabotropic glutamate receptor 5 (mGlu5). We focus on three sources of systematic error in these systems: (i) inadequate resolvation of the binding pocket in apo-like alchemical states, (ii) inconsistent treatment of metal ions, and (iii) insufficient sampling of receptor conformational transitions between holo-like and apo-like ensembles. To address these issues, we introduce two methodological improvements: a biased grand-canonical-like water transport scheme to improve binding pocket resolvation, and a replica-exchange umbrella sampling (REUS)-based framework to quantify and correct the free energy associated with receptor relaxation to apo-like conformations. Together, these approaches reduce the systematic overestimation of binding affinities, improving agreement with experimental data while maintaining ranking performance. Overall, our results highlight the importance of accurately representing the apo state in ABFE calculations and provide a practical framework for applying high-accuracy free energy methods to membrane protein targets.}
 }
 
+@article{schieber2018reweighting,
+  title = {Using Reweighting and Free Energy Surface Interpolation to Predict Solid-Solid Phase Diagrams},
+  author = {Schieber, Natalie P. and Dybeck, Eric C. and Shirts, Michael R.},
+  year = 2018,
+  month = apr,
+  journal = {J. Chem. Phys.},
+  volume = {148},
+  number = {14},
+  pages = {144104},
+  issn = {0021-9606},
+  doi = {10.1063/1.5013273},
+  urldate = {2026-09-07},
+  abstract = {Many physical properties of small organic molecules are dependent on the current crystal packing, or polymorph, of the material, including bioavailability of pharmaceuticals, optical properties of dyes, and charge transport properties of semiconductors. Predicting the most stable crystalline form at a given temperature and pressure requires determining the crystalline form with the lowest relative Gibbs free energy. Effective computational prediction of the most stable polymorph could save significant time and effort in the design of novel molecular crystalline solids or predict their behavior under new conditions. In this study, we introduce a new approach using multistate reweighting to address the problem of determining solid-solid phase diagrams and apply this approach to the phase diagram of solid benzene. For this approach, we perform sampling at a selection of temperature and pressure states in the region of interest. We use multistate reweighting methods to determine the reduced free energy differences between T and P states within a given polymorph and validate this phase diagram using several measures. The relative stability of the polymorphs at the sampled states can be successively interpolated from these points to create the phase diagram by combining these reduced free energy differences with a reference Gibbs free energy difference between polymorphs. The method also allows for straightforward estimation of uncertainties in the phase boundary. We also find that when properly implemented, multistate reweighting for phase diagram determination scales better with the size of the system than previously estimated.},
+  file = {/Users/nfc78/Zotero/storage/JDR3D3EH/Schieber et al. - 2018 - Using reweighting and free energy surface interpolation to predict solid-solid phase diagrams.pdf;/Users/nfc78/Zotero/storage/A8A8SQL3/1.html}
+}
+
+@article{kunsch1989jackknife,
+  title = {The {{Jackknife}} and the {{Bootstrap}} for {{General Stationary Observations}}},
+  author = {K{\"u}nsch, Hans R.},
+  year = 1989,
+  journal = {Ann. Stat.},
+  volume = {17},
+  number = {3},
+  eprint = {2241719},
+  eprinttype = {jstor},
+  pages = {1217--1241},
+  publisher = {Institute of Mathematical Statistics},
+  issn = {0090-5364},
+  urldate = {2026-09-07},
+  abstract = {We extend the jackknife and the bootstrap method of estimating standard errors to the case where the observations form a general stationary sequence. We do not attempt a reduction to i.i.d. values. The jackknife calculates the sample variance of replicates of the statistic obtained by omitting each block of l consecutive data once. In the case of the arithmetic mean this is shown to be equivalent to a weighted covariance estimate of the spectral density of the observations at zero. Under appropriate conditions consistency is obtained if l = l(n) {$\rightarrow$} {$\infty$} and l(n)/n {$\rightarrow$} 0. General statistics are approximated by an arithmetic mean. In regular cases this approximation determines the asymptotic behavior. Bootstrap replicates are constructed by selecting blocks of length l randomly with replacement among the blocks of observations. The procedures are illustrated by using the sunspot numbers and some simulated data.},
+  file = {/Users/nfc78/Zotero/storage/3BVCGCJ5/Künsch - 1989 - The Jackknife and the Bootstrap for General Stationary Observations.pdf}
+}
+
+@article{patton2009correction,
+  title = {Correction to ``{{Automatic Block-Length Selection}} for the {{Dependent Bootstrap}}'' by {{D}}. {{Politis}} and {{H}}. {{White}}},
+  author = {Patton, Andrew and Politis, Dimitris N. and White, Halbert},
+  year = 2009,
+  month = jan,
+  journal = {Econom. Rev.},
+  volume = {28},
+  number = {4},
+  pages = {372--375},
+  publisher = {Taylor \& Francis},
+  issn = {0747-4938},
+  doi = {10.1080/07474930802459016},
+  urldate = {2026-09-07},
+  abstract = {A correction on the optimal block size algorithms of Politis and White (2004) is given following a correction of Lahiri's (Lahiri 1999) theoretical results by Nordman (2008).},
+  keywords = {Block bootstrap,Block size,C14,C22,Circular bootstrap,Stationary bootstrap},
+  file = {/Users/nfc78/Zotero/storage/GV95UY7I/Patton et al. - 2009 - Correction to “Automatic Block-Length Selection for the Dependent Bootstrap” by D. Politis and H. Wh.pdf}
+}
+
+@article{politis2004automatic,
+  title = {Automatic {{Block-Length Selection}} for the {{Dependent Bootstrap}}},
+  author = {Politis, Dimitris N. and White, Halbert},
+  year = 2004,
+  month = dec,
+  journal = {Econom. Rev.},
+  volume = {23},
+  number = {1},
+  pages = {53--70},
+  publisher = {Taylor \& Francis},
+  issn = {0747-4938},
+  doi = {10.1081/ETC-120028836},
+  urldate = {2026-09-07},
+  abstract = {We review the different block bootstrap methods for time series, and present them in a unified framework. We then revisit a recent result of Lahiri [Lahiri, S. N. (1999b). Theoretical comparisons of block bootstrap methods, Ann. Statist. 27:386--404] comparing the different methods and give a corrected bound on their asymptotic relative efficiency; we also introduce a new notion of finite-sample ``attainable'' relative efficiency. Finally, based on the notion of spectral estimation via the flat-top lag-windows of Politis and Romano [Politis, D. N., Romano, J. P. (1995). Bias-corrected nonparametric spectral estimation. J. Time Series Anal. 16:67--103], we propose practically useful estimators of the optimal block size for the aforementioned block bootstrap methods. Our estimators are characterized by the fastest possible rate of convergence which is adaptive on the strength of the correlation of the time series as measured by the correlogram.},
+  keywords = {Bandwidth choice,Block bootstrap,Resampling,Subsampling,Time series,Variance estimation},
+  file = {/Users/nfc78/Zotero/storage/66SXAUCM/Politis and White - 2004 - Automatic Block-Length Selection for the Dependent Bootstrap.pdf}
+}

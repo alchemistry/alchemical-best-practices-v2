@@ -373,7 +373,7 @@ $q'_u$ --- molecular partition function of the solute at rest \\
 $T$ --- temperature \\
 $t_0$ --- equilibration time \\
 $U$ --- potential energy\\
-$u$ --- reduced (dimensionless) potential describing a thermodynamic state \\
+$u$ --- reduced (dimensionless) potential capturing all of the features of a thermodynamic state that change the probability of that state\\
 $w(b, \lambda)$ --- perturbation energy function \\
 $x_u$ --- internal coordinates of the solute \\
 $z_u$ --- intramolecular configurational partition function of the solute \\
@@ -563,7 +563,7 @@ When we carry out a properly run molecular dynamics or Monte Carlo
 simulation in, for example, the canonical (constant particle number
 $N$, constant temperature $T$, constant volume $V$) ensemble, then we
 are generating samples consistent with the Boltzmann distribution
-$p(\vec{q}) \propto e^{-U(\vec{q})/k_BT}$, where $U$ is the total
+$p(\vec{q}) \propto e^{-U(\vec{q})/k_BT}$ (or equivalently $e^{-\beta U(\vec{q})}$), where $U$ is the total
 energy of the system (including both potential and kinetic energies).
 Note that this probability distribution leaves out the constant
 needed to make this a true probability distribution, i.e. one that
@@ -588,9 +588,9 @@ integrals.  So what we will do is find ways to turn the integrals we
 need to carry out to calculate ratio of partition functions into
 expectation values.
 
-One nice thing about expectation values is we don't actually have to
-know the normalizing constant for the probability distribution we are
-carrying out. We will get the same average regardless.  %MRS: clarify
+%One nice thing about expectation values is we don't actually have to
+%know the normalizing constant for the probability distribution we are
+%carrying out. We will get the same average regardless.  %MRS: clarify
 
 We talked above about using the canonical ensemble, but there are
 other ensembles as well. Thermodynamic parameters such as changes in
@@ -605,15 +605,15 @@ Here, the collection of thermodynamic and alchemical parameters $\{\beta, \lambd
 In the context of alchemical calculations, in which the thermodynamic states vary only in their value of $\lambda$, these are also referred to as \emph{alchemical states}.
 The free energy of mutating $A$ to $B$ in any environment ($\Delta G_{\mathrm{env}}$ e.g., binding site, solvent) can then be computed as
 \begin{equation}\label{eq:delta-G-env}
-    \Delta G_{\mathrm{env}} = - k_BT \ln \frac{Z(\lambda_B)}{Z(\lambda_A)} = - k_BT \ln \frac{\int_{\Gamma_{\mathrm{env}}} \exp\left( u(\vec{q}; \lambda_B) \right) \, d\vec{q}}{\int_{\Gamma_{\mathrm{env}}} \exp\left( u(\vec{q}; \lambda_A) \right) \, d\vec{q}} \, ,
+    \Delta G_{\mathrm{env}} = - k_BT \ln \frac{Z(\lambda_B)}{Z(\lambda_A)} = - k_BT \ln \frac{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\vec{q}; \lambda_B) \right) \, d\vec{q}}{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\vec{q}; \lambda_A) \right) \, d\vec{q}} \, ,
 \end{equation}
 over the configurational space of the environment ($\Gamma_{\mathrm{env}}$). 
-While it is generally not feasible to compute the two partition functions $Z(\lambda)$, several estimators have been devised to robustly estimate the ratio of partition functions in Eq.~\ref{eq:delta-G-env} (see Sec.~\ref{subsec:estimators}) from a set of configurations usually collected with MD simulations from the thermodynamic states defined at $\lambda_A$ and $\lambda_B$ and intermediates in between these two. 
+While it is generally not feasible to compute the two partition functions $Z(\lambda)$, several estimators have been devised to robustly estimate the ratio of partition functions in Eq.~\ref{eq:delta-G-env} (see Sec.~\ref{subsec:estimators}) from a set of configurations usually collected with MD simulations from the thermodynamic states defined at $\lambda_A$ and $\lambda_B$ and intermediates in between these two.  For simplicity, we will frequently use the more specific $\beta U(\vec{q})$ instead of $u(q\vec{q})$, but for more complicated situations where one is dealing with simulations at multiple temperatures or pressures, it can prove useful. 
 
 \paragraph{Zwanzig relationship or exponential averaging connects ratios of partition functions to expectation values of energy differences}
 
 Let's say we have some probability function $p_A(\vec{q})$ that we know, up to some constant. This is of
-course the situation we are usually in with molecular simulations, since we know that $p_A \propto e^{-u(\vec{q})}$, but we don't know the partition function $Z_A$.
+course the situation we are usually in with molecular simulations, since we know that $p_A \propto e^{-U(\vec{q})}$, but we don't know the partition function $Z_A$.
 
 We have by the definition of the partition function that $\int
 Z_A^{-1} p_A(\vec{q}) d\vec{q} = 1$. We are starting by making this
@@ -727,15 +727,15 @@ functions in two different ways.
 \paragraph{Thermodynamic integration gives another way to calculate free energies from simulation}
 
 Exponential averaging is not the only way we can relate free energies to
-expectation values.  Once we have defined $u(\vec{q},\lambda)$, as
+expectation values.  Once we have defined $U(\vec{q},\lambda)$, as
 a function of $\lambda$, then we can compute the derivative
-$\frac{du(\vec{q})}{d\lambda}$. Although we will not prove it here, a page or
+$\frac{dU(\vec{q})}{d\lambda}$. Although we will not prove it here, a page or
 so of algebra and statistical mechanics shows that, if $\lambda=0$
 corresponds to state $B$ and $\lambda=1$ corresponds to state $A$,
 then:
 
 \begin{eqnarray}
-  \Delta f = \int_0^1 \left \langle \frac{du(\vec{q})}{d\lambda} \right \rangle d\lambda \label{eq:TI_defn}
+  \Delta F = \int_0^1 \left \langle \frac{dU(\vec{q})}{d\lambda} \right \rangle d\lambda \label{eq:TI_defn}
 \end{eqnarray}
 In other words, we keep track of $\frac{du}{d\lambda}$ as we run the
 simulation, average that to get an estimate of the expectation value,
@@ -770,7 +770,7 @@ where
     \Delta f_{k,k+1} = f_{k+1} - f_{k} = -\ln\frac{Z(\lambda_{k+1})}{Z(\lambda_{k})}
 \end{equation}
 
-Which we can compute from samples collected at all the alchemical states $\{\lambda_k \}$, and where $\Delta f$ is the \emph{unitless free energy difference}
+Which we can compute from samples collected at all the alchemical states $\{\lambda_k \}$, and where $\Delta f$ is the \emph{unitless free energy difference}.
 
 If you like playing with Taylor series, you can also show that Eq.~\ref{eq:TI_defn} can be derived by taking the Zwanzig equation,
 and adding together the free energies from an infinite number of simulations that are infinitely closely spaced together. 
@@ -1720,10 +1720,10 @@ Therefore, it is a good idea to apply the estimators to different fractions of t
 Each method requires different data from the simulation be collected. If, for instance, the free energy estimator selected is thermodynamic integration, then values of $\frac{dU}{d\lambda}$ at uncorrelated data points must be collected. Once you have made a choice of the combination of the type of simulation you will run, which alchemical topology you will simulate, what alchemical path you will simulate along, and what your stopping conditions are, then you are ready to enumerate the information you should capture. Below is a sample of the minimal information you need for a set of common estimators (discussed in more detail in Sec.~\ref{subsec:estimators}):
 
 \begin{itemize}
-    \item Thermodynamic integration (TI) requires $\frac{\partial u(\vec{q})}{\partial\lambda}$.
-    \item Exponential averaging (EXP) needs \textit{either} $\Delta u_{k,k+1}(\vec{q})$ or $\Delta u_{k,k-1}(\vec{q})$, depending on the direction its being evaluated in.
-    \item Bennett acceptance ratio (BAR) needs \textit{both} $\Delta u_{k,k+1}(\vec{q})$ and $\Delta u_{k,k-1}(\vec{q})$.
-    \item Weighted histogram analysis method (WHAM) and multistate Bennett acceptance ratio (MBAR) both need the complete set of $\Delta u_{k,j} \, \forall \, j=\{1...K\}$. WHAM must have this same information binned with some choice of bin width small enough not to affect the results.
+    \item Thermodynamic integration (TI) requires $\frac{\partial U(\vec{q})}{\partial\lambda}$.
+    \item Exponential averaging (EXP) needs \textit{either} $\Delta U_{k,k+1}(\vec{q})$ or $\Delta U_{k,k-1}(\vec{q})$, depending on the direction its being evaluated in.
+    \item Bennett acceptance ratio (BAR) needs \textit{both} $\Delta U_{k,k+1}(\vec{q})$ and $\Delta U_{k,k-1}(\vec{q})$.
+    \item Weighted histogram analysis method (WHAM) and multistate Bennett acceptance ratio (MBAR) both need the complete set of $\Delta U_{k,j} \, \forall \, j=\{1...K\}$. WHAM must have this same information binned with some choice of bin width small enough not to affect the results.
 \end{itemize}
 
 The potential derivative required for TI should generally be calculated during the simulation; only under very rare circumstances~\cite{naden2015linear} can it post-processed by a code that does not evaluate the derivatives. Many codes already have options for doing this.
@@ -1731,7 +1731,7 @@ If that option is unavailable, you can estimate it through finite difference (if
 
 The potential energy differences required for EXP, BAR, MBAR, and WHAM can be calculated either during the simulation or in post-processing. It is recommended to calculate the potential differences in code when possible to avoid extra overhead and possible errors produced by evaluating the energy of the configuration twice, and to reduce the amount of stored information. 
 Although potential energy derivatives must usually be calculated in code, they can sometimes be easily computed in post-simulation analysis. 
-For example, if the alchemical path you have chosen is a linear alchemical path, then $\frac{du}{d\lambda} = u_1(\vec{q}) - u_0(\vec{q}) = u(\vec{q})$, which is the perturbation energy $u$--the potential energy difference between the initial and final states. These values are already calculated by the simulation and can be recorded easily without additional computational expense. As discussed earlier, linear paths are inefficient. However, methods such as EDS and ATM, based on optimized non-linear energy interpolation alchemical energy functions $W_\lambda(u)$ that depend on atomic coordinates only through the perturbation function~\cite{konig2021efficient,azimi2022relative}, can achieve high computational efficiency by sampling and storing only perturbation energy values. The stored values can then be analyzed in post-processing to, for example, evaluate algebraically the $\Delta u_{k,j}$ quantities needed by multistate analysis (see above). 
+For example, if the alchemical path you have chosen is a linear alchemical path, then $\frac{dU}{d\lambda} = U_1(\vec{q}) - U_0(\vec{q}) = u(\vec{q})$, which is the perturbation energy $U$--the potential energy difference between the initial and final states. These values are already calculated by the simulation and can be recorded easily without additional computational expense. As discussed earlier, linear paths are inefficient. However, methods such as EDS and ATM, based on optimized non-linear energy interpolation alchemical energy functions $W_\lambda(U)$ that depend on atomic coordinates only through the perturbation function~\cite{konig2021efficient,azimi2022relative}, can achieve high computational efficiency by sampling and storing only perturbation energy values. The stored values can then be analyzed in post-processing to, for example, evaluate algebraically the $\Delta U_{k,j}$ quantities needed by multistate analysis (see above). 
 
 Free energy information should generally be saved more frequently than coordinate data, approximately at the rate that uncorrelated samples are produced.  
 The on-disk size of the data for free energy estimation is often significantly smaller than full atomic coordinates, so the information can easily be collected frequently. 
@@ -1754,28 +1754,23 @@ The partition functions in, for example, Eq.~\ref{eq:DG-solvation-excess}, are s
 The simplest method for calculating free energy differences from simulations is the so-called \textit{Zwanzig
 relationship}~\cite{zwanzig1954hightemperature}, also called one-sided exponential re-weighting (EXP), or simply free energy perturbation, though this final term is sometimes used to encompass all ways of calculating free energy differences.
 
-The (reduced) free energy difference $\Delta f_{01}$ between an initial state 0 and a final state 1 defined by two different potential energy functions 
-$u_0(\vec{q})$ and $u_1(\vec{q})$ over coordinate space $\vec{q}$ can be calculated as:
-\begin{eqnarray}
-\Delta f_{01} & = & -\ln \expect{e^{-(u_1(\vec{q}) - u_0(\vec{q}))}}_0 =  -\ln \expect{e^{-\Delta u(\vec{q})} }_0 \label{eq:zwanzig}
-\end{eqnarray}
-and the average is over all samples from the simulation performed with $u_0$. In the case of NVT (canonical) sampling and assuming the masses do not change, then $u$ is simply $U/k_BT$, and $f$ is $F/k_BT$, but it can be generalized to other ensembles with the proper definition of $f$ and $u$.
-------
 The free energy difference $\Delta F_{01}$ between an initial state 0 and a final state 1 in a canonical ensemble defined by two Hamiltonians $H_0(\vec{q},\vec{p})$ and $H_1(\vec{q},\vec{p})$ can be calculated as:
 \begin{eqnarray}
-\Delta F_{01} & = & -\beta^{-1}\ln \expect{e^{-(H_1(\vec{q},\vec{p}) - H_0(\vec{q},\vec{p}))}}_0 =  -\beta^{-1}\ln \expect{e^{-\Delta H(\vec{q},\vec{p})} }_0
+\Delta F_{01}  =  -\beta^{-1}\ln \expect{e^{-\beta (H_1(\vec{q},\vec{p}) - H_0(\vec{q},\vec{p}))}}_0 =  -\beta^{-1}\ln \expect{e^{-\beta \Delta H(\vec{q},\vec{p})} }_0
 \end{eqnarray}
 and the average is over all samples from the simulation performed with $H_0$.
 The contribution to free energy difference due to the kinetic partition function can be factored out and cancels out in a thermodynamic cycle when calculating double free energy differences, as discussed in Sec~\ref{sec:chemical_potential}.
 This allows focusing on configurational partition function and express free energy estimator using potential energy $\Delta U(\vec{q})$
 \begin{eqnarray}
-\Delta F_{01} & = &  -\beta^{-1}\ln \expect{e^{-\Delta U(\vec{q})} }_0
-\end{eqnarray}\label{eqn.zwanzig_configurational}
-------
+\Delta F_{01}  =   -\beta^{-1}\ln \expect{e^{-\beta \Delta U(\vec{q})} }_0
+\end{eqnarray}\label{eqn.zwanzig_configurational}.
+
 Described in words, we take the samples generated during our run with the potential energy function $U_0(\vec{q})$ and calculate what the difference in energy would be if we switched instantaneously to the potential energy function $U_1(\vec{q})$, and average the exponential of the negative energy difference to get the negative of the exponential of the free energy difference. The original distributions, P($U_0$) as generated at $\lambda=0$ and P($U_1$) would look like those seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}-\textbf{C} on the right hand side. Reevaluating requires almost no extra code functionality to perform; one need only to save a full precision trajectory, and run an unmodified molecular simulation code using the $U_1$ in order to calculate the new energies of stored snapshots. The analysis can be written in a line of code.
 
 Although the Zwanzig equation is formally correct as long as the two states considered sample the same phase space volume, which is true for standard molecular models, it has some very important numerical issues that mean that it often performs badly for standard free energy calculations, even for small molecules~\cite{shirts2005comparison,lu2003appropriate}. One can show that if the standard deviation of the difference $\Delta U(\vec{q}) = U_1(\vec{q})-U_2(\vec{q})$ over all sampled $\vec{q}$ is large, which in this case, means only several times $k_BT$, then very few samples contribute to the average, and the answer will be both biased and extremely noisy~\cite{lelievre2010free}. Essentially, the method is dominated by contributions of rare snapshots~\cite{jarzynski2006rare, wu2005phasespace, wu2005phasespacea}. 
 
+ As a reminder, this and many of these formulas can be generalized to other ensembles with the use of the reduced energy $u$.  In the case of NVT (canonical) sampling and assuming the masses do not change, then $u$ is simply $\beta U = U(\vec{q},{p})/k_BT$, and $f$ is $G/k_BT$, but it can be generalized to other ensembles with the proper definition of $f$ and $u$.  We will generally use the canonical formalism in this paper. Technically, for free energy calculations at constant pressure, one should use differences in the enthalpy $U+PV$, but at at constant pressure of 1 atm, the contribution of $P\Delta V$ is nearly zero, perhaps a few hundredths of cal/mol.  
+ 
 The Zwanzig formulation is general in that the instantaneous work to change the potential energy function from $U_0$ to $U_1$ can be replaced by the non-reversible work $W$ to make the same change beginning from the same equilibrium conditions at either end state~\cite{jarzynski1997nonequilibrium,jarzynski1998equilibrium,crooks2000pathensemble}, allowing for non-equilibrium free energy calculations, an alternate approach. 
 %We do not detail non-equilibrium transformations here, and refer the reader to more advanced treatments~\cite{maragakis2008bayesian,oberhofer2005biased,procacci2015unbiased,shirts2003equilibrium,ytreberg2004singleensemble, gapsys2020large}.
 
@@ -1827,7 +1822,7 @@ simulations~\cite{shirts2005comparison,lu2003appropriate}, and BAR converges to 
 
 The Bennett acceptance ratio is only defined between two states. Usually, the endpoints of interest in a free energy calculation are sufficiently different that we will need a chain of states that gradually change the potential energy function from $U_0$ to $U_1$, as discussed in Sec.~\ref{sec:important_path}. You can carry out a BAR estimate between each pair of states $\Delta F_{1 \rightarrow N} = \Delta {F_{1\rightarrow 2}} + \Delta {F_{2\rightarrow 3}} +  \ldots + \Delta F_{N-1\rightarrow N}$.
 
-There is one important thing to note about the uncertainty estimates when summing multiple free energy differences together to calculate an overall estimate of a free energy difference. Although BAR itself gives a free energy estimate that is asymptotically correct and is much less biased than the uncertainty estimate for EXP, the uncertainties in $\Delta {F_{i-1\rightarrow i}}$ and $\Delta {F_{i\rightarrow i+1}}$ are not uncorrelated, because they both involve the energies $u_i(\vec{q})$. The variances of each of the free energies cannot simply be summed together into the variance of the overall free energy. Instead, some other method for propagating the uncertainty, such as bootstrapping~\cite{grossfield2018best} must be used.
+There is one important thing to note about the uncertainty estimates when summing multiple free energy differences together to calculate an overall estimate of a free energy difference. Although BAR itself gives a free energy estimate that is asymptotically correct and is much less biased than the uncertainty estimate for EXP, the uncertainties in $\Delta {F_{i-1\rightarrow i}}$ and $\Delta {F_{i\rightarrow i+1}}$ are not uncorrelated, because they both involve the energies $U_i(\vec{q})$. The variances of each of the free energies cannot simply be summed together into the variance of the overall free energy. Instead, some other method for propagating the uncertainty, such as bootstrapping~\cite{grossfield2018best} must be used.
 
 \subsubsection{Bennett Acceptance Ratio for non-equilibrium transitions}
 Similarly to the analogy between Zwanzig's and Jarzynski's equations, Bennett Acceptance Ratio can be applied to estimate free energy differences from non-equilibrium transitions as well.
@@ -1852,49 +1847,49 @@ For the case of $\sigma_f=\sigma_r$, free energy difference is estimated as $\De
 By taking the derivative of the free energy with respect to the
 variable $\lambda$, we find that:
 \begin{equation}
-\frac{df}{d\lambda} = \frac{d}{d\lambda} \left[-\ln \int \frac{\exp{-u(\lambda,\vec{q})}}{Z(\lambda)} d\vec{q}\right] = \expect{\frac{du(\lambda,\vec{q})}{d\lambda}\
+\frac{df}{d\lambda} = \frac{d}{d\lambda} \left[-\ln \int \frac{\exp^{-\beta U(\lambda,\vec{q})}}{Z(\lambda)} d\vec{q}\right] = \expect{\frac{dU(\lambda,\vec{q})}{d\lambda}\
 }_{\lambda} .
 \end{equation}
 And then we can numerically integrate $df/d\lambda$ over an alchemical transformation, using a range of different well-established techniques, to obtain:
 \begin{equation}
-\Delta f    = \int_{0}^{1} \expect{\frac{du(\lambda,\vec{q})}{d\lambda}}_{\lambda}  d\lambda.    
+\Delta f    = \int_{0}^{1} \expect{\frac{dU(\lambda,\vec{q})}{d\lambda}}_{\lambda}  d\lambda.    
 \end{equation}
 This approach to calculating the free energy is called thermodynamic integration (TI). Averaging over $\expect{\frac{du}{d\lambda}}$ requires fewer uncorrelated samples to reach a given level of relative error
-than averaging $e^{-u(\vec{q})}$, as the distribution of values is usually narrower, with a more Gaussian shape to the distribution. Rather than being limited by overlap, as in the case of BAR and MBAR (see below), we are instead limited by the bias in the numerical quadrature, which must be minimized sufficiently to be beneath the level of statistical noise.
+than averaging $e^{-U(\vec{q})}$, as the distribution of values is usually narrower, with a more Gaussian shape to the distribution. Rather than being limited by overlap, as in the case of BAR and MBAR (see below), we are instead limited by the bias in the numerical quadrature, which must be minimized sufficiently to be beneath the level of statistical noise.
 
 %Various numerical integration schemes are possible, but the trapezoid
 %rule provides a simple and robust scheme. 
 All types of numerical integration can be written as:
-\[ \Delta f \approx \sum_{k=1}^{K} w_k
-\expect{\frac{du(\lambda,\vec{q})}{d\lambda}}_{k}, \] where the weights $w_k$ correspond to a particular choice of numerical integration.
-Researchers have tried different integration schemes~\cite{resat1993studies,jorge2010effect,shyu2009reducing,Bruckner2010}. Several of them, e.g., Gauss-Legendre quadrature, require specific choices of $\lambda$, i.e., one needs to calculate $\langle\partial u/\partial \lambda\rangle$ at the particular $\lambda$-values required by the integration method, making them inflexible. The trapezoidal rule is often recommended; it has the advantage of simplicity, both equidistant and non-equidistant $\lambda$-values can be used, and one can include simulations at additional $\lambda$-values if deemed necessary. However, considerably more $\lambda$-values than for more advanced integration methods may be needed. Simpson's rule gives higher accuracy and almost the same flexibility~\cite{Bruckner2010}. An alternative to these numerical integration schemes is to fit the  $\langle\partial u/\partial \lambda\rangle$ values to a piecewise continuous function, e.g., by cubic spline interpolation, and carry out the integration between $\lambda=0$ and 1 analytically. While certainly more complicated than the trapezoidal rule or Simpson integration,  this approach retains the flexibility with regard to choice of $\lambda$ values while giving accuracy comparable to more advanced integration methods. E.g., in recent work requiring very precise free energy calculations~\cite{Fleck_2021}, thermodynamic integration by cubic spline interpolation, followed by analytic integration  was used in parallel with Bennett's acceptance ratio method and gave equivalent results.
+\[ \Delta F \approx \sum_{k=1}^{K} w_k
+\expect{\frac{dU(\lambda,\vec{q})}{d\lambda}}_{k}, \] where the weights $w_k$ correspond to a particular choice of numerical integration.
+Researchers have tried different integration schemes~\cite{resat1993studies,jorge2010effect,shyu2009reducing,Bruckner2010}. Several of them, e.g., Gauss-Legendre quadrature, require specific choices of $\lambda$, i.e., one needs to calculate $\langle\partial u/\partial \lambda\rangle$ at the particular $\lambda$-values required by the integration method, making them inflexible. The trapezoidal rule is often recommended; it has the advantage of simplicity, both equidistant and non-equidistant $\lambda$-values can be used, and one can include simulations at additional $\lambda$-values if deemed necessary. However, considerably more $\lambda$-values than for more advanced integration methods may be needed. Simpson's rule gives higher accuracy and almost the same flexibility~\cite{Bruckner2010}. An alternative to these numerical integration schemes is to fit the  $\langle\partial U/\partial \lambda\rangle$ values to a piecewise continuous function, e.g., by cubic spline interpolation, and carry out the integration between $\lambda=0$ and 1 analytically. While certainly more complicated than the trapezoidal rule or Simpson integration,  this approach retains the flexibility with regard to choice of $\lambda$ values while giving accuracy comparable to more advanced integration methods. E.g., in recent work requiring very precise free energy calculations~\cite{Fleck_2021}, thermodynamic integration by cubic spline interpolation, followed by analytic integration  was used in parallel with Bennett's acceptance ratio method and gave equivalent results.
 
-TI has two drawbacks: First, it requires derivatives with respect to $\lambda$ to be calculated directly in the code. Unfortunately, many problems of interest require using pathways (such as the soft-core pathways, for removing repulsive interactions) that are not linear, as we discuss, making this more complex. However, most programs contain the necessary code for the derivatives with respect to $\lambda$. Second, the difficulty of the numerical integration step is tied to the shape (i.e., variation) of the integrand $\langle\frac{du(\lambda)}{d\lambda}\rangle$. Specifically, the shape depends on the nature of the alchemical transformation and the functional form of the soft-core potentials used. Both cannot be controlled by the user, so regions where the integrand varies rapidly cannot be avoided. If this is the case, TI typically requires more $\lambda$-states for accurate results than the BAR or MBAR estimators~\cite{Bruckner2010}.
+TI has two drawbacks: First, it requires derivatives with respect to $\lambda$ to be calculated directly in the code. Unfortunately, many problems of interest require using pathways (such as the soft-core pathways, for removing repulsive interactions) that are not linear, as we discuss, making this more complex. However, most programs contain the necessary code for the derivatives with respect to $\lambda$. Second, the difficulty of the numerical integration step is tied to the shape (i.e., variation) of the integrand $\langle\frac{dU(\lambda)}{d\lambda}\rangle$. Specifically, the shape depends on the nature of the alchemical transformation and the functional form of the soft-core potentials used. Both cannot be controlled by the user, so regions where the integrand varies rapidly cannot be avoided. If this is the case, TI typically requires more $\lambda$-states for accurate results than the BAR or MBAR estimators~\cite{Bruckner2010}.
 
 \subsubsection{The multistate Bennett acceptance ratio (MBAR)}
 One can generalize Bennett's logic from two states to multiple states to obtain a free energy estimator that uses energy differences between configurations at all intermediate states to compute free energy differences between all states. MBAR gives a system of implicit equations for the free energies $f_i$:
 \begin{equation}
-f_i = - \ln \sum_{n=1}^{N} \frac{\exp(-u_i(\vec{q}_n))}{\sum_{k=1}^K N_k \exp(f_k-u_k(\vec{q}_n))},
+f_i = - \ln \sum_{n=1}^{N} \frac{\exp(-\beta U_i(\vec{q}_n))}{\sum_{k=1}^K N_k \exp(\beta F_k-\beta U_k(\vec{q}_n))},
 \end{equation}
-where there are $N_k$ samples from each of $K$ states, with $\sum_k N_k=N$ the total number of samples. Thus, we need to evaluate the energy function $u_i$ for all samples obtained at all states in the transformation. The equations can be solved by a number of different standard routines. We note that there are only $K-1$ independent equations, so only $K-1$ of the free energies are independent variables, and one of the $f_i$ must be specified (usually, without loss of generality, setting it to zero).
+where there are $N_k$ samples from each of $K$ states, with $\sum_k N_k=N$ the total number of samples. Thus, we need to evaluate the energy function $U_i$ for all samples obtained at all states in the transformation. The equations can be solved by a number of different standard routines. We note that there are only $K-1$ independent equations, so only $K-1$ of the free energies are independent variables, and one of the $f_i$ must be specified (usually, without loss of generality, setting it to zero). Note that this equation assumes that all simulations are performed at the same $\beta$ (or temperature $T$), which is usually true for alchemical simulations.  One can also use this equation to estimate free energies between different temperatures by using the reduced potential $u_i = \beta_i U_i$ for each state, but this requires some additional bookkeeping, as one can only calculate $\Delta F_{binding}(T)$, not the free energy difference between two different phases at two arbitrary temperatures~\cite{schieber2018reweighting}. 
 
 MBAR is probably the lowest variance asymptotically unbiased estimator of the free energy given the energies of the samples~\cite{tan2004likelihood}, which means that BAR is also the lowest variance estimator for the free energy difference between only 2 states, as it is mathematically exactly the same as MBAR in this case. MBAR also provides an uncertainty estimate, derived from standard error propagation methods for implicit functions, which has been shown to be highly accurate as long as there are sufficient samples at each state~\cite{paliwal2011benchmark}.
 
-MBAR can also be thought of as the Zwanzig estimator of the free energy to state $i$ from a sampled distribution referred to as the \textit{mixture distribution}, where one throws all the samples from all simulations together in one ``pot''. Mathematically, this is defined by $p_m(\vec{q}) = N^{-1} \sum_k N_k \exp(f_k-u_k\vec{q})$, which is the average, weighted by the number of samples drawn from each distribution, of all the individual normalized probability distributions from the simulations that are performed~\cite{shirts2017reweighting}.
+MBAR can also be thought of as the Zwanzig estimator of the free energy to state $i$ from a sampled distribution referred to as the \textit{mixture distribution}, where one throws all the samples from all simulations together in one ``pot''. Mathematically, this is defined by $p_m(\vec{q}) = N^{-1} \sum_k N_k \exp(\beta F_k-\Beta U_k\vec{q})$, which is the average, weighted by the number of samples drawn from each distribution, of all the individual normalized probability distributions from the simulations that are performed~\cite{shirts2017reweighting}.
 
-All of the estimators above have uncertainty estimates associated with them.  In the limit of sufficiently large data, perhaps several hundred or thousand independent points, exhaustive analyses of model data has shown that the error estimates of BAR, MBAR, and TI are all quite reliable when there is good overlap between intermediate states. For example, for a series of hydration free energy calculations of model systems of various sizes analytical estimates of the error, bootstrap estimates, and standard deviations over 100 independent simulations started at different locations along a long initial simulations all agreed within a 5---10\%~\cite{paliwal2011benchmark}. For EXP, the number of samples at which they become reliable is significantly higher, especially if overlap between intermediate states is lower. 
+All of the estimators above have uncertainty estimates associated with them. These estimators of uncertainty are all derived from propagation of error formulae resulting from the estimators themselves.  In the limit of sufficiently large data, perhaps several hundred or thousand independent points, exhaustive analyses of model data has shown that the error estimates of BAR, MBAR, and TI are all quite reliable when there is good overlap between intermediate states. For example, for a series of hydration free energy calculations of model systems of various sizes analytical estimates of the error, bootstrap estimates, and standard deviations over 100 independent simulations started at different locations along a long initial simulations all agreed within a 5---10\%~\cite{paliwal2011benchmark}. For EXP, however, the number of samples required for the uncertainty estimates to become reliable is significantly higher, especially if overlap between intermediate states is lower. 
 
-However, in the limit of moderate or small amounts of data (tens or hundreds of independent samples) these errors become somewhat unreliable, often off by a factor of 2 from what one would get if more data was collected~\cite{???}. These estimators of uncertainty are all derived from propagation of error formulae from the estimators themselves. When the underlying data is noisy, this approximation is not very good.
+However, in the limit of moderate or small amounts of data (tens or hundreds of independent samples) these errors become unreliable, often off by a factor of 2 from what one would get if more data was collected~\cite{???}. 
 
-Some of the authors' experience has shown that significantly more reliable estimators at lower numbers of samples are obtained by performing bootstrap sampling on data that has been uncorrelated. We do not provide a full tutorial of bootstrapping here, but the basic idea is that one takes the $N_{sample}$ data points collected and draws, with replacement, $N_{sample}$ samples.  This means some of the data points will be represented multiple times, and other data points none. This process is then repeated $N_{bootstrap}$ times, where $N$ should generally be at least 50 to up to 200 for good estimates of the standard error of the estimator.  The data is then \textit{treated} as $N_{bootstrap}$ samples from the true distribution, and statistics such as the standard error are computed from this artificial set of $N_{bootstrap}$ experiments.  In the limit of $N_{sample}$ large, it can be shown that the bootstrap estimate of the standard error converges to the true population standard error.  One way this can be seen is that bootstrap estimators of the data are independent samples of the \textit{actual} distribution of the experiment performed, i.e., a bunch of $\delta$ functions at $N_{sample}$ points, rather than being independent samples from the true, usually continuous distribution.  As more and more data is collected, our collection of $\delta$ functions becomes more and more like the true distribution. Another advantage of bootstrap sampling is that one can construct decent estimates of error bounds with arbitrary percentiles, and not just standard errors of the estimates, which assume Gaussian behavior of the underlying error, and that the error results are Gaussian as well.  The bootstrap approach, on the other hand, captures non-Gaussian behavior in the data. 
+Some of the authors' experience is that significantly more reliable estimators at lower numbers of samples are obtained by performing bootstrap sampling on the data rather than using the associated asymptotic error estimates for each method. We do not provide a full tutorial of bootstrapping here, but the basic idea is that one takes the $N_{sample}$ uncorrelated data points collected and draws, with replacement, with all the state data sets simultaneously, $N_{sample}$ samples.  This means some of the data points will be represented multiple times, and other data points none. This process is then repeated $N_{bootstrap}$ times, where $N$ should generally be at least 50 to up to 200 for good estimates of the standard error of the estimator.  The data is then \textit{treated} as $N_{bootstrap}$ samples from the true distribution, and statistics such as the standard error are computed from this artificial set of $N_{bootstrap}$ experiments.  In the limit of $N_{sample}$ large, the bootstrap estimate of the standard error converges to the true population standard error.  One way to visualize this is that bootstrap estimators of the data are independent samples of the \textit{actual} distribution of the experiment performed, i.e., a bunch of $\delta$ functions at $N_{sample}$ points, rather than being independent samples from the true, usually continuous distribution.  As more and more data is collected, our collection of $\delta$ functions becomes more and more like the true distribution. Another advantage of bootstrap sampling is that one can construct decent estimates of error bounds with arbitrary percentiles, and not just standard errors of the estimates, which assume Gaussian behavior of the underlying error, and that the error results are Gaussian as well.  The bootstrap approach, on the other hand, captures non-Gaussian behavior of uncertainties in the data. 
 
-One important point is that the bootstrap samples used to estimate the standard error should be decorrelated, or else the bootstrap estimate of the standard error will be artificially small.  More discussion of subsampling and decorrelation is included in section~\ref{sec:subsampling}. Another alternative to bootstrap sampling of individual points that better captures the correlations in the data is block bootstrapping~\cite{???}.  Block bootstrapping is somewhat more complicated and less common to perform and analyze than bootstrap estimates of the error, so we refer readers to the citations for more description, but it can also provide more reliable estimates of uncertainty than the estimators above.
+One important point is that the bootstrap samples used to estimate the standard error should be decorrelated, or else the bootstrap estimate of the standard error will be artificially small. Discussion of subsampling and decorrelation is included in section~\ref{sec:subsampling}. Another alternative to bootstrap sampling of individual points that captures the correlations in the data is block bootstrapping~\cite{politis2004automatic, patton2009correction, kunsch1989jackknife}. Block bootstrapping is somewhat more complicated and less common to perform and analyze than bootstrap estimates of the error, so we refer readers to the citations for more description, but it can also provide more reliable estimates of uncertainty than the estimators above.
 
 
 \subsubsection{Recommendations}
 \begin{itemize}
 \item We recommend MBAR if all energy differences are available. It is the lowest variance unbiased free energy estimate given samples from multiple states.
-\item BAR is essentially just as good as MBAR for highly optimized $\lambda$ intermediates. Specifically, if the $\lambda$s are chosen such that intermediate states have moderate overlap with their neighbors (i.e. between $i$ and $i+1$ and between $i$ and $i-1$), they will \textit{not} have significant overlap with their next nearest neighbors $i+2$ and $i-2$. Thus MBAR does not actually get significant information from these energy differences, so one might as well not even calculate them, and just perform BAR between nearest neighbors~\cite{paliwal2011benchmark}. 
+\item However, BAR is essentially just as good as MBAR for highly optimized $\lambda$ intermediates. Specifically, if the $\lambda$s are chosen such that intermediate states have moderate but not large overlap with their neighbors (i.e. overlap between $i$ and $i+1$ and between $i$ and $i-1$), they will \textit{not} have significant overlap with their next nearest neighbors $i+2$ and $i-2$. Thus MBAR does not actually get significant information from these energy differences, so one might as well not even calculate them, and just perform BAR between nearest neighbors~\cite{paliwal2011benchmark}.  If the data is bootstrapped over all of the samples, then issues with the correlations $\Delta F_{i,i+1}$ and $\Delta F_{i+1,i+2}$ both using samples from state $i$ vanish.
 \item TI usually gives similar values as MBAR implemented with sufficient numbers of intermediates, but quadrature errors that are hard to estimate beforehand  can occur if one does not carefully select $\lambda$ values such that the overlap between states is sufficiently high~\cite{paliwal2011benchmark}.
 \item WHAM is an approximation to MBAR, and there are no compelling reasons it should be used. If bin widths are carefully chosen and there are sufficient samples, it can give similar quality results to the other methods, but it always introduces some degree of binning error, and determining when errors might occur can be challenging. 
 \item Other variants, especially ones that adaptively determine the free energies can be useful in certain circumstances but beyond the scope of a Best Practices article.
