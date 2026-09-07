@@ -310,7 +310,7 @@ Instead, this guide aims to answer the following questions:
      \item What software tools are available to perform alchemical calculations? (Sec.~\ref{sec:software}) 
 \end{itemize}
 
-Notably, this document---version 2.0 of the original guide---focuses specifically on best practices on ``single'' alchemical free energy calculations where the quantity of interest is a single free energy difference (or difference of differences). A companion guide, \textit{Best Practices for Multiple Alchemical Free Energy Calculations}~\cite{mey_largescale_inprep}, covers the considerations involved in high-throughput or large-scale campaigns, such as automation, perturbation network design, and campaign-level data management and analysis. Readers aiming to scale up to multiple calculations will find many important suggestions and ideas relevant to those problems in that document.
+Notably, this document---version 2.0 of the original guide---focuses specifically on best practices on \textit{single} alchemical free energy calculations where the quantity of interest is a single free energy difference (or difference of differences). A companion guide which discusses best practices for running \textit{multiple} alchemical free energy calculations~\cite{mey_largescale_inprep}, covers the considerations involved in high-throughput or large-scale campaigns, such as automation, perturbation network design, and campaign-level data management and analysis. Readers aiming to scale up to many free energy calculations, especially those form forming a network of related chemical transformations such as found in a lead optimization campaign, will find many important suggestions and ideas relevant to those problems in that document.
 
 In this guide, some additional background information may be needed depending on the nature of the alchemical project. For example, if binding poses are not known, docking calculations or co-folding models can be used to generate an initial small molecule binding pose to start alchemical simulations~\cite{scheen2025leveraging, thaler2026boltz, coskun_2023, beuming_2022}. This will require some basic familiarity with how to perform docking or use generative models to generate reasonable simulation starting points~\cite{grinter2014challenges}. 
 As some of the theoretical background can be daunting to beginners, we do, however, provide a guide to the essential theory behind alchemical free energy calculations in Sec.~\ref{sec:theory}, with more in-depth derivations in Sec.~\ref{sec:derivations}.
@@ -459,7 +459,7 @@ The relation above is used to connect alchemical calculations to Henry's constan
 \Delta G_{\mathrm{slv, exc.}} = - k_B T \ln \frac{z_{A(v)}}{z_{A(\mathrm{g})}} = k_B T \ln \frac{k_H}{k_B T} \, .
 \label{eq:DG-solvation-excess}
 \end{equation}
-Eq.~\ref{eq:DG-solvation-excess}, which involves only intramolecular partition functions (as described above),  states that the excess free energy of solvation corresponds to the process of moving the solute from a fixed position and orientation in the gas to a fixed position and orientation in the solvent. However, because in a bulk solvent, the solvent is the same in all translational and rotational directions, this is the same as the free energy of a freely tumbling and moving ligand. This is sometimes referred to as the solvation free energy in the Ben-Naim standard state~\cite{bennaim1984solvation}.  We have now expressed the thermodynamic process in terms of ratios of partition functions.
+Eq.~\ref{eq:DG-solvation-excess}, which involves only intramolecular partition functions (as described above),  states that the excess free energy of solvation corresponds to the process of moving the solute from a fixed position and orientation in the gas to a fixed position and orientation in the solvent. However, because in a bulk solvent, the solvent is the same in all translational and rotational directions, this is the same as the free energy of a freely tumbling and moving ligand. This is sometimes referred to as the solvation free energy in the Ben-Naim standard state~\cite{bennaim1984solvation}.  At this point, we pause to see what we have done; we have now expressed the thermodynamic process in terms of ratios of partition functions, which we will be able to estimate using molecular simulations.
 
 \subsection{Free energy of solvent partitioning}\label{sec:theory-partitioning}
 
@@ -478,7 +478,7 @@ immediately identifies the partition coefficient with the ratio of intramolecula
   P_{sv} = \frac{z_{A(v)}}{z_{A(s)}} \, .
   \label{eq:partition-coefficient}
 \end{equation}
-This relation connects calculated ratios of partition functions to experimental partition coefficients. Similarly to Eq.~\ref{eq:DG-solvation-excess}, Eq.~\ref{eq:partition-coefficient} corresponds to the process of transferring the solute from a fixed position and orientation in one solvent to a fixed position and orientation in the other. Again, because in a bulk solvent, the solvent is the same in all translational and rotational directions, this is the same as the free energy of transfer of a freely tumbling and moving ligand.
+Again, this relation connects calculated ratios of partition functions to experimental partition coefficients. Similarly to Eq.~\ref{eq:DG-solvation-excess}, Eq.~\ref{eq:partition-coefficient} corresponds to the process of transferring the solute from a fixed position and orientation in one solvent to a fixed position and orientation in the other. Again, because in a bulk solvent, the solvent is the same in all translational and rotational directions, this is the same as the free energy of transfer of a freely tumbling and moving ligand.
 
 \subsection{Non-covalent molecular binding}
 \label{sec:non-covalent-molecular-binding}
@@ -506,11 +506,10 @@ To this end, Gilson et al.~\cite{gilson1997statisticalthermodynamic} introduced 
 
 The definition of the bound macrostate of the complex is thus \textit{essential} to defining ligand binding.  Unlike bond lengths, bond angles, and dihedral angles, the three degrees of freedom of the complex that correspond to the position of the ligand relative to the receptor are unbounded. Unless we define specific limits to these variables, the bound state of the complex cannot be distinguished from the unbound state, and the free energy difference between the two states will be undefined.  In fact, this approximation may be slightly too simple, as there may be cases where only some configurations of a highly flexible ligand actually have experimental effect, so the indicator function $I$ may need to include configurations of the ligand or even protein as well. 
 
-The definition of macrostates that are defined by specific choices of the microstates is required in many areas of computational chemistry and biophysics, for example, when specifying the range of backbone angles to measure the relative populations of $\alpha$-helical and $\beta$-strand conformations of peptides, or even whether a protein is folded or not.  What these microstates have in common is that they are different functionally. Only certain configurations have biological or experimental effects, and thus when we analyze any sort of simulation, we should try to figure out what simulation variables correspond to the experimentally configurations that have the measured effect. 
+The definition of macrostates that are \textit{defined by specific choices of the microstates} is required in \textit{many} areas of computational chemistry and biophysics. Examples include needed to specify the range of backbone angles to include in $\alpha$ and $\beta$ structures when calculating  the relative populations of $\alpha$-helical and $\beta$-strand conformations of peptides, or even calculating whether a protein is folded or not. Experimentally, what macrostate a microstates belongs to is that they are different functionally. Only certain configurations have biological or experimental effects, and thus when we analyze any sort of simulation, we should try to figure out what simulation variables correspond to the experimentally configurations that have the measured effect. 
 
-This interpretation of experimental reporters of binding is a complex issue in itself.  For example, an experimental method that identifies any energetic interaction between a protein and a ligand (such as isothermal titration calorimetry) will indicate a different bound state than one that only detects a ligand that is positioned in a specific location on the protein (such as changes in polarization upon displacement of a probe ligand). The relationship between the predictions of this theory and experimental reporters (thermochemical, spectroscopic, inhibition kinetics, and others) of complex formation has been discussed~\cite{gilson1997statisticalthermodynamic,mihailescu2004theory,gallicchio2011recent,simonson2016physical,gallicchio2021comppeptsci}. All the different definitions of the bound state yield nearly equivalent values for the free energy when binding is strong and specific, and the definition of the bound complex encompasses the major bound poses while excluding obvious unbound configurations. Weaker, less specific interactions, as discussed in Sec.~\ref{sec:weak-binders} require somewhat more work to define.  As mentioned above, in some cases it is valuable to consider specific definitions of the complex, for example, by restricting the ligand's orientation to pinpoint the relative contributions of different binding poses.
+This interpretation of experimental reporters of binding is a complex issue in itself that illustrates this principle. For example, an experimental method that identifies any energetic interaction between a protein and a ligand (such as isothermal titration calorimetry) will indicate a different bound state than one that only detects a ligand that is positioned in a specific location on the protein (such as changes in polarization upon displacement of a probe ligand). The relationship between the predictions of this theory and experimental reporters (thermochemical, spectroscopic, inhibition kinetics, and others) of complex formation has been discussed~\cite{gilson1997statisticalthermodynamic,mihailescu2004theory,gallicchio2011recent,simonson2016physical,gallicchio2021comppeptsci}. All the different definitions of the bound state yield nearly equivalent values for the free energy when binding is strong and specific, and the definition of the bound complex encompasses the major bound poses while excluding obvious unbound configurations. Weaker, less specific binding interactions, as discussed in Sec.~\ref{sec:weak-binders} require somewhat more effort to define, and will often give different results depending on the type of experiment used to measure them.  As mentioned above, in some cases it is valuable to consider specific definitions of the complex, for example, by restricting the ligand's orientation to pinpoint the relative contributions of different binding poses.
 
-%MRS: pick up here.
 Eq.~\ref{eq:DG0-binding-constant-def} is the basis of a variety of alchemical computational implementations that have been developed to study molecular binding by alchemical means. Some of the key implementations, specifically double decoupling and alchemical transfer, are discussed in Sec.~\ref{subsec:formulations-abfe-rbfe}. Generally, to formulate the statistical mechanics expression of the binding constant Eq.~\ref{eq:DG0-binding-constant-def} as an ensemble average, we first need to ensure that the configurational integrals in the numerator and denominator are over the same set of degrees of freedom. Note that the intramolecular configurational partition function of the complex, $z_{RL(v)}$, includes six more degrees of freedom---the position and orientation of the ligand relative to the receptor collectively described by the variable $\zeta$---than the product of the intramolecular partition functions, $z_{R(v)} z_{L(v)}$, of the separated receptor and ligand.
 
 
@@ -607,10 +606,11 @@ The free energy of mutating $A$ to $B$ in any environment ($\Delta G_{\mathrm{en
 \begin{equation}\label{eq:delta-G-env}
     \Delta G_{\mathrm{env}} = - k_BT \ln \frac{Z(\lambda_B)}{Z(\lambda_A)} = - k_BT \ln \frac{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\vec{q}; \lambda_B) \right) \, d\vec{q}}{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\vec{q}; \lambda_A) \right) \, d\vec{q}} \, ,
 \end{equation}
-over the configurational space of the environment ($\Gamma_{\mathrm{env}}$). 
-While it is generally not feasible to compute the two partition functions $Z(\lambda)$, several estimators have been devised to robustly estimate the ratio of partition functions in Eq.~\ref{eq:delta-G-env} (see Sec.~\ref{subsec:estimators}) from a set of configurations usually collected with MD simulations from the thermodynamic states defined at $\lambda_A$ and $\lambda_B$ and intermediates in between these two.  For simplicity, we will frequently use the more specific $\beta U(\vec{q})$ instead of $u(q\vec{q})$, but for more complicated situations where one is dealing with simulations at multiple temperatures or pressures, it can prove useful. 
+over the configurational space of the environment ($\Gamma_{\mathrm{env}}$).  For simplicity in this paper, we will usually use the more specific $\beta U(\vec{q})$ instead of $u(q\vec{q})$, but for more complicated situations where one is dealing with simulations at multiple temperatures or pressures, it can prove useful to write equations in terms of the reduced potential. 
 
-\paragraph{Zwanzig relationship or exponential averaging connects ratios of partition functions to expectation values of energy differences}
+While it is generally not feasible to directly compute the two partition functions $Z(\lambda)$, for the same reason we can't easily compute binding free energies with \label{eq:law-mass-action}, several estimators have been devised to robustly estimate the ratio of partition functions in Eq.~\ref{eq:delta-G-env} (see Sec.~\ref{subsec:estimators}) from a set of configurations usually collected with MD simulations from the thermodynamic states defined at $\lambda_A$ and $\lambda_B$ as well as, importantly, configurations from simulating  intermediates in between these two end states.
+
+\paragraph{An example: the Zwanzig relationship connects ratios of partition functions to expectation values of energy differences}
 
 Let's say we have some probability function $p_A(\vec{q})$ that we know, up to some constant. This is of
 course the situation we are usually in with molecular simulations, since we know that $p_A \propto e^{-U(\vec{q})}$, but we don't know the partition function $Z_A$.
@@ -638,7 +638,7 @@ occasionally if the energy goes to infinity.
 
   At this point, we now say that $p_A(\vec{q}) = e^{-u_A(\vec{q})}$,
   and $p_B(\vec{q}) = e^{-u_B(\vec{q})}$, meaning that $Z_A = e^{-f_A}$
-  and $Z_B = e^{-f_B}$.   So we can say that 
+  and $Z_B = e^{-f_B}$.  We use the reduced energy $u$ and reduced free energy $f$ to make the finding general over any ensemble, but one can always replace it with just $\beta U$ for specificity of the canonical ensemble with a single $T$ if you want.  So we can say that 
 
   \begin{eqnarray}  
     \frac{Z_A}{Z_B}  &=& \left \langle \frac{p_A(\vec{q})}{p_B(\vec{q})} \right \rangle_B \nonumber \\
@@ -719,27 +719,28 @@ advantage of the fact that if we perform two calculations of the
 transfer of solvent to vacuum, then we can reverse one of those
 calculations and add them together.  The intermediate vacuum state
 cancels out, and we obtain the transfer free energy.  Calculating the
-free energy of ligand binding is more complicated, because there are.
-We cover in Sec.\ref{subsec:formulations-abfe-rbfe} how to set up the proper partition
-functions in two different ways.
+free energy of ligand binding is more complicated, primarily because defining the end states can be very complicated, as discussed in Sec~\ref{sec:non-covalent-molecular-binding}. We cover in Sec.\ref{subsec:formulations-abfe-rbfe} how to set up the proper partition functions for ligand binding in two different ways.
 
 
 \paragraph{Thermodynamic integration gives another way to calculate free energies from simulation}
 
 Exponential averaging is not the only way we can relate free energies to
-expectation values.  Once we have defined $U(\vec{q},\lambda)$, as
+expectation values.  Once we have defined $U(\vec{q},\lambda)$ (again using the reduced potential to keep it general over different ensembles), as
 a function of $\lambda$, then we can compute the derivative
-$\frac{dU(\vec{q})}{d\lambda}$. Although we will not prove it here, a page or
+$\frac{du(\vec{q})}{d\lambda}$. Although we will not prove it here, a page or
 so of algebra and statistical mechanics shows that, if $\lambda=0$
 corresponds to state $B$ and $\lambda=1$ corresponds to state $A$,
 then:
 
 \begin{eqnarray}
-  \Delta F = \int_0^1 \left \langle \frac{dU(\vec{q})}{d\lambda} \right \rangle d\lambda \label{eq:TI_defn}
+  \Delta f = \int_0^1 \left \langle \frac{du(\vec{q})}{d\lambda} \right \rangle d\lambda \label{eq:TI_defn}
 \end{eqnarray}
 In other words, we keep track of $\frac{du}{d\lambda}$ as we run the
 simulation, average that to get an estimate of the expectation value,
 and then integrate this expectation over all values of $\lambda$.
+
+If you like playing with Taylor series, you can also show that Eq.~\ref{eq:TI_defn} can be derived by taking the Zwanzig equation,
+and adding together the free energies from an infinite number of simulations that are infinitely closely spaced together. 
 
 Clearly we do not want to run simulations at an infinite number of
 $\lambda$ values, so we will have to approximate this integral
@@ -760,24 +761,23 @@ In theory, any pathway connecting the two states will work, because free energy 
 
 Intermediate alchemical states are defined in terms of one or more alchemical progress parameters $\lambda$ that change the potential energy function $U(\vec{q};\lambda)$ such that the potential energies of the initial and final states are recovered at two particular values $\lambda_0$ and $\lambda_1$. We most often parameterize this path with a single number ranging from $\lambda=0$ to $\lambda=1$, with $\lambda$ a single scalar.  However, we could define a path that has two different values, such as separate $\lambda$s for the Coulomb, van der Waals, and bonded terms~\cite{naden}.  Usually, we will treat $\lambda$ as a single scalar, with $\lambda=0$ and $\lambda=1$ as endpoints, as most calculations use this; we will point out where appropriate how the math and treatment are different for a vector of $\lambda$ variables.  
 %MRs: talk more about how even if there is a multiple component vector, for TI we take a path.  But with MBAR, we can take all paths simultaneous. 
-We then introduce some number of intermediate alchemical states at values $\lambda_A = \lambda_0, \lambda_1, \cdots, \lambda_K = \lambda_B$ so that each pair of consecutive states $\lambda_k, \lambda_{k+1}$ do share good phase space overlap, meaning, as described above, that there are decent number of samples $\vec{q}$ that have moderate probability in both neighboring alchemical states.  Then for $K$ intermediate states, we get
+We then introduce some number of intermediate alchemical states at values $\lambda_A = \lambda_0, \lambda_1, \cdots, \lambda_K = \lambda_B$ so that each pair of consecutive states $\lambda_k, \lambda_{k+1}$ do share good phase space overlap, meaning, as described above, that there are decent number of samples $\vec{q}$ that have moderate probability in both neighboring alchemical states.  Then for $K$ intermediate states (written here for the Gibbs free energy, but true for the free energy of any other ensemble), we get
 
 \begin{equation}
-    \Delta G = k_BT \Delta f = k_BT \left(\sum_{k=0}^{K-1} \Delta f_{k,k+1}\right)
+    \Delta G = k_BT \Delta f = k_BT \left(\sum_{k=0}^{K-1} \Delta G_{k,k+1}\right)
 \end{equation}
 where
 \begin{equation}
-    \Delta f_{k,k+1} = f_{k+1} - f_{k} = -\ln\frac{Z(\lambda_{k+1})}{Z(\lambda_{k})}
+    \Delta G_{k,k+1} = G_{k+1} - G_{k} = -\ln\frac{Z(\lambda_{k+1})}{Z(\lambda_{k})}
 \end{equation}
 
-Which we can compute from samples collected at all the alchemical states $\{\lambda_k \}$, and where $\Delta f$ is the \emph{unitless free energy difference}.
+Which we can compute from samples collected at all the alchemical states $\{\lambda_k \}$.
 
-If you like playing with Taylor series, you can also show that Eq.~\ref{eq:TI_defn} can be derived by taking the Zwanzig equation,
-and adding together the free energies from an infinite number of simulations that are infinitely closely spaced together. 
+
 
 This strategy usually results in sampling thermodynamic states whose Boltzmann distributions are very similar, thus collecting information that is to some degree redundant, some estimators, such as the multistate Bennett acceptance ratio (MBAR)~\cite{shirts2008statisticallya}, can exploit similarities between states to improve the precision of the estimates, using \textit{all} of the data at the same time, with all of the configurations sampled at all alchemical states $\{\lambda_k \}$ to compute the free energy difference $\Delta f(\lambda_i, \lambda_{j})$ between any pair of states $i,j$ (see Sec.~\ref{subsec:estimators}).
 
-Non-equilibrium free energy techniques provide an alternate approach to this problem, driving $\lambda$ between states (see Sec.~\ref{sec:sampling_schemes})~\cite{jarzynski1997nonequilibrium,jarzynski1998equilibrium,crooks2000pathensemble, gapsys2020large}. 
+Finally, non-equilibrium free energy techniques provide an alternate approach to this problem, driving $\lambda$ at states between the endpoints (see Sec.~\ref{sec:sampling_schemes})~\cite{jarzynski1997nonequilibrium,jarzynski1998equilibrium,crooks2000pathensemble, gapsys2020large}. 
 
 %%%%%%%%%%%%
 % Step 0   %
@@ -915,10 +915,10 @@ In principle, in the limit of sufficient configurational sampling, the free ener
 In addition to the above, the following questions may be relevant before diving into the binding free energy simulation setup.
 
 \begin{itemize}
-    \item Do I have one or multiple good receptor structures? (e.g. a good resolution X-ray crystal of the protein target)
-    \item Do I have information on one or all of the ligand binding sites? (e.g. an X-ray structure)
+    \item Do I have one or multiple good receptor structures (e.g. a good resolution X-ray crystal of the protein target)?
+    \item Do I have information on one or all of the ligand binding sites (e.g. an X-ray structure)?
     \item Should I include buried waters, or other small molecules that can be found in an X-ray structure?
-    \item Are my ligands part of a congeneric series? (i.e. simple R group substitutions around the same scaffold)
+    \item Are my ligands part of a congeneric series (i.e. simple R group substitutions around the same scaffold)?
     \end{itemize}
 
 \paragraph{Are there good starting structures available?}
@@ -985,7 +985,7 @@ In this case, two independent calculations compute the free energy of removing t
 \subsubsection{Absolute binding free energy (ABFE)}
 \label{sec:theory-abfe}
 
-In the alchemical literature, the term ``absolute binding free energy'' is another name for the standard binding free energy $\Delta G^\circ_b = - k_B T \ln K_b$ between a receptor and its ligand.  Here, we discuss two methods, Double-Decoupling (DDM) and Alchemical Transfer (ATM), used to evaluate it by alchemical computer simulations.  In the following analysis, we use the solvent-averaged solute forms, which is defined more explicitly in the later section of the paper Sec.~\ref{sec:derivations}, digging more deeply into the details of the theory to be formally correct.
+In the alchemical literature, the term ``absolute binding free energy'' is another name for the standard binding free energy $\Delta G^\circ_b = - k_B T \ln K_b$ between a receptor and its ligand.  Here, we discuss two methods, Double-Decoupling (DDM) and Alchemical Transfer (ATM), used to evaluate it by alchemical computer simulations.  In the following analysis, we use the solvent-averaged solute forms, which is defined more explicitly in the later section of the paper Sec.~\ref{sec:derivations}, digging more deeply into the details of the theory to be formally correct.  We will use real potentials and temperatures $U$ and $\beta$, rather than reduced potentials, for concreteness and to make these calculations more easily implementable, and use $G$ for the free energy, though technically one would need to add a (negligible for protein-ligand binding at ambient conditions) $P\Delta V$ term. 
 
 \paragraph{Double Decoupling}
 
@@ -1627,9 +1627,14 @@ With Hamiltonian replica exchange, one can include additional differences in the
 
 A variant of this approach of changing intermediate state Hamiltonians to improve sampling that overcomes some of the reported issues with FEP/REST2 is called alchemical enhanced sampling (ACES)~\cite{lee2023aces}. ACES creates localized targeted ``enhanced sampling states'' that are connected to the real state end-points through HREMD.  The method leverages the dual topology framework to produce a concerted ``counter-diffusion'' of alchemical states that leads to minimal rearrangement of the environment along the alchemical path~\cite{York_ACSPhysChemAu_2023_v3_p478}. The computational overhead of the method is negligible relative to more conventional alchemical free energy simulations with HREMD.
 
-A third approach borrows ideas from simulated tempering~\cite{marinari1992simulated}. In this scheme, a single replica rapidly explores all of $\lambda$ space by switching between different intermediate $\lambda$ values, as seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{C}.  This is referred to as expanded ensemble, extended ensemble or even just simulated tempering (although the temperature is not changed when applied to $\lambda$ changes in alchemical free energy calculations).~\cite{lyubartsev1992new, li2007simulated, tan2017optimally} and is supported by OpenMM Tools~\cite{andrearizzi2019choderalab}, GROMACS and AMBER TI~\cite{Lee_JPhysChemB_2025_v129_p13063}.    One can show that the expanded ensemble calculations will move back and forth between replicas faster than replica exchange.~\cite{zhang2008comparison,hsu2024replica}  
+A third approach builds on simulated tempering~\cite{marinari1992simulated}. In this scheme, a single replica rapidly explores all of $\lambda$ space by switching between different intermediate $\lambda$ values, as seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{C}.  This is also referred to as expanded ensemble, extended ensemble or even just simulated tempering (although the temperature is not changed when applied to $\lambda$ changes in alchemical free energy calculations) ~\cite{lyubartsev1992new, li2007simulated, tan2017optimally} and is supported by OpenMM Tools~\cite{andrearizzi2019choderalab}, GROMACS and AMBER TI~\cite{Lee_JPhysChemB_2025_v129_p13063}.   It has been shown that, under some conditions, the expanded ensemble calculations will move back and forth between replicas faster than replica exchange.~\cite{zhang2008comparison,hsu2024replica}  
 
-Although this approach allows multiple states to be simulated in a single simulation, thus removing requirements for multiple parallel simulations, in order to sample all of the states evenly, one must introduce a weight for each state; otherwise, the simulation will remain in the states that are near the free energy minimum. The weights that give exactly equal sampling of all states are just $\exp(-\beta F)$, meaning that one must know the free energies themselves to estimate the free energies!  Since any reasonable estimate of the free energies will give approximately equal sampling of all $\lambda$s, leading to good free energy estimations, the problem is not quite as bad as it first appears. A number of approaches have been proposed to converge the weights more rapidly to the equal sampling weights, including Wang-Landau sampling~\cite{Wang:PRL:2001} and self-adjusted mixture sampling~\cite{tan2017optimally}, and even using metadynamics in $\lambda$ space~\cite{Hsu:JCTC:2023}. A full description of the different methods to adjust the weights is beyond the scope of this review---the interested reader is directed to a more complete review in~\cite{Henin:LJCMS:2022} of the different choices as well as the other $\lambda$-based enhanced sampling methods.  However, at this point, all of these methods require some effort and attention to robustly give equal sampling to all $\lambda$ states and give consistent free energies.
+While simulated tempering eliminates the need for parallel simulations, it also eliminates the cancellation of unknown free energies that occurs in replica exchange acceptance probabilities. Consequently, any method based on simulated tempering transition kernel requires a reasonable estimate of the free energies to achieve reasonable $\lambda$ transitions.
+
+Suppose, temporarily, that the true free energies were known and used for the $\lambda$ transitions. Even then, the choice of the desired asymptotic probability of visiting each $\lambda$ state is important. It is closely related to the choice of spacing of the $\lambda$ states discussed near the end of Section \ref{sec:important_path}: many closely spaced states, each visited with small probability, should behave roughly like fewer, more widely spaced states that are each visited with higher probability. As discussed there, the spacing should be chosen so that the statistical difficulty is approximately uniform along the path. Analogously, the probability of visiting a given $\lambda$ should be roughly proportional to the thermodynamic length volume element \cite{https://www2.stat.duke.edu/~scs/Courses/Stat376/Papers/NormConstants/GelmanMengStatSci1998.pdf}.
+
+
+Any reasonable estimate of the free energies will lead to reasonable free energy estimates, and a number of approaches have been proposed to estimate the free energies on-the-fly, including Wang-Landau sampling~\cite{Wang:PRL:2001} and self-adjusted mixture sampling~\cite{tan2017optimally}, and even using metadynamics in $\lambda$ space~\cite{Hsu:JCTC:2023}. A full description of the different methods to adjust the free energies and target probability distribution is beyond the scope of this review---the interested reader is directed to a more complete review in~\cite{Henin:LJCMS:2022} of the different choices as well as the other $\lambda$-based enhanced sampling methods.  
 
 The non-equilibrium (NEQ) switching (Fig.~\ref{fig:fig_sampling_scheme}\textbf{D}) approach makes use of short out-of-equilibrium simulations~\cite{aldeghi2018accurate}. In this protocol, only end state $\lambda$ replicas ($\lambda$=0, $\lambda=1$) are simulated at equilibrium; intermediate information is generated from non-equilibrium simulations that rapidly transition between end states. 
 Over the course of each transition, Hamiltonian derivative with respect to $\lambda$ is recorded; subsequently the curves are integrated to yield work distributions for the forward and reverse processes. Crooks Fluctuation Theorem~\cite{crooks1999entropy} allows estimating free energy difference between the end states from the generated work distributions~\cite{shirts2003equilibrium}.
@@ -1801,7 +1806,7 @@ When work distributions are Gaussian, $p(W) \sim \mathcal{N}(\overline{W},\sigma
 \Delta F = \overline{W} - \frac{\beta\sigma^2}{2}
 \end{eqnarray}\label{eqn.jarzynski_gaussian}
 
-The assumption of Gaussian work distributions usually holds only for slow switching that keeps the system close to equilibrium~\cite{jarzynski1997nonequilibrium}.
+The assumption of Gaussian work distributions usually holds only for slow switching that keeps the system close to equilibrium~\cite{jarzynski1997nonequilibrium}, so it's use should be carefully monitored.
 
 \subsubsection{The Bennett acceptance ratio (BAR)}
 If we have the differences in the potential energy sampled from the distribution defined by $U_0$ to the state defined by $U_1$, and we also have the differences in potential energies from the distribution sampled by $U_1$ to the state defined by $U_0$, we can obtain a significantly improved estimate of the
@@ -2368,7 +2373,9 @@ It is important to carefully examine output data for common problems. Some of th
 \section{Detailed derivations of statistical mechanical results}
 \label{sec:derivations}
 
-In this section, we present the necessary statistical mechanics theory of dilute solutions to define the quantities we are trying to calculate using alchemical methods in more detail than in Sec.~\ref{sec:theory}. We derive free energy expressions that form the basis of alchemical computational protocols for modeling noncovalent molecular binding, solvation, and solvent partitioning equilibria. The emphasis here is placed on bridging theoretical foundations and intuition. Since chemical equilibria are governed by the chemical potentials of the species involved, we begin by considering a statistical mechanics expression for the chemical potential of a solute in a solvent. We will then combine chemical potentials to develop models for each process.  As discussed in Sec.~\ref{sec:theory}, our derivations are entirely classical, and we will repeat some definitions from Sec.~\ref{sec:theory} to avoid having the reader flip back and forth between sections.
+In this section, we present the necessary statistical mechanics theory of dilute solutions to define the quantities we are trying to calculate using alchemical methods in more detail than in Sec.~\ref{sec:theory}. There will therefore be some repetition between the two sections.  This section is mainly intended to provide more rigor to the derivations in section Sec.~\ref{sec:theory} and many readers may be able to skip this.  However, these details are often left out of much of the literature, and we gather them together here to provide a reference for those instances when fiddling with the details of implementations or derivations is needed.
+
+Here, we derive free energy expressions that form the basis of alchemical computational protocols for modeling noncovalent molecular binding, solvation, and solvent partitioning equilibria. The emphasis here is placed on bridging theoretical foundations and intuition. Since chemical equilibria are governed by the chemical potentials of the species involved, we begin by considering a statistical mechanics expression for the chemical potential of a solute in a solvent. We will then combine chemical potentials to develop models for each process.  As discussed in Sec.~\ref{sec:theory}, our derivations are entirely classical, and we will repeat some definitions from Sec.~\ref{sec:theory} to avoid having the reader flip back and forth between sections.
 
 \subsection{The chemical potential}
 \label{sec:chemical_potential-app}
@@ -2386,9 +2393,9 @@ The quantity $q'_u$ in Eq.~\ref{eq:chemical-potential-definition-app} is the mol
   q'_u = \frac{\Lambda_u^3}{\prod_i \lambda_i^3} 8 \pi^2 z_u
   \label{eq:intra-qpu-def-app}
 \end{equation}
-where $\beta = (k_B T)^{-1}$, $\lambda_i$ is the thermal De Broglie wavelength of the $i$-th atom of the solute (not the alchemical parameter as used elsewhere in this document), and $z_u$ is the intramolecular configurational partition function of the solute.  As described in Sec.~\ref{sec:theory}, masses do not enter the classical statistical mechanical potentials, so the thermal De Broglie wavelength terms coming from the partition functions of the momenta cancel in the resulting expressions below, and we will no longer consider them.
+where $\beta = (k_B T)^{-1}$, $\lambda_i$ is the thermal De Broglie wavelength of the $i$-th atom of the solute (not the alchemical parameter as used elsewhere in this document), and $z_u$ is the intramolecular configurational partition function of the solute.  As described in Sec.~\ref{sec:theory}, masses do not enter the classical statistical mechanical potentials, so the thermal De Broglie wavelength terms coming from the partition functions of the momenta cancel in the resulting expressions below, and we will no longer consider them.  Up to this point, we are merely recapitulating what was presented in Sec.~\ref{sec:theory}; indeed, Eqs.~\ref{eq:chemical-potential-definition-app} and \ref{eq:intra-qpu-def-app} are the same as Eqs. ~\ref{eq:chemical-potential-definition} and \ref{eq:intra-qpu-def} and are included here again for completeness (similar repetitions will occur throughout this section).
 
-We define this intramolecular partition function more precisely here, as:
+However, in contrast to Sec.~\ref{sec:theory} We define this intramolecular partition function more precisely here, as:
 \begin{equation}
   z_u = \int dx_u e^{-\beta \Psi_v(x_u)}
   \label{eq:intra-zu-def}
@@ -2777,7 +2784,7 @@ We hope that the best practice guide provides a set of tools that allow a better
 \textbf{AR}: Created figure~\ref{fig:freeenergytrajectories}, contributed to sections~\ref{sec:theory} and~\ref{sec:simulation_protocol_choice}, and helped edit the paper.\\
 \textbf{JS}: Created Figs.~\ref{fig:fig_what_is_alchemy},~\ref{fig:fig_binding_thermodynamic_cycle},~\ref{fig:fig_topology},~\ref{fig:fig_mcss}, and~\ref{fig:fig_absolute_thermodynamic_cycle}. Wrote the checklist Sec.~\ref{sec:checklist}, and contributed to general formatting discussions and editing.\\
 \textbf{OJM} Contributed to ``Conserved binding site waters can play an important role in binding free energies'' and ``Handling poorly sampled water networks'' in Sec.~\ref{subsec:binding}.\\
-\textbf{MRS}: Helped create figure~\ref{fig:fig_what_is_lambda}, wrote Sec.~\ref{sec:important_path} describing choices for alchemical pathways and parts of~\ref{sec:data_analysis} on the analysis for free energy calculations. Reviewed, organized and edited text throughout.\\
+\textbf{MRS}: Helped create figure~\ref{fig:fig_what_is_lambda}, wrote Sec.~\ref{sec:important_path} describing choices for alchemical pathways and parts of~\ref{sec:data_analysis} on the analysis for free energy calculations. Helped reorganize theory and uncertainty sections. Reviewed, organized and edited text throughout.\\
 \textbf{ST}: Created Fig.~\ref{fig:fig_topology} (based on an earlier version by JS).\\
 \textbf{GT}: Contributed to Sec.~\ref{sec:intro} and helped edit the paper.\\
 \textbf{HX}: Contributed to Sec.~\ref{sec:relative-fe-protocol}, and to Sec.~\ref{sec:are-they-good}.\\
@@ -2826,8 +2833,8 @@ MK and JM acknowledge funding through Innovate UK by KTP partnership 011120.
 AR acknowledges partial support from the Tri-Institutional Program in Computational Biology and Medicine and the Sloan Kettering Institute.
 HEBM acknowledges support from a Molecular Sciences Software Institute Investment Fellowship and Relay Therapeutics.
 DLM acknowledges support from the National Institutes of Health (R01GM108889, R01GM124270, and R01GM132386), and the National Science Foundation (CHE 1352608). NMA is funded by the MRC via an iCASE studentship with Vertex Pharmaceuticals with contributions from Reuben College, Oxford. 
-JDC acknowledges support from the National Institutes of Health (NIH P30 CA008748, NIH R01 GM121505, R01 GM132386), as does EG (NIH 1R15GM151708).
-A complete funding history for the Chodera lab can be found at \url{http://choderalab.org/funding}.
+JDC acknowledges support from the National Institutes of Health (P30 CA008748, R01 GM121505, R01 GM132386)A complete funding history for the Chodera lab can be found at \url{http://choderalab.org/funding}.
+EG (R15GM151708), and MRS (R35GM158359) also acknowledge funding support from the National Institutes of Health.
 The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health.
 FC acknowledges support from a UKRI Future Leaders Fellowship (Grant MR/T019654/1).
 OJM, WGP, and JWE acknowledge funding from the EPSRC, Astex Pharmaceuticals, and Defence Threat Reduction Agency.
