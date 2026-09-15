@@ -368,7 +368,8 @@ $L$ and $R$ --- generic labels for ligand and receptor\\
 $\mathcal{O}$ --- overlap matrix between alchemical states\\
 $P^{\circ}$ --- standard pressure \\
 $p$ --- pressure \\
-$\vec{q}$ --- vector of a single configuration, i.e. $x$, $y$, $z$ coordinates of the simulation system\\
+$\mathbf{q}$ --- a single configuration of the system, i.e. the collection of degrees of freedom that completely specifies it\\
+$\mathbf{r}_A$, $\mathbf{r}_v$ --- positions of the solute and of the solvent molecules\\
 $q'_u$ --- molecular partition function of the solute at rest \\
 $T$ --- temperature \\
 $t_0$ --- equilibration time \\
@@ -562,23 +563,23 @@ When we carry out a properly run molecular dynamics or Monte Carlo
 simulation in, for example, the canonical (constant particle number
 $N$, constant temperature $T$, constant volume $V$) ensemble, then we
 are generating samples consistent with the Boltzmann distribution
-$p(\vec{q}) \propto e^{-U(\vec{q})/k_BT}$ (or equivalently $e^{-\beta U(\vec{q})}$), where $U$ is the total
+$p(\mathbf{q}) \propto e^{-U(\mathbf{q})/k_BT}$ (or equivalently $e^{-\beta U(\mathbf{q})}$), where $U$ is the total
 energy of the system (including both potential and kinetic energies).
 Note that this probability distribution leaves out the constant
 needed to make this a true probability distribution, i.e. one that
 integrates to 1, also termed a \textit{normalized} probability
 distribution.  That constant of proportionality is the partition
-function $Z=\int e^{-U(\vec{q})/k_BT} d\vec{q}$, so we can then write
-$p(\vec{x}) = \frac{e^{-U(\vec{q})/k_BT}}{Z}$.
+function $Z=\int e^{-U(\mathbf{q})/k_BT} d\mathbf{q}$, so we can then write
+$p(\mathbf{q}) = \frac{e^{-U(\mathbf{q})/k_BT}}{Z}$.
 
 We can define the \textit{expectation value} of some quantity like
-energy or volume with respect to a probability distribution $p(q)$ as
+energy or volume with respect to a probability distribution $p(\mathbf{q})$ as
 the average of some quantity from many, many samples from the that
 distribution. For example, the expectation function of the energy is
-$\langle U \rangle_p = \frac{1}{N}\sum_{n=1}^N U(\vec{q}_n)$, as $N$ gets
-very large, and the $x_n$'s are generated from the distribution
-$p(x)$. But in the limit of enough samples, this will also eventually
-become equal to $\int p(\vec{q}) U(\vec{q})d\vec{q}$.  Now, for a box
+$\langle U \rangle_p = \frac{1}{N}\sum_{n=1}^N U(\mathbf{q}_n)$, as $N$ gets
+very large, and the $\mathbf{q}_n$'s are generated from the distribution
+$p(\mathbf{q})$. But in the limit of enough samples, this will also eventually
+become equal to $\int p(\mathbf{q}) U(\mathbf{q})d\mathbf{q}$.  Now, for a box
 of 30,000 atoms, this is a $3\times30,000 = 90,000$ dimensional
 integral, which is pretty much impossible to do without severe
 approximations. So it is clear how much easier it might be to compute
@@ -598,58 +599,58 @@ number of molecules $N_i$ of species $i$ at constant chemical
 potential $\mu_i$ (e.g., number of waters or ions) by introducing the
 \textit{reduced potential}~\cite{shirts2008statisticallya}
 \begin{equation}\label{eq:reduced-potential}
-u(\vec{q};\lambda) \equiv \beta \left[ U(\vec{q};\lambda) + p \, V(\vec{q}) + \sum_i \mu_i \, N_i(\vec{q}) + \cdots \right] \, .
+u(\mathbf{q};\lambda) \equiv \beta \left[ U(\mathbf{q};\lambda) + p \, V(\mathbf{q}) + \sum_i \mu_i \, N_i(\mathbf{q}) + \cdots \right] \, .
 \end{equation}
 Here, the collection of thermodynamic and alchemical parameters $\{\beta, \lambda, p, \mu, \ldots\}$ defines a \emph{thermodynamic state}.
 In the context of alchemical calculations, in which the thermodynamic states vary only in their value of $\lambda$, these are also referred to as \emph{alchemical states}.
 The free energy of mutating $A$ to $B$ in any environment ($\Delta G_{\mathrm{env}}$ e.g., binding site, solvent) can then be computed as
 \begin{equation}\label{eq:delta-G-env}
-    \Delta G_{\mathrm{env}} = - k_BT \ln \frac{Z(\lambda_B)}{Z(\lambda_A)} = - k_BT \ln \frac{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\vec{q}; \lambda_B) \right) \, d\vec{q}}{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\vec{q}; \lambda_A) \right) \, d\vec{q}} \, ,
+    \Delta G_{\mathrm{env}} = - k_BT \ln \frac{Z(\lambda_B)}{Z(\lambda_A)} = - k_BT \ln \frac{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\mathbf{q}; \lambda_B) \right) \, d\mathbf{q}}{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\mathbf{q}; \lambda_A) \right) \, d\mathbf{q}} \, ,
 \end{equation}
-over the configurational space of the environment ($\Gamma_{\mathrm{env}}$).  For simplicity in this paper, we will usually use the more specific $\beta U(\vec{q})$ instead of $u(q\vec{q})$, but for more complicated situations where one is dealing with simulations at multiple temperatures or pressures, it can prove useful to write equations in terms of the reduced potential. 
+over the configurational space of the environment ($\Gamma_{\mathrm{env}}$).  For simplicity in this paper, we will usually use the more specific $\beta U(\mathbf{q})$ instead of $u(q\mathbf{q})$, but for more complicated situations where one is dealing with simulations at multiple temperatures or pressures, it can prove useful to write equations in terms of the reduced potential. 
 
 While it is generally not feasible to directly compute the two partition functions $Z(\lambda)$, for the same reason we can't easily compute binding free energies with \ref{eq:law-mass-action}, several estimators have been devised to robustly estimate the ratio of partition functions in Eq.~\ref{eq:delta-G-env} (see Sec.~\ref{subsec:estimators}) from a set of configurations usually collected with MD simulations from the thermodynamic states defined at $\lambda_A$ and $\lambda_B$ as well as, importantly, configurations from simulating  intermediates in between these two end states.
 
 \paragraph{An example: the Zwanzig relationship connects ratios of partition functions to expectation values of energy differences}
 
-Let's say we have some probability function $p_A(\vec{q})$ that we know, up to some constant. This is of
-course the situation we are usually in with molecular simulations, since we know that $p_A \propto e^{-U(\vec{q})}$, but we don't know the partition function $Z_A$.
+Let's say we have some probability function $p_A(\mathbf{q})$ that we know, up to some constant. This is of
+course the situation we are usually in with molecular simulations, since we know that $p_A \propto e^{-U(\mathbf{q})}$, but we don't know the partition function $Z_A$.
 
 We have by the definition of the partition function that $\int
-Z_A^{-1} p_A(\vec{q}) d\vec{q} = 1$. We are starting by making this
+Z_A^{-1} p_A(\mathbf{q}) d\mathbf{q} = 1$. We are starting by making this
 very general, so we won't define $p_A(x)$ just yet. We can always
 divide and multiply by one, so if we have some other probability
-distribution $p_B(\vec{q})$, defined on the same coordinates $\vec{q}$,
+distribution $p_B(\mathbf{q})$, defined on the same coordinates $\mathbf{q}$,
 we have:
   \begin{eqnarray*}
-    1 &=& \int \frac{p_A(\vec{q})}{Z_A} d\vec{q} \\
-      &=& \int p_A(\vec{q})/Z_A \frac{p_B(\vec{q})/Z_B}{p_B(\vec{q})/Z_B} d\vec{q} \\
-    &=& \int p_B(\vec{q})/Z_B \frac{p_A(\vec{q})/Z_A}{p_B(\vec{q})/Z_B} d\vec{q} \\
-    \left \langle 1 \right \rangle_B &=& \left \langle \frac{p_A(\vec{q})/Z_A}{p_B(\vec{q})/Z_B} \right \rangle_B \\
-           1  &=& \frac{Z_B}{Z_A} \left \langle \frac{p_A(\vec{q})}{p_B(\vec{q})} \right \rangle_B \\
-           \frac{Z_A}{Z_B}  &=& \left \langle \frac{p_A(\vec{q})}{p_B(\vec{q})} \right \rangle_B \\
+    1 &=& \int \frac{p_A(\mathbf{q})}{Z_A} d\mathbf{q} \\
+      &=& \int p_A(\mathbf{q})/Z_A \frac{p_B(\mathbf{q})/Z_B}{p_B(\mathbf{q})/Z_B} d\mathbf{q} \\
+    &=& \int p_B(\mathbf{q})/Z_B \frac{p_A(\mathbf{q})/Z_A}{p_B(\mathbf{q})/Z_B} d\mathbf{q} \\
+    \left \langle 1 \right \rangle_B &=& \left \langle \frac{p_A(\mathbf{q})/Z_A}{p_B(\mathbf{q})/Z_B} \right \rangle_B \\
+           1  &=& \frac{Z_B}{Z_A} \left \langle \frac{p_A(\mathbf{q})}{p_B(\mathbf{q})} \right \rangle_B \\
+           \frac{Z_A}{Z_B}  &=& \left \langle \frac{p_A(\mathbf{q})}{p_B(\mathbf{q})} \right \rangle_B \\
   \end{eqnarray*}
 
 We take advantage of the fact that the expectation value of a constant
 is just that constant.  The average of 1 is just 1, and $Z_A$ and $Z_B$
-don't depend on $\vec{q}$ either. We do have to make sure $p_B(\vec{q})$
+don't depend on $\mathbf{q}$ either. We do have to make sure $p_B(\mathbf{q})$
 isn't zero anywhere, which usually isn't a problem, but can crop up
 occasionally if the energy goes to infinity.
 
-  At this point, we now say that $p_A(\vec{q}) = e^{-u_A(\vec{q})}$,
-  and $p_B(\vec{q}) = e^{-u_B(\vec{q})}$, meaning that $Z_A = e^{-f_A}$
+  At this point, we now say that $p_A(\mathbf{q}) = e^{-u_A(\mathbf{q})}$,
+  and $p_B(\mathbf{q}) = e^{-u_B(\mathbf{q})}$, meaning that $Z_A = e^{-f_A}$
   and $Z_B = e^{-f_B}$.  We use the reduced energy $u$ and reduced free energy $f$ to make the finding general over any ensemble, but one can always replace it with just $\beta U$ for specificity of the canonical ensemble with a single $T$ if you want.  So we can say that 
 
   \begin{eqnarray}  
-    \frac{Z_A}{Z_B}  &=& \left \langle \frac{p_A(\vec{q})}{p_B(\vec{q})} \right \rangle_B \nonumber \\
-    \frac{e^{-f_A}}{e^{-f_B}}  &=& \left \langle \frac{ e^{-u_A(\vec{q})}}{ e^{-u_B(\vec{q}}} \right\rangle_B \nonumber \\
-      e^{-(f_A-f_B)}  &=& \left \langle e^{-(u_A(\vec{q})-u_B(\vec{q}))}\right\rangle_B \nonumber \\
-      e^{-\Delta f}  &=& \left \langle e^{-\Delta u(\vec{q}))}\right\rangle_B \nonumber \\
-    \Delta f  &=& - \ln \left \langle e^{-\Delta u(\vec{q}))}\right\rangle_B \label{eq:zwanzig}
+    \frac{Z_A}{Z_B}  &=& \left \langle \frac{p_A(\mathbf{q})}{p_B(\mathbf{q})} \right \rangle_B \nonumber \\
+    \frac{e^{-f_A}}{e^{-f_B}}  &=& \left \langle \frac{ e^{-u_A(\mathbf{q})}}{ e^{-u_B(\mathbf{q}}} \right\rangle_B \nonumber \\
+      e^{-(f_A-f_B)}  &=& \left \langle e^{-(u_A(\mathbf{q})-u_B(\mathbf{q}))}\right\rangle_B \nonumber \\
+      e^{-\Delta f}  &=& \left \langle e^{-\Delta u(\mathbf{q}))}\right\rangle_B \nonumber \\
+    \Delta f  &=& - \ln \left \langle e^{-\Delta u(\mathbf{q}))}\right\rangle_B \label{eq:zwanzig}
   \end{eqnarray}
 
-Where $\Delta f = f_A - f_B$ and $\Delta u(\vec{q}) =
-u_A(\vec{q})-u_B(\vec{q})$.  This equation is often known as the
+Where $\Delta f = f_A - f_B$ and $\Delta u(\mathbf{q}) =
+u_A(\mathbf{q})-u_B(\mathbf{q})$.  This equation is often known as the
 Zwanzig relation~\cite{zwanzig1954hightemperature}, or exponential
 averaging, since we exponentiate our $\Delta u$, then average, then
 take the logarithm.
@@ -667,14 +668,14 @@ doing a simulation of state $A$ as well.  We will get out $-\Delta f =
 f_B - f_A$, or minus the free energy we get by doing the simulation
 from state $B$.
 
-The key to this working well is that we need $\Delta u(\vec{q})$ not
+The key to this working well is that we need $\Delta u(\mathbf{q})$ not
 to vary too much during the simulation.  If it does vary a lot, then
-it means some values of $\vec{q}$ are much more probable in one state
+it means some values of $\mathbf{q}$ are much more probable in one state
 than the other, and simulations of $A$ and $B$ don't really visit the
 same configurations at all.  This is frequently called poor phase
 space overlap, or poor configuration space overlap.  In that case,
 just a few simulation points contribute to the average and it will be
-very noisy. If on the other hand, $\vec{q}$ has similar probability in
+very noisy. If on the other hand, $\mathbf{q}$ has similar probability in
 states $A$ and $B$, then we have good phase space overlap, all of the
 numbers we average in the expectation value are similar in size, and
 the average converges quickly.
@@ -686,25 +687,25 @@ the ratio of partition functions $\frac{z_{A(v)}}{z_{A(\mathrm{g})}}$
 \begin{eqnarray}
   \frac{z_{A(v)}}{z_{A(\mathrm{g})}} &=&
   \frac{
-    \int d\vec{r}_A  d\vec{r}_v  e^{-u(\vec{r}_A, \vec{r}_v) } 
+    \int d\mathbf{r}_A  d\mathbf{r}_v  e^{-u(\mathbf{r}_A, \mathbf{r}_v) } 
   }{
-    \int d\vec{r}_A d\vec{r}_v e^{-[u(\vec{r}_v) + u( \vec{r}_A  )] } 
+    \int d\mathbf{r}_A d\mathbf{r}_v e^{-[u(\mathbf{r}_v) + u( \mathbf{r}_A  )] } 
   } \\
 &=&  \frac{
-    \int d\vec{r}_A  d\vec{r}_v  e^{-\{ u(\vec{r}_A, \vec{r}_v) -  [ u(\vec{r}_v) + u(\vec{r}_A) ] \}} e^{-[u(\vec{r}_v) + u(  \vec{r}_A  )] } 
+    \int d\mathbf{r}_A  d\mathbf{r}_v  e^{-\{ u(\mathbf{r}_A, \mathbf{r}_v) -  [ u(\mathbf{r}_v) + u(\mathbf{r}_A) ] \}} e^{-[u(\mathbf{r}_v) + u(  \mathbf{r}_A  )] } 
   }{
-    \int d\vec{r}_A d\vec{r}_v e^{-[u(\vec{r}_v) + u( \vec{r}_A  )] } 
+    \int d\mathbf{r}_A d\mathbf{r}_v e^{-[u(\mathbf{r}_v) + u( \mathbf{r}_A  )] } 
   } \\
-  &=& \langle e^{-\Delta u(\vec{r}_A, \vec{r}_v)} \rangle_0
+  &=& \langle e^{-\Delta u(\mathbf{r}_A, \mathbf{r}_v)} \rangle_0
   \label{eq:zratio-solv-average}
 \end{eqnarray}
-where $d\vec{r}_A$ are the positions of the solute, and $d\vec{r}_v$ the positions of all solvent molecules, and $\Delta u =  u(\vec{r}_A , \vec{r}_v) -  [ u(\vec{r}_v) + u(\vec{r}_A ) ]$ the change in the system's potential energy for coupling the solute to the solvent. $\langle \ldots \rangle_0$ is this case is an average in the \textit{decoupled} ensemble, where the probability distribution we are using is the Boltzmann distribution for a box containing the solvent and solute, but where there is no interaction between the two. 
+where $d\mathbf{r}_A$ are the positions of the solute, and $d\mathbf{r}_v$ the positions of all solvent molecules, and $\Delta u =  u(\mathbf{r}_A , \mathbf{r}_v) -  [ u(\mathbf{r}_v) + u(\mathbf{r}_A ) ]$ the change in the system's potential energy for coupling the solute to the solvent. $\langle \ldots \rangle_0$ is this case is an average in the \textit{decoupled} ensemble, where the probability distribution we are using is the Boltzmann distribution for a box containing the solvent and solute, but where there is no interaction between the two. 
 
 As above, we can consider the reciprocal of Eq.~\ref{eq:zratio-solv-average} and express it in terms of an ensemble average $\langle \ldots \rangle_1$ in the coupled ensemble:
 \begin{equation}
   \frac{z_{A(v)}}{z_{A(\mathrm{g})}} = \frac{1}{\langle e^{\Delta u} \rangle_1}
 \end{equation}
-where $-\Delta u = [ u(\vec{r}_v) + u(\vec{r}_A ) ] - u(\vec{r}_A , \vec{r}_v)$ is a \textit{decoupling energy}, as it represents the energy of decoupling or turning off the energy between the solute and the solvent.
+where $-\Delta u = [ u(\mathbf{r}_v) + u(\mathbf{r}_A ) ] - u(\mathbf{r}_A , \mathbf{r}_v)$ is a \textit{decoupling energy}, as it represents the energy of decoupling or turning off the energy between the solute and the solvent.
 
 %The objective of alchemical solvation free energy calculations is to implement Eq.~\ref{eq:zratio-solv-dgexc}, by means of \emph{coupling} or \emph{decoupling} computational protocols and alchemical intermediate states as discussed in section \ref{subsec:numerical-implementations}.
 
@@ -725,15 +726,15 @@ free energy of ligand binding is more complicated, primarily because defining th
 \paragraph{Thermodynamic integration gives another way to calculate free energies from simulation}
 
 Exponential averaging is not the only way we can relate free energies to
-expectation values.  Once we have defined $U(\vec{q},\lambda)$ (again using the reduced potential to keep it general over different ensembles), as
+expectation values.  Once we have defined $U(\mathbf{q},\lambda)$ (again using the reduced potential to keep it general over different ensembles), as
 a function of $\lambda$, then we can compute the derivative
-$\frac{du(\vec{q})}{d\lambda}$. Although we will not prove it here, a page or
+$\frac{du(\mathbf{q})}{d\lambda}$. Although we will not prove it here, a page or
 so of algebra and statistical mechanics shows that, if $\lambda=0$
 corresponds to state $B$ and $\lambda=1$ corresponds to state $A$,
 then:
 
 \begin{eqnarray}
-  \Delta f = \int_0^1 \left \langle \frac{du(\vec{q})}{d\lambda} \right \rangle d\lambda \label{eq:TI_defn}
+  \Delta f = \int_0^1 \left \langle \frac{du(\mathbf{q})}{d\lambda} \right \rangle d\lambda \label{eq:TI_defn}
 \end{eqnarray}
 In other words, we keep track of $\frac{du}{d\lambda}$ as we run the
 simulation, average that to get an estimate of the expectation value,
@@ -755,13 +756,13 @@ While it is theoretically possible to estimate the ratio of partition functions 
 
 Instead, we take advantage of the fact that the free energy is a state function and break up the transformation into a series of manageable steps, distributed along a pathway where we gradually morph the system from initial to final state of the desired transformation. Each intermediate state models a molecule that is neither $A$ nor $B$ but an interpolation of the two.
 
-In the case of a relative binding free energy calculation, for example, this might be achieved by simulating a ``chimeric'' molecule composed of enough atoms to represent both $A$ and $B$. A subset of the energetic terms in $U(\vec{q};\lambda)$ is then modulated by $\lambda$ so that at $\lambda_A$, the atoms that form molecule $A$ are activated and those belonging exclusively to $B$ are non-interacting ``dummy atoms'', while the opposite occurs at $\lambda_B$ (see Sec.~\ref{sec:relative-fe-protocol} and Fig.~\ref{fig:fig_topology} for details).
+In the case of a relative binding free energy calculation, for example, this might be achieved by simulating a ``chimeric'' molecule composed of enough atoms to represent both $A$ and $B$. A subset of the energetic terms in $U(\mathbf{q};\lambda)$ is then modulated by $\lambda$ so that at $\lambda_A$, the atoms that form molecule $A$ are activated and those belonging exclusively to $B$ are non-interacting ``dummy atoms'', while the opposite occurs at $\lambda_B$ (see Sec.~\ref{sec:relative-fe-protocol} and Fig.~\ref{fig:fig_topology} for details).
 
 In theory, any pathway connecting the two states will work, because free energy is a state variable.  However, many instinctively obvious ways to interpolate between molecules end up being very noisy and inefficient, but a number of good ways to choose a pathway have been developed, discussed in more detail in Sec.~\ref{sec:important_path}.
 
-Intermediate alchemical states are defined in terms of one or more alchemical progress parameters $\lambda$ that change the potential energy function $U(\vec{q};\lambda)$ such that the potential energies of the initial and final states are recovered at two particular values $\lambda_0$ and $\lambda_1$. We most often parameterize this path with a single number ranging from $\lambda=0$ to $\lambda=1$, with $\lambda$ a single scalar.  However, we could define a path that has two different values, such as separate $\lambda$s for the Coulomb, van der Waals, and bonded terms~\cite{naden}.  Usually, we will treat $\lambda$ as a single scalar, with $\lambda=0$ and $\lambda=1$ as endpoints, as most calculations use this; we will point out where appropriate how the math and treatment are different for a vector of $\lambda$ variables.  
+Intermediate alchemical states are defined in terms of one or more alchemical progress parameters $\lambda$ that change the potential energy function $U(\mathbf{q};\lambda)$ such that the potential energies of the initial and final states are recovered at two particular values $\lambda_0$ and $\lambda_1$. We most often parameterize this path with a single number ranging from $\lambda=0$ to $\lambda=1$, with $\lambda$ a single scalar.  However, we could define a path that has two different values, such as separate $\lambda$s for the Coulomb, van der Waals, and bonded terms~\cite{naden}.  Usually, we will treat $\lambda$ as a single scalar, with $\lambda=0$ and $\lambda=1$ as endpoints, as most calculations use this; we will point out where appropriate how the math and treatment are different for a vector of $\lambda$ variables.  
 %MRs: talk more about how even if there is a multiple component vector, for TI we take a path.  But with MBAR, we can take all paths simultaneous. 
-We then introduce some number of intermediate alchemical states at values $\lambda_A = \lambda_0, \lambda_1, \cdots, \lambda_K = \lambda_B$ so that each pair of consecutive states $\lambda_k, \lambda_{k+1}$ do share good phase space overlap, meaning, as described above, that there are decent number of samples $\vec{q}$ that have moderate probability in both neighboring alchemical states.  Then for $K$ intermediate states (written here for the Gibbs free energy, but true for the free energy of any other ensemble), we get
+We then introduce some number of intermediate alchemical states at values $\lambda_A = \lambda_0, \lambda_1, \cdots, \lambda_K = \lambda_B$ so that each pair of consecutive states $\lambda_k, \lambda_{k+1}$ do share good phase space overlap, meaning, as described above, that there are decent number of samples $\mathbf{q}$ that have moderate probability in both neighboring alchemical states.  Then for $K$ intermediate states (written here for the Gibbs free energy, but true for the free energy of any other ensemble), we get
 
 \begin{equation}
     \Delta G = k_BT \Delta f = k_BT \left(\sum_{k=0}^{K-1} \Delta G_{k,k+1}\right)
@@ -1012,7 +1013,7 @@ z_{RL(v)} = \frac{Z_{N_v, RL}}{Z_{N_v}}
 \end{equation}
 where
 \begin{equation}\label{eq:partfunct-ratio-explsolv-2}
-Z_{N_v, RL} = \int d\vec{r}_v dx_R dx_L d\zeta I(\zeta) e^{-\beta U(x_R, x_L, \zeta, \vec{r}_v)}
+Z_{N_v, RL} = \int d\mathbf{r}_v dx_R dx_L d\zeta I(\zeta) e^{-\beta U(x_R, x_L, \zeta, \mathbf{r}_v)}
 \end{equation}
 is the configurational partition function of the complex in a fixed position and orientation in $N_v$ solvent molecules, and $Z_{N_v}$ is the configurational partition function of the pure solvent. This process leads to an expression for the binding constant in terms of products of ratios of partition functions analogous to those encountered in Section \ref{sec:theory-solvation} to model solvation
 \begin{equation}
@@ -1052,7 +1053,7 @@ In the alchemical transfer approach, the standard binding free energy is obtaine
 \begin{equation}
   z_{R(v)} z_{L(v)} =
   \frac{
-    \int d\vec{r}_v dx_R dx_L d\zeta I^\ast(\zeta) e^{-\beta U(x_R, x_L, \zeta, \vec{r}_v)}
+    \int d\mathbf{r}_v dx_R dx_L d\zeta I^\ast(\zeta) e^{-\beta U(x_R, x_L, \zeta, \mathbf{r}_v)}
   }{
     8 \pi^2 V_{\rm site} Z_{N_v}
   }
@@ -1060,9 +1061,9 @@ In the alchemical transfer approach, the standard binding free energy is obtaine
 where, as above, we multiplied and divided by the volume of the binding site, assuming for simplicity that the indicator function does not depend on the orientational degrees of freedom of the ligand. Combining this result with Eq.~\ref{eq:partfunct-ratio-explsolv-1} for the complex and canceling the common partition function of the pure solvent, leads with Eq.~\ref{eq:DG0-binding-constant-def}  to an expression for the binding constant in terms of ratios of partition functions in explicit solvent that differ only by the location of the indicator function (in the binding site or in the solvent region):
 \begin{equation}\label{eq:atm-partfunc-ratio}
   K_b = C^\circ V_{\rm site} \frac{
-    \int d\vec{r}_v dx_R dx_L d\zeta I(\zeta) e^{-\beta U(x_R, x_L, \zeta, \vec{r}_v)}
+    \int d\mathbf{r}_v dx_R dx_L d\zeta I(\zeta) e^{-\beta U(x_R, x_L, \zeta, \mathbf{r}_v)}
   }{
-    \int d\vec{r}_v dx_R dx_L d\zeta I^\ast(\zeta) e^{-\beta U(x_R, x_L, \zeta, \vec{r}_v)}
+    \int d\mathbf{r}_v dx_R dx_L d\zeta I^\ast(\zeta) e^{-\beta U(x_R, x_L, \zeta, \mathbf{r}_v)}
   }
 \end{equation}
 The idea of alchemical transfer, illustrated in Figure \ref{fig:atm-illustration}A, is to cast Eq.~\ref{eq:atm-partfunc-ratio} as an ensemble average by a change of coordinates noting that $I(\zeta) = I^\ast(\zeta - \vec{h})$ where $\vec{h}$ is the fixed vector distance between the binding site and solvent locations spanned by the two indicator functions. The symbol $\zeta$ represents the position and orientation of the ligand relative to the receptor, so here $\zeta - \vec{h}$ is the operation of shifting the position of the ligand by the displacement $\vec{h}$ without changing its orientation. Hence, by applying the change of variable $\zeta \rightarrow \zeta - \vec{h}$ to the integral in the numerator of Eq.~\ref{eq:atm-partfunc-ratio}, we arrive at the following expression for the binding constant, equivalent to Eq.~\ref{eq:DG0-binding-constant-def-average-noOmega}:
@@ -1071,13 +1072,13 @@ K_b = C^\circ V_{\rm site} \langle e^{-\beta \Delta U} \rangle_0
 \end{equation}
 where
 \begin{equation}\label{eq:atm-deltaU-def}
-\Delta U(x) = U(x_R, x_L, \zeta + \vec{h}, \vec{r}_v) - U(x_R, x_L, \zeta, \vec{r}_v)
+\Delta U(x) = U(x_R, x_L, \zeta + \vec{h}, \mathbf{r}_v) - U(x_R, x_L, \zeta, \mathbf{r}_v)
 \end{equation}
 is the perturbation energy of the method, and the ensemble average $\langle \ldots \rangle_0$ is over the unbound ensemble when the ligand is limited to the solvent region far away from the receptor. Eq.~\ref{eq:atm-average-abfe} instructs to simulate the unbounded system where the ligand is limited to a region in the solvent and to sample the change of potential energy $\Delta U$ resulting from transferring the ligand from the solvent to the receptor binding site by a fixed displacement of the ligand as a whole.
 
 While Eq.~\ref{eq:atm-average-abfe} is formally rigorous, it is numerically necessary to divide the alchemical transfer ABFE calculation in explicit solvent into two legs~\cite{wu2021alchemical,azimi2022relative} that connect the unbound and bound states by a suitable alchemical intermediate state. Current implementations use an alchemical intermediate state midway between the bound and unbound states with the symmetric hybrid potential energy function
 \begin{equation}\label{eq:atm-intermediate-pot}
-U_{1/2}(x) = \frac12 [ U(x_R, x_L, \zeta + \vec{h}, \vec{r}_v) + U(x_R, x_L, \zeta, \vec{r}_v)  ] 
+U_{1/2}(x) = \frac12 [ U(x_R, x_L, \zeta + \vec{h}, \mathbf{r}_v) + U(x_R, x_L, \zeta, \mathbf{r}_v)  ] 
 \end{equation}
 To include the alchemical intermediate, Eq.~\ref{eq:atm-partfunc-ratio} is multiplied and divided by the partition function of the system with the hybrid potential energy function in Eq.~\ref{eq:atm-intermediate-pot}, each serving as the sampling state for each leg. The expression for the binding constant becomes a ratio of ensemble averages
 \begin{equation}\label{eq:atm-average-abfe-intermediate}
@@ -1089,7 +1090,7 @@ To include the alchemical intermediate, Eq.~\ref{eq:atm-partfunc-ratio} is multi
 \end{equation}
 where $\Delta U_1$ and $\Delta U_2$ are the perturbation energies of the bound and unbound states relative to the alchemical intermediate. For example,
 \begin{equation}
-\Delta U_1(x) = U(x_R, x_L, \zeta + \vec{h}, \vec{r}_v) - U_{1/2}(x)
+\Delta U_1(x) = U(x_R, x_L, \zeta + \vec{h}, \mathbf{r}_v) - U_{1/2}(x)
 \end{equation}
 Setting,
 \begin{equation}
@@ -1136,17 +1137,17 @@ The RBFE alchemical transfer formulation follows the ABFE formulation closely. S
 and noting that the numerator represents a system with $B$ bound and $A$ unbound, and in the denominator, the roles are switched. Next, the solvent PMF is used to indicate the solvent degrees of freedom explicitly, and the indicator functions $I^\ast(\zeta_A)$ and $I^\ast(\zeta_b)$ are introduced to keep the unbound ligands in the solvent, similarly to Eq.~\ref{eq:atm-partfunc-ratio}. The result is
 \begin{equation}\label{eq:atm-partfunc-ratio-rbfe-1}
   \frac{K_b(B)}{K_b(A)} = \frac{
-    \int d\vec{r}_v dx_R dx_A d\zeta_A dx_B d\zeta_B I^\ast(\zeta_A) I(\zeta_B)  e^{-\beta U(x_R, x_A, \zeta_A, x_B, \zeta_B, \vec{r}_v)}
+    \int d\mathbf{r}_v dx_R dx_A d\zeta_A dx_B d\zeta_B I^\ast(\zeta_A) I(\zeta_B)  e^{-\beta U(x_R, x_A, \zeta_A, x_B, \zeta_B, \mathbf{r}_v)}
   }{
-    \int d\vec{r}_v dx_R dx_A d\zeta_A dx_B d\zeta_B I(\zeta_A) I^\ast(\zeta_B)  e^{-\beta U(x_R, x_A, \zeta_A, x_B, \zeta_B, \vec{r}_v)}
+    \int d\mathbf{r}_v dx_R dx_A d\zeta_A dx_B d\zeta_B I(\zeta_A) I^\ast(\zeta_B)  e^{-\beta U(x_R, x_A, \zeta_A, x_B, \zeta_B, \mathbf{r}_v)}
   }
 \end{equation}
 where $x_A$ and $x_B$ are the internal coordinates of the ligands and $\zeta_A$, $\zeta_B$ are their external coordinates relative to the receptor.  Next we apply the change of variables $\zeta_B \rightarrow \zeta_B + \vec{h}$ and $\zeta_A \rightarrow \zeta_A - \vec{h}$ to the partition function in the numerator to obtain
 \begin{equation}\label{eq:atm-partfunc-ratio-rbfe-2}
   \frac{K_b(B)}{K_b(A)} = \frac{
-    \int d\vec{r}_v dx_R dx_A d\zeta_A dx_B d\zeta_B I(\zeta_A) I^\ast(\zeta_B)  e^{-\beta U(x_R, x_A, \zeta_A + \vec{h}, x_B, \zeta_B - \vec{h}, \vec{r}_v)}
+    \int d\mathbf{r}_v dx_R dx_A d\zeta_A dx_B d\zeta_B I(\zeta_A) I^\ast(\zeta_B)  e^{-\beta U(x_R, x_A, \zeta_A + \vec{h}, x_B, \zeta_B - \vec{h}, \mathbf{r}_v)}
   }{
-    \int d\vec{r}_v dx_R dx_A d\zeta_A dx_B d\zeta_B I(\zeta_A) I^\ast(\zeta_B)  e^{-\beta U(x_R, x_A, \zeta_A, x_B, \zeta_B, \vec{r}_v)}
+    \int d\mathbf{r}_v dx_R dx_A d\zeta_A dx_B d\zeta_B I(\zeta_A) I^\ast(\zeta_B)  e^{-\beta U(x_R, x_A, \zeta_A, x_B, \zeta_B, \mathbf{r}_v)}
   }
 \end{equation}
 which can be written as an ensemble average
@@ -1155,7 +1156,7 @@ which can be written as an ensemble average
 \end{equation}
 where
 \begin{equation}\label{eq:atm-partfunc-ratio-rbfe-pert}
-\Delta U = U(x_R, x_A, \zeta_A + \vec{h}, x_B, \zeta_B - \vec{h}, \vec{r}_v) - U(x_R, x_A, \zeta_A, x_B, \zeta_B, \vec{r}_v)
+\Delta U = U(x_R, x_A, \zeta_A + \vec{h}, x_B, \zeta_B - \vec{h}, \mathbf{r}_v) - U(x_R, x_A, \zeta_A, x_B, \zeta_B, \mathbf{r}_v)
 \end{equation}
 is the perturbation energy for displacing the two ligands in opposite directions, and the ensemble average $\langle \ldots \rangle_{RA+B}$ is carried out with $A$ bound and $B$ in the solvent. Except for the coordinate displacement, Eq.~\ref{eq:atm-partfunc-ratio-rbfe-average} is implemented similarly to the alchemical transfer ABFE protocol, including the use of the symmetric alchemical intermediate as in Eq.~\ref{eq:atm-average-abfe-intermediate}.
 
@@ -1556,9 +1557,9 @@ Another way of stating this is that intermediate states should sample molecular 
 
 So what are the options to adjust the potentials between the two end states based on $\lambda$? The simplest possible alchemical pathway is a \textit{linear} pathway:
 \begin{equation}
-U(\vec{q},\lambda) = (1-\lambda) U_0(\vec{q}) + \lambda U_1(\vec{q}), \end{equation}
+U(\mathbf{q},\lambda) = (1-\lambda) U_0(\mathbf{q}) + \lambda U_1(\mathbf{q}), \end{equation}
 
-so-called because the dependence on $\lambda$ is linear. This clearly satisfies the basic requirement that it gives the initial endpoint potential energy $U_0(\vec{q})$ when $\lambda=0$ and final endpoint energy $U_1(\vec{q})$ when $\lambda=1$. 
+so-called because the dependence on $\lambda$ is linear. This clearly satisfies the basic requirement that it gives the initial endpoint potential energy $U_0(\mathbf{q})$ when $\lambda=0$ and final endpoint energy $U_1(\mathbf{q})$ when $\lambda=1$. 
 
 For many energy terms this is a very good approach, \textit{as long as a repulsive core remains on}. For example, it can be shown that if van der Waals repulsions are left on, then the linear approach is very nearly the optimal path possible for changing, removing, or inserting the electrostatic energy terms, with the alchemical path being within about 10--20\% of the minimum possible uncertainty~\cite{naden2015linear} for a fixed amount of simulation time, as well as being nearly optimally efficient for van der Waals attractive terms with repulsion terms turned on~\cite{naden2014linear}. Although we are not aware of any quantitative tests for a linear transformation for dipolar or higher multipole terms, theoretically it should behave equally well for those types of interactions as well.
 
@@ -1567,7 +1568,7 @@ However, this linear approach ends up being terrible for removing or adding repu
 What we need instead is a function that smoothly removes this infinity. A large number of schemes have been tried~\cite{beutler1994avoiding, zacharias1994separationshifted, blondel2004ensemble, pham2011identifying, pham2012optimal, naden2014linear, donnini2005incorporating,gapsys2012new}, but the most common strategy is to use a ``soft-core'' potential, of the form:
 
 \begin{equation}
-    U(\vec{r_{ij}},\lambda) = 4\epsilon_{ij} \lambda \left(\frac{1}{(\alpha(1-\lambda) + (r_{ij}/\sigma_{ij})^6)^2} -  \frac{1}{\alpha(1-\lambda) + (r_{ij}/\sigma_{ij})^6}\right)
+    U(r_{ij},\lambda) = 4\epsilon_{ij} \lambda \left(\frac{1}{(\alpha(1-\lambda) + (r_{ij}/\sigma_{ij})^6)^2} -  \frac{1}{\alpha(1-\lambda) + (r_{ij}/\sigma_{ij})^6}\right)
     \label{eq:softcore},
 \end{equation}
 
@@ -1588,7 +1589,7 @@ A common process in single topology relative calculations is, as noted above, to
 Other schemes, such as simultaneously changing electrostatic and Lennard-Jones interactions with electrostatic soft-core potentials~\cite{steinbrecher2007nonlinear}, as already discussed above, may be implemented with fewer intermediate states but could require fine-tuning of electrostatic and Lennard-Jones soft-core parameters to avoid numerical instabilities~\cite{tsai2023amber}. 
 At the time of writing, there has not been conclusive evidence to suggest the separate or simultaneous approach is in general better than the other, all factors considered, so discretion should be left up to the user as to what is viable from both hardware resources, and what the simulation software supports.
 
-The pathway implemented for the Alchemical Transfer Method (ATM)~\cite{pal2019perturbation,khuttan2021alchemical,wu2021alchemical,azimi2022relative} is an example of an alternative alchemical formulation for binding that does not require soft-core pair potentials and the splitting of electrostatic and non-electrostatic contributions. ATM employs an optimized softplus alchemical potential energy function~\cite{pal2019perturbation} and a soft-core binding energy function that smooths the variations of the perturbation energy $u(\vec{q}) = U_1(\vec{q}) - U_0(\vec{q})$ rather than each pair interaction~\cite{khuttan2021alchemical}. The advantage of this approach is that it does not require modifications of the energy routines of the MD engine to implement soft-core pair potentials. Moreover, it has been shown to be applicable without electrostatic/LJ splitting to the transfer of molecules, equivalent to the disappearance and introduction of atoms in conventional single- and dual-topology methods~\cite{khuttan2021alchemical}.
+The pathway implemented for the Alchemical Transfer Method (ATM)~\cite{pal2019perturbation,khuttan2021alchemical,wu2021alchemical,azimi2022relative} is an example of an alternative alchemical formulation for binding that does not require soft-core pair potentials and the splitting of electrostatic and non-electrostatic contributions. ATM employs an optimized softplus alchemical potential energy function~\cite{pal2019perturbation} and a soft-core binding energy function that smooths the variations of the perturbation energy $u(\mathbf{q}) = U_1(\mathbf{q}) - U_0(\mathbf{q})$ rather than each pair interaction~\cite{khuttan2021alchemical}. The advantage of this approach is that it does not require modifications of the energy routines of the MD engine to implement soft-core pair potentials. Moreover, it has been shown to be applicable without electrostatic/LJ splitting to the transfer of molecules, equivalent to the disappearance and introduction of atoms in conventional single- and dual-topology methods~\cite{khuttan2021alchemical}.
 
 A key additional consideration in choosing the alchemical pathway is the choice of spacing of intermediate states.
 The spacing depends to some extent on the choice of analysis method, though states should essentially be spaced equidistant in the relevant thermodynamic length~\cite{crooks2007measuring, sivak2012thermodynamic}.
@@ -1741,9 +1742,9 @@ Therefore, it is a good idea to apply the estimators to different fractions of t
 Each method requires different data from the simulation be collected. If, for instance, the free energy estimator selected is thermodynamic integration, then values of $\frac{dU}{d\lambda}$ at uncorrelated data points must be collected. Once you have made a choice of the combination of the type of simulation you will run, which alchemical topology you will simulate, what alchemical path you will simulate along, and what your stopping conditions are, then you are ready to enumerate the information you should capture. Below is a sample of the minimal information you need for a set of common estimators (discussed in more detail in Sec.~\ref{subsec:estimators}):
 
 \begin{itemize}
-    \item Thermodynamic integration (TI) requires $\frac{\partial U(\vec{q})}{\partial\lambda}$.
-    \item Exponential averaging (EXP) needs \textit{either} $\Delta U_{k,k+1}(\vec{q})$ or $\Delta U_{k,k-1}(\vec{q})$, depending on the direction its being evaluated in.
-    \item Bennett acceptance ratio (BAR) needs \textit{both} $\Delta U_{k,k+1}(\vec{q})$ and $\Delta U_{k,k-1}(\vec{q})$.
+    \item Thermodynamic integration (TI) requires $\frac{\partial U(\mathbf{q})}{\partial\lambda}$.
+    \item Exponential averaging (EXP) needs \textit{either} $\Delta U_{k,k+1}(\mathbf{q})$ or $\Delta U_{k,k-1}(\mathbf{q})$, depending on the direction its being evaluated in.
+    \item Bennett acceptance ratio (BAR) needs \textit{both} $\Delta U_{k,k+1}(\mathbf{q})$ and $\Delta U_{k,k-1}(\mathbf{q})$.
     \item Weighted histogram analysis method (WHAM) and multistate Bennett acceptance ratio (MBAR) both need the complete set of $\Delta U_{k,j} \, \forall \, j=\{1...K\}$. WHAM must have this same information binned with some choice of bin width small enough not to affect the results.
 \end{itemize}
 
@@ -1752,7 +1753,7 @@ If that option is unavailable, you can estimate it through finite difference (if
 
 The potential energy differences required for EXP, BAR, MBAR, and WHAM can be calculated either during the simulation or in post-processing. It is recommended to calculate the potential differences in code when possible to avoid extra overhead and possible errors produced by evaluating the energy of the configuration twice, and to reduce the amount of stored information. 
 Although potential energy derivatives must usually be calculated in code, they can sometimes be easily computed in post-simulation analysis. 
-For example, if the alchemical path you have chosen is a linear alchemical path, then $\frac{dU}{d\lambda} = U_1(\vec{q}) - U_0(\vec{q}) = u(\vec{q})$, which is the perturbation energy $U$--the potential energy difference between the initial and final states. These values are already calculated by the simulation and can be recorded easily without additional computational expense. As discussed earlier, linear paths are inefficient. However, methods such as EDS and ATM, based on optimized non-linear energy interpolation alchemical energy functions $W_\lambda(U)$ that depend on atomic coordinates only through the perturbation function~\cite{konig2021efficient,azimi2022relative}, can achieve high computational efficiency by sampling and storing only perturbation energy values. The stored values can then be analyzed in post-processing to, for example, evaluate algebraically the $\Delta U_{k,j}$ quantities needed by multistate analysis (see above). 
+For example, if the alchemical path you have chosen is a linear alchemical path, then $\frac{dU}{d\lambda} = U_1(\mathbf{q}) - U_0(\mathbf{q}) = u(\mathbf{q})$, which is the perturbation energy $U$--the potential energy difference between the initial and final states. These values are already calculated by the simulation and can be recorded easily without additional computational expense. As discussed earlier, linear paths are inefficient. However, methods such as EDS and ATM, based on optimized non-linear energy interpolation alchemical energy functions $W_\lambda(U)$ that depend on atomic coordinates only through the perturbation function~\cite{konig2021efficient,azimi2022relative}, can achieve high computational efficiency by sampling and storing only perturbation energy values. The stored values can then be analyzed in post-processing to, for example, evaluate algebraically the $\Delta U_{k,j}$ quantities needed by multistate analysis (see above). 
 
 Free energy information should generally be saved more frequently than coordinate data, approximately at the rate that uncorrelated samples are produced.  
 The on-disk size of the data for free energy estimation is often significantly smaller than full atomic coordinates, so the information can easily be collected frequently. 
@@ -1775,22 +1776,22 @@ The partition functions in, for example, Eq.~\ref{eq:DG-solvation-excess}, are s
 The simplest method for calculating free energy differences from simulations is the so-called \textit{Zwanzig
 relationship}~\cite{zwanzig1954hightemperature}, also called one-sided exponential re-weighting (EXP), or simply free energy perturbation, though this final term is sometimes used to encompass all ways of calculating free energy differences.
 
-The free energy difference $\Delta F_{01}$ between an initial state 0 and a final state 1 in a canonical ensemble defined by two Hamiltonians $H_0(\vec{q},\vec{p})$ and $H_1(\vec{q},\vec{p})$ can be calculated as:
+The free energy difference $\Delta F_{01}$ between an initial state 0 and a final state 1 in a canonical ensemble defined by two Hamiltonians $H_0(\mathbf{q},\mathbf{p})$ and $H_1(\mathbf{q},\mathbf{p})$ can be calculated as:
 \begin{eqnarray}
-\Delta F_{01}  =  -\beta^{-1}\ln \expect{e^{-\beta (H_1(\vec{q},\vec{p}) - H_0(\vec{q},\vec{p}))}}_0 =  -\beta^{-1}\ln \expect{e^{-\beta \Delta H(\vec{q},\vec{p})} }_0
+\Delta F_{01}  =  -\beta^{-1}\ln \expect{e^{-\beta (H_1(\mathbf{q},\mathbf{p}) - H_0(\mathbf{q},\mathbf{p}))}}_0 =  -\beta^{-1}\ln \expect{e^{-\beta \Delta H(\mathbf{q},\mathbf{p})} }_0
 \end{eqnarray}
 and the average is over all samples from the simulation performed with $H_0$.
 The contribution to free energy difference due to the kinetic partition function can be factored out and cancels out in a thermodynamic cycle when calculating double free energy differences, as discussed in Sec~\ref{sec:chemical_potential}.
-This allows focusing on configurational partition function and express free energy estimator using potential energy $\Delta U(\vec{q})$
+This allows focusing on configurational partition function and express free energy estimator using potential energy $\Delta U(\mathbf{q})$
 \begin{eqnarray}
-\Delta F_{01}  =   -\beta^{-1}\ln \expect{e^{-\beta \Delta U(\vec{q})} }_0
+\Delta F_{01}  =   -\beta^{-1}\ln \expect{e^{-\beta \Delta U(\mathbf{q})} }_0
 \end{eqnarray}\label{eqn.zwanzig_configurational}.
 
-Described in words, we take the samples generated during our run with the potential energy function $U_0(\vec{q})$ and calculate what the difference in energy would be if we switched instantaneously to the potential energy function $U_1(\vec{q})$, and average the exponential of the negative energy difference to get the negative of the exponential of the free energy difference. The original distributions, P($U_0$) as generated at $\lambda=0$ and P($U_1$) would look like those seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}-\textbf{C} on the right hand side. Reevaluating requires almost no extra code functionality to perform; one need only to save a full precision trajectory, and run an unmodified molecular simulation code using the $U_1$ in order to calculate the new energies of stored snapshots. The analysis can be written in a line of code.
+Described in words, we take the samples generated during our run with the potential energy function $U_0(\mathbf{q})$ and calculate what the difference in energy would be if we switched instantaneously to the potential energy function $U_1(\mathbf{q})$, and average the exponential of the negative energy difference to get the negative of the exponential of the free energy difference. The original distributions, P($U_0$) as generated at $\lambda=0$ and P($U_1$) would look like those seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}-\textbf{C} on the right hand side. Reevaluating requires almost no extra code functionality to perform; one need only to save a full precision trajectory, and run an unmodified molecular simulation code using the $U_1$ in order to calculate the new energies of stored snapshots. The analysis can be written in a line of code.
 
-Although the Zwanzig equation is formally correct as long as the two states considered sample the same phase space volume, which is true for standard molecular models, it has some very important numerical issues that mean that it often performs badly for standard free energy calculations, even for small molecules~\cite{shirts2005comparison,lu2003appropriate}. One can show that if the standard deviation of the difference $\Delta U(\vec{q}) = U_1(\vec{q})-U_2(\vec{q})$ over all sampled $\vec{q}$ is large, which in this case, means only several times $k_BT$, then very few samples contribute to the average, and the answer will be both biased and extremely noisy~\cite{lelievre2010free}. Essentially, the method is dominated by contributions of rare snapshots~\cite{jarzynski2006rare, wu2005phasespace, wu2005phasespacea}. 
+Although the Zwanzig equation is formally correct as long as the two states considered sample the same phase space volume, which is true for standard molecular models, it has some very important numerical issues that mean that it often performs badly for standard free energy calculations, even for small molecules~\cite{shirts2005comparison,lu2003appropriate}. One can show that if the standard deviation of the difference $\Delta U(\mathbf{q}) = U_1(\mathbf{q})-U_2(\mathbf{q})$ over all sampled $\mathbf{q}$ is large, which in this case, means only several times $k_BT$, then very few samples contribute to the average, and the answer will be both biased and extremely noisy~\cite{lelievre2010free}. Essentially, the method is dominated by contributions of rare snapshots~\cite{jarzynski2006rare, wu2005phasespace, wu2005phasespacea}. 
 
- As a reminder, this and many of these formulas can be generalized to other ensembles with the use of the reduced energy $u$.  In the case of NVT (canonical) sampling and assuming the masses do not change, then $u$ is simply $\beta U = U(\vec{q},{p})/k_BT$, and $f$ is $G/k_BT$, but it can be generalized to other ensembles with the proper definition of $f$ and $u$.  We will generally use the canonical formalism in this paper. Technically, for free energy calculations at constant pressure, one should use differences in the enthalpy $U+PV$, but at at constant pressure of 1 atm, the contribution of $P\Delta V$ is nearly zero, perhaps a few hundredths of cal/mol.  
+ As a reminder, this and many of these formulas can be generalized to other ensembles with the use of the reduced energy $u$.  In the case of NVT (canonical) sampling and assuming the masses do not change, then $u$ is simply $\beta U = U(\mathbf{q},{p})/k_BT$, and $f$ is $G/k_BT$, but it can be generalized to other ensembles with the proper definition of $f$ and $u$.  We will generally use the canonical formalism in this paper. Technically, for free energy calculations at constant pressure, one should use differences in the enthalpy $U+PV$, but at at constant pressure of 1 atm, the contribution of $P\Delta V$ is nearly zero, perhaps a few hundredths of cal/mol.  
  
 The Zwanzig formulation is general in that the instantaneous work to change the potential energy function from $U_0$ to $U_1$ can be replaced by the non-reversible work $W$ to make the same change beginning from the same equilibrium conditions at either end state~\cite{jarzynski1997nonequilibrium,jarzynski1998equilibrium,crooks2000pathensemble}, allowing for non-equilibrium free energy calculations, an alternate approach. 
 %We do not detail non-equilibrium transformations here, and refer the reader to more advanced treatments~\cite{maragakis2008bayesian,oberhofer2005biased,procacci2015unbiased,shirts2003equilibrium,ytreberg2004singleensemble, gapsys2020large}.
@@ -1802,10 +1803,10 @@ Jarzynski's equality relates the work ($W$) obtained from a one-directional non-
 \langle e^{-\beta W} \rangle =e^{-\beta\Delta F}
 \end{eqnarray}\label{eqn.jarzynski}
 
-The work of an alchemical transition can be calculated by integrating $\partial H(\vec{q},\vec{p})/\partial(\lambda)$ over the transition path:
+The work of an alchemical transition can be calculated by integrating $\partial H(\mathbf{q},\mathbf{p})/\partial(\lambda)$ over the transition path:
 
 \begin{equation}
-W   = \int_{0}^{1} \frac{\partial H(\vec{q},\vec{p})}{\partial\lambda} d\lambda.  
+W   = \int_{0}^{1} \frac{\partial H(\mathbf{q},\mathbf{p})}{\partial\lambda} d\lambda.  
 \end{equation}\label{eqn.work_value}
 
 Expressing $\Delta F$ directly from Jarzynski's equality gives an estimator for the free energy difference, which is equivalent to Zwanzig's estimator when a transition is performed instantaneously:
@@ -1830,9 +1831,9 @@ free energy difference compared to that obtained by EXP.
 This estimate was first derived by Bennett and is hence generally called the Bennett Acceptance Ratio (BAR). It is solved by finding the free energy difference $\Delta F$ that satisfies the following implicit equation:
 
 \begin{eqnarray}
- \sum_{k=1}^{n_i} \frac{1}{1 + \exp[\ln(\frac{n_i}{n_j}) + \beta \Delta U_{ij}(\vec{q_k}) - \beta \Delta F_{ij})
+ \sum_{k=1}^{n_i} \frac{1}{1 + \exp[\ln(\frac{n_i}{n_j}) + \beta \Delta U_{ij}(\mathbf{q}_k) - \beta \Delta F_{ij})
  ]} \nonumber \\
- =\sum_{l=1}^{n_j} \frac{1}{1 + \exp[\ln(\frac{n_j}{n_i}) - \beta \Delta U_{ij}(\vec{q_l}) + \beta \Delta F_{ij})]},
+ =\sum_{l=1}^{n_j} \frac{1}{1 + \exp[\ln(\frac{n_j}{n_i}) - \beta \Delta U_{ij}(\mathbf{q}_l) + \beta \Delta F_{ij})]},
 \end{eqnarray}\label{eq:bar}
 
 where $n_i$ and $n_j$ are the number of samples from each state. More recent derivations show that this formula is the maximum likelihood estimate of the free energy difference given sets of samples from the two states~\cite{shirts2003equilibrium}. 
@@ -1843,11 +1844,11 @@ simulations~\cite{shirts2005comparison,lu2003appropriate}, and BAR converges to 
 
 The Bennett acceptance ratio is only defined between two states. Usually, the endpoints of interest in a free energy calculation are sufficiently different that we will need a chain of states that gradually change the potential energy function from $U_0$ to $U_1$, as discussed in Sec.~\ref{sec:important_path}. You can carry out a BAR estimate between each pair of states $\Delta F_{1 \rightarrow N} = \Delta {F_{1\rightarrow 2}} + \Delta {F_{2\rightarrow 3}} +  \ldots + \Delta F_{N-1\rightarrow N}$.
 
-There is one important thing to note about the uncertainty estimates when summing multiple free energy differences together to calculate an overall estimate of a free energy difference. Although BAR itself gives a free energy estimate that is asymptotically correct and is much less biased than the uncertainty estimate for EXP, the uncertainties in $\Delta {F_{i-1\rightarrow i}}$ and $\Delta {F_{i\rightarrow i+1}}$ are not uncorrelated, because they both involve the energies $U_i(\vec{q})$. The variances of each of the free energies cannot simply be summed together into the variance of the overall free energy. Instead, some other method for propagating the uncertainty, such as bootstrapping~\cite{grossfield2018best} must be used.
+There is one important thing to note about the uncertainty estimates when summing multiple free energy differences together to calculate an overall estimate of a free energy difference. Although BAR itself gives a free energy estimate that is asymptotically correct and is much less biased than the uncertainty estimate for EXP, the uncertainties in $\Delta {F_{i-1\rightarrow i}}$ and $\Delta {F_{i\rightarrow i+1}}$ are not uncorrelated, because they both involve the energies $U_i(\mathbf{q})$. The variances of each of the free energies cannot simply be summed together into the variance of the overall free energy. Instead, some other method for propagating the uncertainty, such as bootstrapping~\cite{grossfield2018best} must be used.
 
 \subsubsection{Bennett Acceptance Ratio for non-equilibrium transitions}
 Similarly to the analogy between Zwanzig's and Jarzynski's equations, Bennett Acceptance Ratio can be applied to estimate free energy differences from non-equilibrium transitions as well.
-Replacing $U_{ij}(\vec{q})$ in equation~\ref{eq:bar} by work values $W_k$ and $W_l$ corresponding to the work observed for the forward and reverse transitions, BAR can be written as follows~\cite{shirts2003equilibrium}:
+Replacing $U_{ij}(\mathbf{q})$ in equation~\ref{eq:bar} by work values $W_k$ and $W_l$ corresponding to the work observed for the forward and reverse transitions, BAR can be written as follows~\cite{shirts2003equilibrium}:
 
 \begin{eqnarray}
  \sum_{k=1}^{n_F} \frac{1}{1 + \exp[\ln(\frac{n_F}{n_R}) + \beta W_{k} - \beta\Delta F)]} \nonumber \\
@@ -1868,21 +1869,21 @@ For the case of $\sigma_f=\sigma_r$, free energy difference is estimated as $\De
 By taking the derivative of the free energy with respect to the
 variable $\lambda$, we find that:
 \begin{equation}
-\frac{df}{d\lambda} = \frac{d}{d\lambda} \left[-\ln \int \frac{\exp^{-\beta U(\lambda,\vec{q})}}{Z(\lambda)} d\vec{q}\right] = \expect{\frac{dU(\lambda,\vec{q})}{d\lambda}\
+\frac{df}{d\lambda} = \frac{d}{d\lambda} \left[-\ln \int \frac{\exp^{-\beta U(\lambda,\mathbf{q})}}{Z(\lambda)} d\mathbf{q}\right] = \expect{\frac{dU(\lambda,\mathbf{q})}{d\lambda}\
 }_{\lambda} .
 \end{equation}
 And then we can numerically integrate $df/d\lambda$ over an alchemical transformation, using a range of different well-established techniques, to obtain:
 \begin{equation}
-\Delta f    = \int_{0}^{1} \expect{\frac{dU(\lambda,\vec{q})}{d\lambda}}_{\lambda}  d\lambda.    
+\Delta f    = \int_{0}^{1} \expect{\frac{dU(\lambda,\mathbf{q})}{d\lambda}}_{\lambda}  d\lambda.    
 \end{equation}
 This approach to calculating the free energy is called thermodynamic integration (TI). Averaging over $\expect{\frac{du}{d\lambda}}$ requires fewer uncorrelated samples to reach a given level of relative error
-than averaging $e^{-U(\vec{q})}$, as the distribution of values is usually narrower, with a more Gaussian shape to the distribution. Rather than being limited by overlap, as in the case of BAR and MBAR (see below), we are instead limited by the bias in the numerical quadrature, which must be minimized sufficiently to be beneath the level of statistical noise.
+than averaging $e^{-U(\mathbf{q})}$, as the distribution of values is usually narrower, with a more Gaussian shape to the distribution. Rather than being limited by overlap, as in the case of BAR and MBAR (see below), we are instead limited by the bias in the numerical quadrature, which must be minimized sufficiently to be beneath the level of statistical noise.
 
 %Various numerical integration schemes are possible, but the trapezoid
 %rule provides a simple and robust scheme. 
 All types of numerical integration can be written as:
 \[ \Delta F \approx \sum_{k=1}^{K} w_k
-\expect{\frac{dU(\lambda,\vec{q})}{d\lambda}}_{k}, \] where the weights $w_k$ correspond to a particular choice of numerical integration.
+\expect{\frac{dU(\lambda,\mathbf{q})}{d\lambda}}_{k}, \] where the weights $w_k$ correspond to a particular choice of numerical integration.
 Researchers have tried different integration schemes~\cite{resat1993studies,jorge2010effect,shyu2009reducing,Bruckner2010}. Several of them, e.g., Gauss-Legendre quadrature, require specific choices of $\lambda$, i.e., one needs to calculate $\langle\partial u/\partial \lambda\rangle$ at the particular $\lambda$-values required by the integration method, making them inflexible. The trapezoidal rule is often recommended; it has the advantage of simplicity, both equidistant and non-equidistant $\lambda$-values can be used, and one can include simulations at additional $\lambda$-values if deemed necessary. However, considerably more $\lambda$-values than for more advanced integration methods may be needed. Simpson's rule gives higher accuracy and almost the same flexibility~\cite{Bruckner2010}. An alternative to these numerical integration schemes is to fit the  $\langle\partial U/\partial \lambda\rangle$ values to a piecewise continuous function, e.g., by cubic spline interpolation, and carry out the integration between $\lambda=0$ and 1 analytically. While certainly more complicated than the trapezoidal rule or Simpson integration,  this approach retains the flexibility with regard to choice of $\lambda$ values while giving accuracy comparable to more advanced integration methods. E.g., in recent work requiring very precise free energy calculations~\cite{Fleck_2021}, thermodynamic integration by cubic spline interpolation, followed by analytic integration  was used in parallel with Bennett's acceptance ratio method and gave equivalent results.
 
 TI has two drawbacks: First, it requires derivatives with respect to $\lambda$ to be calculated directly in the code. Unfortunately, many problems of interest require using pathways (such as the soft-core pathways, for removing repulsive interactions) that are not linear, as we discuss, making this more complex. However, most programs contain the necessary code for the derivatives with respect to $\lambda$. Second, the difficulty of the numerical integration step is tied to the shape (i.e., variation) of the integrand $\langle\frac{dU(\lambda)}{d\lambda}\rangle$. Specifically, the shape depends on the nature of the alchemical transformation and the functional form of the soft-core potentials used. Both cannot be controlled by the user, so regions where the integrand varies rapidly cannot be avoided. If this is the case, TI typically requires more $\lambda$-states for accurate results than the BAR or MBAR estimators~\cite{Bruckner2010}.
@@ -1890,13 +1891,13 @@ TI has two drawbacks: First, it requires derivatives with respect to $\lambda$ t
 \subsubsection{The multistate Bennett acceptance ratio (MBAR)}
 One can generalize Bennett's logic from two states to multiple states to obtain a free energy estimator that uses energy differences between configurations at all intermediate states to compute free energy differences between all states. MBAR gives a system of implicit equations for the free energies $f_i$:
 \begin{equation}
-f_i = - \ln \sum_{n=1}^{N} \frac{\exp(-\beta U_i(\vec{q}_n))}{\sum_{k=1}^K N_k \exp(\beta F_k-\beta U_k(\vec{q}_n))},
+f_i = - \ln \sum_{n=1}^{N} \frac{\exp(-\beta U_i(\mathbf{q}_n))}{\sum_{k=1}^K N_k \exp(\beta F_k-\beta U_k(\mathbf{q}_n))},
 \end{equation}
 where there are $N_k$ samples from each of $K$ states, with $\sum_k N_k=N$ the total number of samples. Thus, we need to evaluate the energy function $U_i$ for all samples obtained at all states in the transformation. The equations can be solved by a number of different standard routines. We note that there are only $K-1$ independent equations, so only $K-1$ of the free energies are independent variables, and one of the $f_i$ must be specified (usually, without loss of generality, setting it to zero). Note that this equation assumes that all simulations are performed at the same $\beta$ (or temperature $T$), which is usually true for alchemical simulations.  One can also use this equation to estimate free energies between different temperatures by using the reduced potential $u_i = \beta_i U_i$ for each state, but this requires some additional bookkeeping, as one can only calculate $\Delta F_{binding}(T)$, not the free energy difference between two different phases at two arbitrary temperatures~\cite{schieber2018reweighting}. 
 
 MBAR is probably the lowest variance asymptotically unbiased estimator of the free energy given the energies of the samples~\cite{tan2004likelihood}, which means that BAR is also the lowest variance estimator for the free energy difference between only 2 states, as it is mathematically exactly the same as MBAR in this case. MBAR also provides an uncertainty estimate, derived from standard error propagation methods for implicit functions, which has been shown to be highly accurate as long as there are sufficient samples at each state~\cite{paliwal2011benchmark}.
 
-MBAR can also be thought of as the Zwanzig estimator of the free energy to state $i$ from a sampled distribution referred to as the \textit{mixture distribution}, where one throws all the samples from all simulations together in one ``pot''. Mathematically, this is defined by $p_m(\vec{q}) = N^{-1} \sum_k N_k \exp(\beta F_k-\beta U_k\vec{q})$, which is the average, weighted by the number of samples drawn from each distribution, of all the individual normalized probability distributions from the simulations that are performed~\cite{shirts2017reweighting}.
+MBAR can also be thought of as the Zwanzig estimator of the free energy to state $i$ from a sampled distribution referred to as the \textit{mixture distribution}, where one throws all the samples from all simulations together in one ``pot''. Mathematically, this is defined by $p_m(\mathbf{q}) = N^{-1} \sum_k N_k \exp(\beta F_k-\beta U_k\mathbf{q})$, which is the average, weighted by the number of samples drawn from each distribution, of all the individual normalized probability distributions from the simulations that are performed~\cite{shirts2017reweighting}.
 
 All of the estimators above have uncertainty estimates associated with them. These estimators of uncertainty are all derived from propagation of error formulae resulting from the estimators themselves.  In the limit of sufficiently large data, perhaps several hundred or thousand independent points, exhaustive analyses of model data has shown that the error estimates of BAR, MBAR, and TI are all quite reliable when there is good overlap between intermediate states. For example, for a series of hydration free energy calculations of model systems of various sizes analytical estimates of the error, bootstrap estimates, and standard deviations over 100 independent simulations started at different locations along a long initial simulations all agreed within a 5---10\%~\cite{paliwal2011benchmark}. For EXP, however, the number of samples required for the uncertainty estimates to become reliable is significantly higher, especially if overlap between intermediate states is lower. 
 
@@ -2026,7 +2027,7 @@ where $\rho_0(z)$ is the initial density for $Z_0$, that is, the probability dis
 
 %% MS: This is a very loose proposal of how one might address some of the issues on uncertainty quantification.  It is only meant to help get the ball rolling, per the discussion in https://github.com/alchemistry/alchemical-best-practices/issues/150#issuecomment-3567254644. Otherwise, it can be mostly discarded. The important points in my view are:
 %
-% 1. clearly expressing the dependence of the density as a function (t, x_0), and what assumptions are made about its behavior; without this, I see no way of making statements about uncertainty quantification, as these all require some statistical theorem, like a Law of Large Numbers, or a Central Limit Theorem. 
+% 1. clearly expressing the dependence of the density as a function (t, \mathbf{q}_0), and what assumptions are made about its behavior; without this, I see no way of making statements about uncertainty quantification, as these all require some statistical theorem, like a Law of Large Numbers, or a Central Limit Theorem. 
 % 2. a definition of an ensemble
 %
 % and to a lesser extent
@@ -2039,70 +2040,70 @@ where $\rho_0(z)$ is the initial density for $Z_0$, that is, the probability dis
 
 \subsubsection{Central difficulty: timescales}\label{sec:timescales}
 
-Consider a molecular dynamics trajectory started at some initial configuration $z_0 = (x_0, v_0)$, where $x_0 \in \mathbb{R}^{3 N}$ denotes the initial positions of the system and $v_0 \in \mathbb{R}^{3 N}$ its initial velocities, and denote the density at time $t$ by $\rho_t(z|z_0)$. This transition density is determined by the molecular dynamics integrator. The distribution of the velocities is usually ignored, since in the presence of a thermostat they are kept distributed roughly according to a Maxwell-Boltzmann distribution, so we only consider the $x$ component. In principle, one could consider the initial condition $x_0$ to be drawn from a more complicated initial distribution $\rho_0(x) \mathrm{d}x$, like a mixture of Dirac densities $\rho_0(x) \mathrm{d}x = \sum_{i = 1}^n \delta_{\{ x_i \}}(\mathrm{d}x) / n$, but any such "better" initial density would require some knowledge about the system at hand, such as the distribution of binding modes. 
+Consider a molecular dynamics trajectory started at some initial configuration $z_0 = (\mathbf{q}_0, v_0)$, where $\mathbf{q}_0 \in \mathbb{R}^{3 N}$ denotes the initial positions of the system and $v_0 \in \mathbb{R}^{3 N}$ its initial velocities, and denote the density at time $t$ by $\rho_t(z|z_0)$. This transition density is determined by the molecular dynamics integrator. The distribution of the velocities is usually ignored, since in the presence of a thermostat they are kept distributed roughly according to a Maxwell-Boltzmann distribution, so we only consider the $\mathbf{q}$ component. In principle, one could consider the initial condition $\mathbf{q}_0$ to be drawn from a more complicated initial distribution $\rho_0(\mathbf{q}) \mathrm{d}\mathbf{q}$, like a mixture of Dirac densities $\rho_0(\mathbf{q}) \mathrm{d}\mathbf{q} = \sum_{i = 1}^n \delta_{\{ \mathbf{q}_i \}}(\mathrm{d}\mathbf{q}) / n$, but any such "better" initial density would require some knowledge about the system at hand, such as the distribution of binding modes. 
 
-It is difficult to make general statements about the behavior of $\rho_t (x | x_0)$. For systems not involving a protein or otherwise having a smaller number of degrees of freedom, it may be possible to identify clear "plateaus'' of convergence, i.e. long periods within which $\rho_t (x|x_0)$ does not vary much with the time $t$, at least in those reaction coordinates relevant to the free energy being estimated, and within which $\rho_t (x|x_0)$ is approximately invariant to $x_0$ in some appropriate starting domain. Consider, for instance, the estimation of free energies of hydration for small molecules ~\cite{paliwal2011benchmark}. In this case, the free energy estimates behave in accordance with classical statistical theory, and for sufficiently large $t$ and most $x_0$ the density $\rho_t (x | x_0)$ should not vary much along coordinates relevant to the free energy estimates. Quantifying ideas such as "long periods" or "vary much"  and of identifying relevant reaction coordinates is an active area of research and beyond the scope of this review.
+It is difficult to make general statements about the behavior of $\rho_t (\mathbf{q} | \mathbf{q}_0)$. For systems not involving a protein or otherwise having a smaller number of degrees of freedom, it may be possible to identify clear "plateaus'' of convergence, i.e. long periods within which $\rho_t (\mathbf{q}|\mathbf{q}_0)$ does not vary much with the time $t$, at least in those reaction coordinates relevant to the free energy being estimated, and within which $\rho_t (\mathbf{q}|\mathbf{q}_0)$ is approximately invariant to $\mathbf{q}_0$ in some appropriate starting domain. Consider, for instance, the estimation of free energies of hydration for small molecules ~\cite{paliwal2011benchmark}. In this case, the free energy estimates behave in accordance with classical statistical theory, and for sufficiently large $t$ and most $\mathbf{q}_0$ the density $\rho_t (\mathbf{q} | \mathbf{q}_0)$ should not vary much along coordinates relevant to the free energy estimates. Quantifying ideas such as "long periods" or "vary much"  and of identifying relevant reaction coordinates is an active area of research and beyond the scope of this review.
 
 %  MS: The above paragraph is too vague, but some kind of discussion to this effect might be necessary to make sense of why some free energy calculations, such as solvation free energy calculations or computation of free energy landscapes for small molecules, have different statistical properties than more complicated calculations, like absolute binding free energy calculations. 
 
 What is certain is that one should not confuse observing a long plateau in the free energy estimates as any evidence that the simulation has explored the entirety of the configuration space $\Omega \subset \mathbb{R}^{3N}$; most bio-molecular systems, even those involving only a single ligand, possess a whole hierarchy of timescales, the longest of which can easily exceed achievable simulation times. Consequently, the estimated error of the free energy estimate will typically be an underestimate of the true uncertainty.
 
-% Of course, it _could_ be the case for some systems that \rho_t(x | x_0) is independent of x_0, and that the empirical distribution of any replicate is a good approximation for \rho_t (x|x_0). In general, however, we will only have access to a so-called quasi-stationary distribution; i.e. we will consider the distribution conditional on not having exceeded an escape time, and this distribution will only equilibrate in some degrees of freedom. 
+% Of course, it _could_ be the case for some systems that \rho_t(\mathbf{q} | \mathbf{q}_0) is independent of \mathbf{q}_0, and that the empirical distribution of any replicate is a good approximation for \rho_t (\mathbf{q}|\mathbf{q}_0). In general, however, we will only have access to a so-called quasi-stationary distribution; i.e. we will consider the distribution conditional on not having exceeded an escape time, and this distribution will only equilibrate in some degrees of freedom. 
 
 % The following footnote feels out of place, but might address some comments by A. Bhati re: the Poincaré recurrence times.
-% \footnote{(Luckily, it is not necessary for simulations to visit every configuration $x \in \Omega$ in order to exhibit a regime of convergence for the free energy estimates. For instance, two configurations $x$ and $x'$ may be considered equivalent for free energy estimation if they differ only by the permutation of water molecules. Nature too faces the same difficulty that not all states are accessible on timescales we can observe -- it will take an astronomically long time before all the gas particles in a room happen to be on one half-side of it -- but this does not prevent us from measuring the temperature of (most) rooms.)}
+% \footnote{(Luckily, it is not necessary for simulations to visit every configuration $\mathbf{q} \in \Omega$ in order to exhibit a regime of convergence for the free energy estimates. For instance, two configurations $\mathbf{q}$ and $\mathbf{q}'$ may be considered equivalent for free energy estimation if they differ only by the permutation of water molecules. Nature too faces the same difficulty that not all states are accessible on timescales we can observe -- it will take an astronomically long time before all the gas particles in a room happen to be on one half-side of it -- but this does not prevent us from measuring the temperature of (most) rooms.)}
 
 
 
 %% MS: I'm not tied to any particular definition of ensemble, but we should probably make a concrete one:
-% - common x_0 ? 
+% - common \mathbf{q}_0 ? 
 % - v ~ MaxwellBoltzmann(Temperature) 
 % - what are the individual trajectories called? "replicates" ? 
 
 \textbf{Definition}:
-We define an \textbf{ensemble} to be a set of $R \geqslant 1$ trajectories, all started at the same initial configuration $x_0$, with initial velocity $v_0$ independently drawn from the Maxwell-Boltzmann distribution at the appropriate temperature and run for a chemical time $T$. We emphasize that, with this definition, all ensemble-based estimates are inherently tied to the choice of $x_0$; pathological choices  -- for example, a protein–ligand configuration that may quickly unbind -- can render the resulting estimates meaningless.
+We define an \textbf{ensemble} to be a set of $R \geqslant 1$ trajectories, all started at the same initial configuration $\mathbf{q}_0$, with initial velocity $v_0$ independently drawn from the Maxwell-Boltzmann distribution at the appropriate temperature and run for a chemical time $T$. We emphasize that, with this definition, all ensemble-based estimates are inherently tied to the choice of $\mathbf{q}_0$; pathological choices  -- for example, a protein–ligand configuration that may quickly unbind -- can render the resulting estimates meaningless.
 
 \subsubsection{Ensemble error estimates}
 
-This section describes the simplest and, in many cases, the most robust procedure for estimating uncertainties in free energy calculations. For most practical applications, we recommend this approach when reporting statistical error bars. The procedure consists of simulating an ensemble $\{X^{(1)},\ldots,X^{(R)}\}$ of $R$ molecular dynamics trajectories initialized at $x_0$, and using the resulting free energy estimates $\{\Delta G^{(1)},\ldots,\Delta G^{(R)}\}$ to quantify uncertainty. The trajectories $\Delta
-G^{(i)} (\cdot)$ are identically distributed and conditionally independent given $x_0$. For any time $T > 0$, the variance of any $\Delta G^{(i)} (T)$ can be estimated with the sample variance $S^2_{R} (T)$,
+This section describes the simplest and, in many cases, the most robust procedure for estimating uncertainties in free energy calculations. For most practical applications, we recommend this approach when reporting statistical error bars. The procedure consists of simulating an ensemble $\{X^{(1)},\ldots,X^{(R)}\}$ of $R$ molecular dynamics trajectories initialized at $\mathbf{q}_0$, and using the resulting free energy estimates $\{\Delta G^{(1)},\ldots,\Delta G^{(R)}\}$ to quantify uncertainty. The trajectories $\Delta
+G^{(i)} (\cdot)$ are identically distributed and conditionally independent given $\mathbf{q}_0$. For any time $T > 0$, the variance of any $\Delta G^{(i)} (T)$ can be estimated with the sample variance $S^2_{R} (T)$,
 \begin{equation}\label{eq:sample-variance-definition}
   S^2_R (T) = \frac{1}{R - 1} \sum_{i = 1}^R (\Delta G^{(i)} (T) -
   \overline{\Delta G (T)})^2, \qquad \overline{\Delta G (T)} = \frac{1}{R}
   \sum_{i = 1}^R \Delta G^{(i)} (T) .
 \end{equation}
-In the notation of Eq.~\ref{eqn:empirical-average}, $Z_i = \Delta G^{(i)}(T)$; conditioned on $x_0$, the $Z_i$ are independent and identically distributed and are trivially a Markov process, with stationary distribution given by the distribution of $\Delta G^{(1)}(T)$. By direct calculation, we have (conditionally on $x_0$)
+In the notation of Eq.~\ref{eqn:empirical-average}, $Z_i = \Delta G^{(i)}(T)$; conditioned on $\mathbf{q}_0$, the $Z_i$ are independent and identically distributed and are trivially a Markov process, with stationary distribution given by the distribution of $\Delta G^{(1)}(T)$. By direct calculation, we have (conditionally on $\mathbf{q}_0$)
 \begin{equation}
-    \mathbb{E}_{x_0}[S_R^2(T)] = \mathrm{Var}_{x_0}(\Delta G^{(1)}(T))
+    \mathbb{E}_{\mathbf{q}_0}[S_R^2(T)] = \mathrm{Var}_{\mathbf{q}_0}(\Delta G^{(1)}(T))
 \end{equation}
-The above equation says that $S_R^2(T)$ is an unbiased estimator of the variance of $\Delta G^{(1)}(T)$, conditioned on $x_0$. By the Law of Large Numbers, as $R \rightarrow \infty$, we have $S^2_R (T) \rightarrow \mathrm{Var} _{x_0}(\Delta
-G^{(1)} (T)) = \sigma^2 (T ; x_0)$. Furthermore, by conditional independence of the $\Delta G^{(i)}(T)$, for sufficiently large $R$ and any $T>0$ for which the variance is finite, we have
+The above equation says that $S_R^2(T)$ is an unbiased estimator of the variance of $\Delta G^{(1)}(T)$, conditioned on $\mathbf{q}_0$. By the Law of Large Numbers, as $R \rightarrow \infty$, we have $S^2_R (T) \rightarrow \mathrm{Var} _{\mathbf{q}_0}(\Delta
+G^{(1)} (T)) = \sigma^2 (T ; \mathbf{q}_0)$. Furthermore, by conditional independence of the $\Delta G^{(i)}(T)$, for sufficiently large $R$ and any $T>0$ for which the variance is finite, we have
 \begin{equation}\label{eqn:variance-of-empirical-mean}
-\mathrm{Var}_{x_0}(\overline{\Delta G(T)}) = \frac{\mathrm{Var}_{x_0}(\Delta G^{(1)}(T))}{R} \approx \frac{S_R^2(T)}{R}
+\mathrm{Var}_{\mathbf{q}_0}(\overline{\Delta G(T)}) = \frac{\mathrm{Var}_{\mathbf{q}_0}(\Delta G^{(1)}(T))}{R} \approx \frac{S_R^2(T)}{R}
 \end{equation}
 %% Should we say what kind of LLN (weak/strong) ? Do we provide a reference (standard: Durrett or Chung)? 
 Taking square roots, we obtain the standard error
 \begin{equation}
-  \mathrm{SE}_R (T ; x_0) = \sqrt{\frac{S_R^2(T)}{R}},
+  \mathrm{SE}_R (T ; \mathbf{q}_0) = \sqrt{\frac{S_R^2(T)}{R}},
 \end{equation}
-which is the gold standard for reporting the error of a free energy estimate $\overline{\Delta G (T)} $ when a single initial condition $x_0$ is used. Note that $\mathrm{SE}_R
-(T ; x_0) \rightarrow 0$ as $R \rightarrow \infty$ so long as $\mathrm{Var}_{x_0}(\Delta G^{(1)}(T))$ is finite, which is true if the $\Delta G^{(1)}(T)$ are bounded. Thus the variance can be made arbitrarily small simply by running enough replicates, but we note critically this does \textit{not} mean that we will have estimated the free energy to arbitrary precision: $\Delta G^{(1)}(T)$ in general will not be normally distributed, its value may vary greatly with both $T$ and $x_0$, and the variance may not be a good statistic to capture the error, as the distribution may be multi-modal, heavy-tailed and be sensitive to rare events. For example, one replicate out of many might explore a different mode of an important torsional angle, leading to a drastically different free energy estimate. 
+which is the gold standard for reporting the error of a free energy estimate $\overline{\Delta G (T)} $ when a single initial condition $\mathbf{q}_0$ is used. Note that $\mathrm{SE}_R
+(T ; \mathbf{q}_0) \rightarrow 0$ as $R \rightarrow \infty$ so long as $\mathrm{Var}_{\mathbf{q}_0}(\Delta G^{(1)}(T))$ is finite, which is true if the $\Delta G^{(1)}(T)$ are bounded. Thus the variance can be made arbitrarily small simply by running enough replicates, but we note critically this does \textit{not} mean that we will have estimated the free energy to arbitrary precision: $\Delta G^{(1)}(T)$ in general will not be normally distributed, its value may vary greatly with both $T$ and $\mathbf{q}_0$, and the variance may not be a good statistic to capture the error, as the distribution may be multi-modal, heavy-tailed and be sensitive to rare events. For example, one replicate out of many might explore a different mode of an important torsional angle, leading to a drastically different free energy estimate. 
 %% MS: The rare event problem is a serious one, simulating even R = 100 replicates may not be "enough", depending on the purposes. Should we say this?
 %% Should we also state the central limit theorem? 
-In principle, the most robust error estimates can be obtained by starting from many different initial conditions $x_0, x_1, \dots$, and computing means and standard errors, but as mentioned in Section \ref{sec:timescales}, the value of this approach is limited by the user's ability to choose a suitable initial density $\rho_0(x)$.
+In principle, the most robust error estimates can be obtained by starting from many different initial conditions $\mathbf{q}_0, \mathbf{q}_1, \dots$, and computing means and standard errors, but as mentioned in Section \ref{sec:timescales}, the value of this approach is limited by the user's ability to choose a suitable initial density $\rho_0(\mathbf{q})$.
 
 \subsubsection{Per-replicate error estimates}
 
-In the preceding case, we used minimal assumptions on the distribution of $\Delta G^{(i)}(T)$ to obtain estimates on $\sigma^2(T;x_0)$ by simulating conditionally independent replicates and using the sample variance Eq.~\ref{eq:sample-variance-definition}. To obtain per-replicate (i.e., per-$i$) error estimates, we impose much stricter assumptions on the distribution of $\Delta G^{(i)}(T)$,  namely that they satisfy a Central Limit Theorem (CLT) as $T\rightarrow \infty$, for each $i=1,\dots,R$:
-$$ \sqrt{T} ( \Delta G^{(i)}(T) - \Delta G^\star) \Rightarrow N(0, \sigma^2_{\mathrm{asym}}(x_0))$$
-where $\Delta G^\star$ denotes the true free energy difference, $\sigma_{\mathrm{asym}}^2(x_0)>0$ denotes the so-called "asymptotic variance", $ N(0, \sigma^2_{\mathrm{asym}}(x_0))$ is a Gaussian distribution with mean 0 and variance $\sigma_{\mathrm{asym}}^2(x_0)>0$, and $\Rightarrow$ denotes convergence in distribution. %% Should we define this? Might be a little too technical for the audience. Again, Durrett is one of the standard references. 
+In the preceding case, we used minimal assumptions on the distribution of $\Delta G^{(i)}(T)$ to obtain estimates on $\sigma^2(T;\mathbf{q}_0)$ by simulating conditionally independent replicates and using the sample variance Eq.~\ref{eq:sample-variance-definition}. To obtain per-replicate (i.e., per-$i$) error estimates, we impose much stricter assumptions on the distribution of $\Delta G^{(i)}(T)$,  namely that they satisfy a Central Limit Theorem (CLT) as $T\rightarrow \infty$, for each $i=1,\dots,R$:
+$$ \sqrt{T} ( \Delta G^{(i)}(T) - \Delta G^\star) \Rightarrow N(0, \sigma^2_{\mathrm{asym}}(\mathbf{q}_0))$$
+where $\Delta G^\star$ denotes the true free energy difference, $\sigma_{\mathrm{asym}}^2(\mathbf{q}_0)>0$ denotes the so-called "asymptotic variance", $ N(0, \sigma^2_{\mathrm{asym}}(\mathbf{q}_0))$ is a Gaussian distribution with mean 0 and variance $\sigma_{\mathrm{asym}}^2(\mathbf{q}_0)>0$, and $\Rightarrow$ denotes convergence in distribution. %% Should we define this? Might be a little too technical for the audience. Again, Durrett is one of the standard references. 
 The CLT assumption implies that 
-$$\sigma^2(T;x_0)\approx\frac{\sigma^2_{\mathrm{asym}}(x_0)}{T}.$$
-In practice, it may not be the case that $\sigma^2(T;x_0)\propto T^{-1}$, nor even that $\sigma^2(T;x_0)$ is monotonically decreasing with $T$. In such a case, we are not in a regime where the CLT is satisfied and the remainder of this subsection does not apply.
+$$\sigma^2(T;\mathbf{q}_0)\approx\frac{\sigma^2_{\mathrm{asym}}(\mathbf{q}_0)}{T}.$$
+In practice, it may not be the case that $\sigma^2(T;\mathbf{q}_0)\propto T^{-1}$, nor even that $\sigma^2(T;\mathbf{q}_0)$ is monotonically decreasing with $T$. In such a case, we are not in a regime where the CLT is satisfied and the remainder of this subsection does not apply.
 
-To understand the difficulty of estimating $\mathrm{Var}_{x_0}(\Delta G^{(i)}(T))$ using only samples from replicate $i$, it is helpful to recall the empirical mean Eq.~\ref{eqn:empirical-average} as the canonical estimator. Suppose that $\{Z_i\}_{i\ge 0}$ is an ergodic Markov chain with stationary distribution $\pi$, that $Z_0 \sim \pi$, and that $t_{N-1}=T$. Let $f$ be a fixed observable. 
+To understand the difficulty of estimating $\mathrm{Var}_{\mathbf{q}_0}(\Delta G^{(i)}(T))$ using only samples from replicate $i$, it is helpful to recall the empirical mean Eq.~\ref{eqn:empirical-average} as the canonical estimator. Suppose that $\{Z_i\}_{i\ge 0}$ is an ergodic Markov chain with stationary distribution $\pi$, that $Z_0 \sim \pi$, and that $t_{N-1}=T$. Let $f$ be a fixed observable. 
 \begin{align}
-\sigma^2(T;x_0) &= \mathrm{Var}_{\pi}\!\left(\frac{1}{N}\sum_{i=0}^{N-1} f(Z_i) \right) \\
+\sigma^2(T;\mathbf{q}_0) &= \mathrm{Var}_{\pi}\!\left(\frac{1}{N}\sum_{i=0}^{N-1} f(Z_i) \right) \\
 &= \frac{1}{N^2}\sum_{i,j=0}^{N-1}
 \mathrm{Cov}_{\pi}\!\bigl(f(Z_i), f(Z_j)\bigr) \\
 &= \frac{1}{N^2}\left(
@@ -2122,7 +2123,7 @@ The expression for the variance contains cross-terms which would vanish if $Z_0$
 %% should we describe the atch means estiamtor? maybe not...
 For the remainder of the section we focus on a single replicate. The simplest generalization of Eq.~\ref{eq:sample-variance-definition} to the case of time-correlated samples is the non-overlapping batch means estimator. Let $\{t_0,\dots,t_{N-1}\}$ be a discretization of $[0,T]$ with $t_0=0$ and $t_{N-1}=T$;  we discuss the choices of discretization width $t_{i+1} - t_i$ and initial time $t_0$ in later subsections. 
 
-Partition the $N$ sequential samples of this single replicate into $B$ consecutive batches of equal size $M$, so that $N = BM$. Batch $k$ consists of the samples $\{X(t_{kM}),\dots,X(t_{(k+1)M-1})\}, k=0,\dots,B-1$, with $X(t_0) = x_0$. Let
+Partition the $N$ sequential samples of this single replicate into $B$ consecutive batches of equal size $M$, so that $N = BM$. Batch $k$ consists of the samples $\{X(t_{kM}),\dots,X(t_{(k+1)M-1})\}, k=0,\dots,B-1$, with $X(t_0) = \mathbf{q}_0$. Let
 \[
 \Delta G_k = \Delta G(t_{kM}:t_{(k+1)M})
 \]
@@ -2132,14 +2133,14 @@ denote the estimator obtained using only the samples in batch $k$, and define th
 \]
 The non-overlapping batch means estimator is then
 \[
-\hat\sigma_B^2(T;x_0)
+\hat\sigma_B^2(T;\mathbf{q}_0)
 = \frac{1}{B(B-1)}\sum_{k=0}^{B-1}
 \left(\Delta G_k - \overline{\Delta G}\right)^2 .
 \]
-This estimator may look complicated, but it is just the application of the sample variance to the estimates on  $B$ non-overlapping time blocks of length $M$, which gives the variance using $M$ samples. The sample variance across $\Delta G_k$ estimates $\mathrm{Var}_{x_0}(\Delta G_k)$, and the additional factor of $1/B$ yields an estimate of $\mathrm{Var}_{x_0}(\overline{\Delta G})$.
+This estimator may look complicated, but it is just the application of the sample variance to the estimates on  $B$ non-overlapping time blocks of length $M$, which gives the variance using $M$ samples. The sample variance across $\Delta G_k$ estimates $\mathrm{Var}_{\mathbf{q}_0}(\Delta G_k)$, and the additional factor of $1/B$ yields an estimate of $\mathrm{Var}_{\mathbf{q}_0}(\overline{\Delta G})$.
 
 If the final time $T=t_{N-1}$ and the block length $M$ are well-chosen, then with enough replicates $R\geqslant 1$, we should find that
-$$ \hat\sigma_B^2(T; x_0) \approx S_R^2(T ; x_0) .$$
+$$ \hat\sigma_B^2(T; \mathbf{q}_0) \approx S_R^2(T ; \mathbf{q}_0) .$$
 When this relationship holds, we may surmise the replicates are exploring roughly the same regions of configuration space, at least in those degrees of freedom that are relevant to the free energy estimate. 
 
 \paragraph{Integrated autocorrelation times}
@@ -2174,9 +2175,9 @@ so that
 The quantity 
 
 \begin{eqnarray}
-g &\equiv& 1 + 2 \tau_\mathrm{eq} \approx  \frac{\sigma^2(T;x_0)}{\sigma_0^2} N \label{eq:statistical-inefficiency-definition} 
+g &\equiv& 1 + 2 \tau_\mathrm{eq} \approx  \frac{\sigma^2(T;\mathbf{q}_0)}{\sigma_0^2} N \label{eq:statistical-inefficiency-definition} 
 \end{eqnarray}
-is referred to as the \textit{statistical inefficiency}. Loosely speaking, $g$ measures the number of indices $i$ between roughly independent samples. The role of estimators such as non-overlapping batch means is precisely to estimate $\sigma^2(T;x_0)$ directly from correlated data, which is roughly equivalent to estimating $g$. 
+is referred to as the \textit{statistical inefficiency}. Loosely speaking, $g$ measures the number of indices $i$ between roughly independent samples. The role of estimators such as non-overlapping batch means is precisely to estimate $\sigma^2(T;\mathbf{q}_0)$ directly from correlated data, which is roughly equivalent to estimating $g$. 
 
 Robust estimation of $C_i$ for $i$ on the order of $N$ is difficult due to growth in statistical error, so common estimators of $g$ make use of several additional properties of $C_i$ to provide useful estimates (see \emph{Practical Computation of Statistical Inefficiencies} in~\cite{chodera2016simple} for a detailed discussion).
 
@@ -2213,7 +2214,7 @@ Reliable estimation of the statistical inefficiency is itself a nontrivial task,
 
 \label{sec:automatic-equilibration-detection}
 % Much of the infrastructure for analyzing alchemical free energy calculations relies on the concept of asymptotically unbiased estimators, which produce unbiased estimates of the free energy when fed very long simulations~\cite{shirts2005comparison}.
-The importance of choosing the time  $t_0\geqslant 0$ at which we start using samples for estimation depends on the quality of the initial condition of $x_0$.  Simulations for free energy calculations are often initiated from highly atypical initial conditions (such as a protein-ligand geometry obtained from docking and subjected to a heuristic solvent placement scheme), and simulations are of a finite length dictated by available computational resources and computing demands. As a result, these estimators can produce significantly biased estimates if fed the entirety of simulation data generated without further processing~\cite{chodera2016simple}.
+The importance of choosing the time  $t_0\geqslant 0$ at which we start using samples for estimation depends on the quality of the initial condition of $\mathbf{q}_0$.  Simulations for free energy calculations are often initiated from highly atypical initial conditions (such as a protein-ligand geometry obtained from docking and subjected to a heuristic solvent placement scheme), and simulations are of a finite length dictated by available computational resources and computing demands. As a result, these estimators can produce significantly biased estimates if fed the entirety of simulation data generated without further processing~\cite{chodera2016simple}.
 \begin{figure}
     \centering
     \includegraphics[width=0.95\linewidth]{figures/fig11_equib_detection/Figure.pdf}
@@ -2242,9 +2243,9 @@ For additional discussion of working with correlated data and autocorrelation an
 
 \paragraph{Computing the timeseries for equilibration detection}
 Typically, the timeseries of note $a_t$ analyzed in automated equilibration detection is the negative logarithm of the probability density ($\pi(X_t; \lambda$)) sampled by the MCMC algorithm (up to an irrelevant additive constant).
-For simple independent simulations that sample $x_t \sim \pi(x ; \lambda)$, this is given by the reduced potential
+For simple independent simulations that sample $\mathbf{q}_t \sim \pi(\mathbf{q} ; \lambda)$, this is given by the reduced potential
 \begin{eqnarray}
-a_t &\equiv& - \ln \pi(x_t; \lambda) + c = u(x_t; \lambda) .
+a_t &\equiv& - \ln \pi(\mathbf{q}_t; \lambda) + c = u(\mathbf{q}_t; \lambda) .
 \end{eqnarray}
 
 Note that the use of the effective reduced potential is not guaranteed to detect all slow relaxation processes that may be coupled to the alchemical free energy, but the simplicity of its computation means it is generally appropriate for most cases.
@@ -2261,7 +2262,7 @@ A related practical question concerns how a fixed computational budget should be
 
 Let $\Delta G^{(i)}(t)$ denote the free energy estimate obtained from replicate $i$ after simulation time $t$, and suppose that, for fixed $t$, the conditional variance 
 \[
-E(t)^2 \;\equiv\; \mathrm{Var}_{x_0}\!\bigl(\Delta G^{(i)}(t)\bigr)
+E(t)^2 \;\equiv\; \mathrm{Var}_{\mathbf{q}_0}\!\bigl(\Delta G^{(i)}(t)\bigr)
 \]
 is finite. Given a fixed computational budget $B$, we may consider simple allocation schemes in which $B = RT$, where $R$ replicates are each run for time $T$. Under this constraint, the conditional error scales as
 \[
@@ -2339,7 +2340,7 @@ In this case, one can extend the simulations or try an approach that requires si
 
 \paragraph{Overlap matrix}
 One way of assessing reliability of the calculations is checking the phase space overlap between neighboring $\lambda$-windows~\cite{wu2005phasespace, wu2005phasespacea}. For this purpose, a so-called overlap matrix $\mathcal{O}$ can be used. $\mathcal{O}$ is a $K\times K$ matrix, with $K$ being the number of simulated states, i.e. values of $\lambda$. Sufficient overlap is important for reweighting estimators such as BAR or MBAR, but cannot help assess reliability of estimates when using TI. 
-These matrices are graphical representations of the phase space overlap. This is defined as the average probability over the simulation that a sample generated at state $\lambda_{j}$ can be observed at state $\vec{\lambda_{i}}$. As this probability is computed considering the samples from all states, and not just the adjacent states, the values in each row and column add up to 1. By examining this matrix, one can check that every state has overlap with its neighbors in both directions, indicated by off-diagonal elements that are sufficiently larger than zero. For accurate calculations, the matrix must be at least tridiagonal.
+These matrices are graphical representations of the phase space overlap. This is defined as the average probability over the simulation that a sample generated at state $\lambda_{j}$ can be observed at state $\lambda_i$. As this probability is computed considering the samples from all states, and not just the adjacent states, the values in each row and column add up to 1. By examining this matrix, one can check that every state has overlap with its neighbors in both directions, indicated by off-diagonal elements that are sufficiently larger than zero. For accurate calculations, the matrix must be at least tridiagonal.
 
 Details on the calculation and properties of these matrices can be found elsewhere~\cite{klimovich2015guidelines}.
 In an overlap matrix $\mathcal{O}$, the off-diagonal values (${O}_{i,j,i\ne j}$) are negatively correlated with the variance of the free energy difference. Accordingly, the uncertainty of the free energy difference between the states $i$ and $j$ will be smaller when ${O}_{i,j,i\ne j}$ is larger (and thus the values in the main diagonal (${O}_{i,j,i=j}$) are smaller). 
@@ -2418,12 +2419,12 @@ However, in contrast to Sec.~\ref{sec:theory} We define this intramolecular part
 \end{equation}
 where $x_u$ represents the collection of internal degrees of freedom of the solute (bond lengths, bond angles, and dihedral angles) with the corresponding volume element $dx_u$ assumed to include the appropriate Jacobian factors. The function $\Psi_v(x_u)$ in Eq.~\ref{eq:intra-zu-def} is the solvent-averaged potential of mean force of the solute in conformation $x_u$ in solvent $v$~\cite{rouxandsimonson1999solventmodels} 
 \begin{equation}
-  e^{-\beta \Psi_v(x_u)} = \frac{1}{Z_{N_v}} \int d\vec{r}_v e^{-\beta U(x_u, \vec{r}_v)}
+  e^{-\beta \Psi_v(x_u)} = \frac{1}{Z_{N_v}} \int d\mathbf{r}_v e^{-\beta U(x_u, \mathbf{r}_v)}
   \label{eq:solvent-pmf-def}
 \end{equation}
-where $\vec{r}_v$ represents the collection of Cartesian coordinates of the atoms of $N_v$ solvent molecules, $U(x_u, \vec{r}_v)$ is the potential energy of the solvent with one solute molecule in conformation $x_u$ placed in an arbitrary position in a volume $V$. When the potential energy function of the solution is separable into an intramolecular potential energy of the solute $U(x_u)$ and a solute-solvent non-bonded interaction energy, the potential of mean force can be written as the sum $\Psi_v(x_u) = U(x_u) + W_v(x_u)$ where $W_u(x_u)$ is the solvent potential of mean force, the solvation free energy of the solute fixed in configuration $x_u$~\cite{gilson2007calculation}. However, the potential of mean force definition Eq.~\ref{eq:solvent-pmf-def} is valid in general. Finally, $Z_{N_v}$ is the configurational partition function of the pure solvent
+where $\mathbf{r}_v$ represents the collection of Cartesian coordinates of the atoms of $N_v$ solvent molecules, $U(x_u, \mathbf{r}_v)$ is the potential energy of the solvent with one solute molecule in conformation $x_u$ placed in an arbitrary position in a volume $V$. When the potential energy function of the solution is separable into an intramolecular potential energy of the solute $U(x_u)$ and a solute-solvent non-bonded interaction energy, the potential of mean force can be written as the sum $\Psi_v(x_u) = U(x_u) + W_v(x_u)$ where $W_u(x_u)$ is the solvent potential of mean force, the solvation free energy of the solute fixed in configuration $x_u$~\cite{gilson2007calculation}. However, the potential of mean force definition Eq.~\ref{eq:solvent-pmf-def} is valid in general. Finally, $Z_{N_v}$ is the configurational partition function of the pure solvent
 \begin{equation}
-  Z_{N_v} = \int d\vec{r}_v e^{-\beta U(\vec{r}_v)} \, .
+  Z_{N_v} = \int d\mathbf{r}_v e^{-\beta U(\mathbf{r}_v)} \, .
   \label{eq:Z-pure-solvent}
 \end{equation}
 
@@ -2459,28 +2460,28 @@ The next step is to express the ratio of intramolecular configurational partitio
 \begin{equation}
   \frac{z_{A(v)}}{z_{A(\mathrm{g})}} =
   \frac{
-    \int dx_A d\vec{r}_v e^{-\beta U(x_A, \vec{r}_v)}
+    \int dx_A d\mathbf{r}_v e^{-\beta U(x_A, \mathbf{r}_v)}
   }{
-    \int dx_A d\vec{r}_v e^{-\beta [U(\vec{r}_v) + U(x_A)] }
+    \int dx_A d\mathbf{r}_v e^{-\beta [U(\mathbf{r}_v) + U(x_A)] }
   }
 \end{equation}
 where the integral $Z_{N_v}$ for the pure solvent from Eq.~\ref{eq:Z-pure-solvent} has been combined in the denominator with the integral $z_{A(\mathrm{g})}$ of the solute in the gas phase to obtain the configurational partition function of an artificial system where the solute is in the solvent but it is decoupled from it (note the absence of coupling terms between the degrees of freedom of the solvent and those of the solute).
 
-Next, we multiply and divide by the integral $\int d\zeta$ of the six external degrees of freedom of the solute (the center of mass position and the orientation angles). These degrees of freedom, together with the internal degrees of freedom $x_A$, allow the recast the integrals in terms of the Cartesian coordinates $\vec{r}_A$ of the $n_A$ solute's atoms which are typically used in computer simulations, without restraining the position and orientation of the solute. Finally, we multiply and divide the integrand in the numerator by the integrand in the denominator to obtain
+Next, we multiply and divide by the integral $\int d\zeta$ of the six external degrees of freedom of the solute (the center of mass position and the orientation angles). These degrees of freedom, together with the internal degrees of freedom $x_A$, allow the recast the integrals in terms of the Cartesian coordinates $\mathbf{r}_A$ of the $n_A$ solute's atoms which are typically used in computer simulations, without restraining the position and orientation of the solute. Finally, we multiply and divide the integrand in the numerator by the integrand in the denominator to obtain
 \begin{equation}
   \frac{z_{A(v)}}{z_{A(\mathrm{g})}} =
   \frac{
-    \int d\vec{r}_A  d\vec{r}_v  e^{-\beta \{ U(\vec{r}_A, \vec{r}_v) -  [ U(\vec{r}_v) + U(\vec{r}_A) ] \}} e^{-\beta [U(\vec{r}_v) + U(  \vec{r}_A  )] } 
+    \int d\mathbf{r}_A  d\mathbf{r}_v  e^{-\beta \{ U(\mathbf{r}_A, \mathbf{r}_v) -  [ U(\mathbf{r}_v) + U(\mathbf{r}_A) ] \}} e^{-\beta [U(\mathbf{r}_v) + U(  \mathbf{r}_A  )] } 
   }{
-    \int d\vec{r}_A d\vec{r}_v e^{-\beta [U(\vec{r}_v) + U( \vec{r}_A  )] } 
+    \int d\mathbf{r}_A d\mathbf{r}_v e^{-\beta [U(\mathbf{r}_v) + U( \mathbf{r}_A  )] } 
   } = \langle e^{-\beta \Delta U} \rangle_0
   \label{eq:zratio-solv-average-app}
 \end{equation}
-where $\langle \ldots \rangle_0$ is an average in the decoupled ensemble and $\Delta U =  U(\vec{r}_A , \vec{r}_v) -  [ U(\vec{r}_v) + U(\vec{r}_A ) ]$ the change in the system's potential energy for coupling the solute to the solvent. Equivalently, we can consider the reciprocal of Eq.~\ref{eq:zratio-solv-average-app} and express it in terms of an ensemble average $\langle \ldots \rangle_1$ in the coupled ensemble:
+where $\langle \ldots \rangle_0$ is an average in the decoupled ensemble and $\Delta U =  U(\mathbf{r}_A , \mathbf{r}_v) -  [ U(\mathbf{r}_v) + U(\mathbf{r}_A ) ]$ the change in the system's potential energy for coupling the solute to the solvent. Equivalently, we can consider the reciprocal of Eq.~\ref{eq:zratio-solv-average-app} and express it in terms of an ensemble average $\langle \ldots \rangle_1$ in the coupled ensemble:
 \begin{equation}
   \frac{z_{A(v)}}{z_{A(\mathrm{g})}} = \frac{1}{\langle e^{\beta \Delta U} \rangle_1}
 \end{equation}
-where $-\Delta U = [ U(\vec{r}_v) + U(\vec{r}_A ) ] - U(\vec{r}_A , \vec{r}_v)$ is a decoupling energy.
+where $-\Delta U = [ U(\mathbf{r}_v) + U(\mathbf{r}_A ) ] - U(\mathbf{r}_A , \mathbf{r}_v)$ is a decoupling energy.
 
 Combining Eqs.~\ref{eq:DG-solvation-excess} and (\ref{eq:zratio-solv-average}) yields~\cite{widom1982potential} 
 \begin{equation}
