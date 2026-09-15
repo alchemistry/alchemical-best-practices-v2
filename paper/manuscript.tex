@@ -351,52 +351,58 @@ For convenience, we have also compiled a list of common acronyms and common symb
 
 
 %MRS: this should be reviewed at the end.
-\begin{tcolorbox}[title=List of Symbols, colback=green!10!white]
-$A$ --- Helmholtz free energy (free energy in the canonical ensemble) or Helmholtz function, with Helmholtz free energy used in the text.\\
+\begin{tcolorbox}[title=List of Symbols, colback=green!10!white, breakable]
+$A$, $B$ --- generic labels for chemical species and for alchemical end states\\
 $a$ --- a generic observable whose average is being estimated\\
 $\mathcal{B}$ --- computational budget\\
-%$b$ --- reduced binding energy function \\
 $C^{\circ}$, $C_s$ --- standard and actual molar solute concentrations \\
-$C_t$ --- discrete-time-normalized fluctuation auto-correlation function\\
+$C_i$ --- discrete-time normalized fluctuation auto-correlation function\\
 $f$ --- reduced (dimensionless) free energy, defined through $Z = e^{-f}$; $\Delta f$ is a reduced free energy difference, related to the Gibbs free energy by $\Delta G = k_B T \Delta f$\\
 $G$ --- Gibbs free energy (free energy in the isothermal isobaric ensemble), Gibbs function, or free enthalpy, though the most common term Gibbs free energy is used in the text\\
 $g$ --- statistical inefficiency\\
 $h$ --- Planck's constant \\
 $\vec{h}$ --- a displacement vector in the ATM method \\
+$\mathcal{H}$ --- reduced (dimensionless) Hamiltonian, $\mathcal{H} \equiv \beta H$\\
+$I(\zeta)$ --- binding site indicator function\\
+$J(\mathcal{T})$ --- objective quantifying the trade-off between replicate number and trajectory length\\
 $k_B$ --- Boltzmann constant \\
 $k_H$ --- Henry's constant \\
-$K_b^{\circ}$ --- binding  constant \\
+$K$ --- number of alchemical states\\
+$K_b$ --- binding  constant \\
 $L$ and $R$ --- generic labels for ligand and receptor\\
 $M$ --- batch size; $N_{\mathrm{b}}$ --- number of batches\\
 $N$ --- number of samples; $N_{\mathrm{atoms}}$, $N_{\mathrm{rep}}$ --- number of atoms and of replicates\\
 $\mathcal{O}$ --- overlap matrix between alchemical states\\
 $P^{\circ}$ --- standard pressure \\
+$P_{12}$ --- partition coefficient of a solute between the two solvents $v_1$ and $v_2$\\
 $p$ --- pressure \\
 $\mathbf{q}$ --- a single configuration of the system, i.e. the collection of degrees of freedom that completely specifies it\\
-$q'_s$ --- molecular partition function of the solute at rest \\
+$q'_s$ --- molecular partition function of the solute at rest, the prime denoting that the centre-of-mass translational contribution has been factored out \\
 $\mathbf{r}_A$, $\mathbf{r}_v$ --- positions of the solute and of the solvent molecules\\
-$s$, $v$ --- subscripts labelling the solute and the solvent; in Sec.~\ref{sec:theory-partitioning} the two solvents are $v_1$ and $v_2$. Not to be confused with the reduced potential $u$ or the reduced work $w$ below\\
+$s$, $v$ --- subscripts labelling the solute and the solvent (the two solvents of Sec.~\ref{sec:theory-partitioning} being $v_1$, $v_2$); distinct from the reduced $u$ and $w$ below\\
 $S^2$ --- sample variance of the free energy estimates across replicates\\
 $T$ --- temperature \\
 $\mathcal{T}$ --- length (chemical time) of a single trajectory\\
 $t_0$ --- equilibration time, i.e. the boundary between the equilibration and production regions \\
 $U$ --- potential energy\\
 $u$ --- reduced (dimensionless) potential capturing all of the features of a thermodynamic state that change the probability of that state\\
+$V_{\rm site}$ --- volume of the binding site\\
 $W$, $w$ --- work and reduced (dimensionless) work, $w \equiv \beta W$; $w_{\mathrm{dis}}$ is the reduced dissipated work \\
 $x_s$ --- internal coordinates of the solute \\
-$z_s$ --- intramolecular configurational partition function of the solute \\
 $Y_i$ --- successive samples of a Markov process\\
+$z_s$ --- intramolecular configurational partition function of the solute \\
 $Z$ --- partition function \\
 $\beta$ --- inverse thermal energy $(k_B T)^{-1}$ \\
 $\Gamma$ --- configurational space accessible by simulations \\
-$\pi$ --- stationary (equilibrium) density; $\rho_t$, $\rho_0$ --- transition density at time $t$ and initial density \\
-$\Delta \hat{f}$ --- estimate from an estimator for the reduced free energy difference between two states\\
-$\lambda$ --- alchemical progress parameter, which may be multidimensional if there are multiple dimensions along which the system is changing \\
-$\lambda_i$, $\Lambda_s$ --- atomic and molecular thermal de Broglie wavelengths \\
+$\zeta$ --- external coordinates of the solute \\
+$\lambda$ --- alchemical progress parameter, which may be multidimensional if the system changes along several dimensions \\
+$\Lambda_s$ --- molecular thermal de Broglie wavelength of the solute \\
 $\mu^\circ$, $\mu$ --- standard and actual solute chemical potential \\
+$\pi$ --- stationary (equilibrium) density; $\rho_t$, $\rho_0$ --- transition density at time $t$ and initial density \\
+$\sigma_0^2$ --- stationary variance of the observable\\
+$\tau_{\mathrm{int}}$ --- integrated auto-correlation time\\
 $\Psi_v$ --- solvent-averaged potential of mean force of the solute \\
-$\tau _{eq}$ --- integrated auto-correlation time\\
-$\zeta$ --- external coordinates of the solute
+$\Omega$ --- orientational extent of the binding pose
 \end{tcolorbox}
 
 
@@ -2187,7 +2193,7 @@ so that
 The quantity 
 
 \begin{eqnarray}
-g &\equiv& 1 + 2 \tau_\mathrm{eq} \approx  \frac{\sigma^2(\mathcal{T};\mathbf{q}_0)}{\sigma_0^2} N \label{eq:statistical-inefficiency-definition} 
+g &\equiv& 1 + 2 \tau_{\mathrm{int}}(N) \approx  \frac{\sigma^2(\mathcal{T};\mathbf{q}_0)}{\sigma_0^2} N \label{eq:statistical-inefficiency-definition} 
 \end{eqnarray}
 is referred to as the \textit{statistical inefficiency}. Loosely speaking, $g$ measures the number of indices $i$ between roughly independent samples. The role of estimators such as non-overlapping batch means is precisely to estimate $\sigma^2(\mathcal{T};\mathbf{q}_0)$ directly from correlated data, which is roughly equivalent to estimating $g$. 
 
