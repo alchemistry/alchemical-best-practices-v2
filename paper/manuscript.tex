@@ -358,7 +358,7 @@ $\mathcal{B}$ --- computational budget\\
 %$b$ --- reduced binding energy function \\
 $C^{\circ}$, $C_s$ --- standard and actual molar solute concentrations \\
 $C_t$ --- discrete-time-normalized fluctuation auto-correlation function\\
-$f$ --- reduced (dimensionless) free energy \\
+$f$ --- reduced (dimensionless) free energy, defined through $Z = e^{-f}$; $\Delta f$ is a reduced free energy difference, related to the Gibbs free energy by $\Delta G = k_B T \Delta f$\\
 $G$ --- Gibbs free energy (free energy in the isothermal isobaric ensemble), Gibbs function, or free enthalpy, though the most common term Gibbs free energy is used in the text\\
 $g$ --- statistical inefficiency\\
 $h$ --- Planck's constant \\
@@ -382,7 +382,7 @@ $\mathcal{T}$ --- length (chemical time) of a single trajectory\\
 $t_0$ --- equilibration time, i.e. the boundary between the equilibration and production regions \\
 $U$ --- potential energy\\
 $u$ --- reduced (dimensionless) potential capturing all of the features of a thermodynamic state that change the probability of that state\\
-$w(b, \lambda)$ --- perturbation energy function \\
+$W$, $w$ --- work and reduced (dimensionless) work, $w \equiv \beta W$; $w_{\mathrm{dis}}$ is the reduced dissipated work \\
 $x_s$ --- internal coordinates of the solute \\
 $z_s$ --- intramolecular configurational partition function of the solute \\
 $Y_i$ --- successive samples of a Markov process\\
@@ -614,11 +614,12 @@ u(\mathbf{q};\lambda) \equiv \beta \left[ U(\mathbf{q};\lambda) + p \, V(\mathbf
 \end{equation}
 Here, the collection of thermodynamic and alchemical parameters $\{\beta, \lambda, p, \mu, \ldots\}$ defines a \emph{thermodynamic state}.
 In the context of alchemical calculations, in which the thermodynamic states vary only in their value of $\lambda$, these are also referred to as \emph{alchemical states}.
+The free energy and the work follow the same convention and are likewise dimensionless: the reduced free energy $f$ is defined through $Z = e^{-f}$, and the reduced work of a transformation is $w \equiv \beta W$.
 The free energy of mutating $A$ to $B$ in any environment ($\Delta G_{\mathrm{env}}$ e.g., binding site, solvent) can then be computed as
 \begin{equation}\label{eq:delta-G-env}
     \Delta G_{\mathrm{env}} = - k_BT \ln \frac{Z(\lambda_B)}{Z(\lambda_A)} = - k_BT \ln \frac{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\mathbf{q}; \lambda_B) \right) \, d\mathbf{q}}{\int_{\Gamma_{\mathrm{env}}} \exp\left( -u(\mathbf{q}; \lambda_A) \right) \, d\mathbf{q}} \, ,
 \end{equation}
-over the configurational space of the environment ($\Gamma_{\mathrm{env}}$).  For simplicity in this paper, we will usually use the more specific $\beta U(\mathbf{q})$ instead of $u(q\mathbf{q})$, but for more complicated situations where one is dealing with simulations at multiple temperatures or pressures, it can prove useful to write equations in terms of the reduced potential. 
+over the configurational space of the environment ($\Gamma_{\mathrm{env}}$).  From here on we write the estimators of Sec.~\ref{subsec:estimators} and the uncertainty analysis of Sec.~\ref{subsec:uncertainty} in terms of these reduced quantities. Doing so keeps the results valid in any ensemble, which matters as soon as one deals with simulations at multiple temperatures or pressures, and it removes a good deal of clutter from the equations. A reader working exclusively in the canonical ensemble at a single temperature may simply read $u$ as $\beta U(\mathbf{q})$, $f$ as $\beta G$, and $w$ as $\beta W$ throughout.
 
 While it is generally not feasible to directly compute the two partition functions $Z(\lambda)$, for the same reason we can't easily compute binding free energies with \ref{eq:law-mass-action}, several estimators have been devised to robustly estimate the ratio of partition functions in Eq.~\ref{eq:delta-G-env} (see Sec.~\ref{subsec:estimators}) from a set of configurations usually collected with MD simulations from the thermodynamic states defined at $\lambda_A$ and $\lambda_B$ as well as, importantly, configurations from simulating  intermediates in between these two end states.
 
@@ -773,14 +774,14 @@ In theory, any pathway connecting the two states will work, because free energy 
 
 Intermediate alchemical states are defined in terms of one or more alchemical progress parameters $\lambda$ that change the potential energy function $U(\mathbf{q};\lambda)$ such that the potential energies of the initial and final states are recovered at two particular values $\lambda_0$ and $\lambda_1$. We most often parameterize this path with a single number ranging from $\lambda=0$ to $\lambda=1$, with $\lambda$ a single scalar.  However, we could define a path that has two different values, such as separate $\lambda$s for the Coulomb, van der Waals, and bonded terms~\cite{naden}.  Usually, we will treat $\lambda$ as a single scalar, with $\lambda=0$ and $\lambda=1$ as endpoints, as most calculations use this; we will point out where appropriate how the math and treatment are different for a vector of $\lambda$ variables.  
 %MRs: talk more about how even if there is a multiple component vector, for TI we take a path.  But with MBAR, we can take all paths simultaneous. 
-We then introduce some number of intermediate alchemical states at values $\lambda_A = \lambda_0, \lambda_1, \cdots, \lambda_K = \lambda_B$ so that each pair of consecutive states $\lambda_k, \lambda_{k+1}$ do share good phase space overlap, meaning, as described above, that there are decent number of samples $\mathbf{q}$ that have moderate probability in both neighboring alchemical states.  Then for $K$ intermediate states (written here for the Gibbs free energy, but true for the free energy of any other ensemble), we get
+We then introduce some number of intermediate alchemical states at values $\lambda_A = \lambda_0, \lambda_1, \cdots, \lambda_K = \lambda_B$ so that each pair of consecutive states $\lambda_k, \lambda_{k+1}$ do share good phase space overlap, meaning, as described above, that there are decent number of samples $\mathbf{q}$ that have moderate probability in both neighboring alchemical states.  Then for $K$ intermediate states we get
 
 \begin{equation}
-    \Delta G = k_BT \Delta f = k_BT \left(\sum_{k=0}^{K-1} \Delta G_{k,k+1}\right)
+    \Delta f = \sum_{k=0}^{K-1} \Delta f_{k,k+1} \, , \qquad \Delta G = k_BT \, \Delta f
 \end{equation}
 where
 \begin{equation}
-    \Delta G_{k,k+1} = G_{k+1} - G_{k} = -\ln\frac{Z(\lambda_{k+1})}{Z(\lambda_{k})}
+    \Delta f_{k,k+1} = f_{k+1} - f_{k} = -\ln\frac{Z(\lambda_{k+1})}{Z(\lambda_{k})}
 \end{equation}
 
 Which we can compute from samples collected at all the alchemical states $\{\lambda_k \}$.
@@ -1787,128 +1788,128 @@ The partition functions in, for example, Eq.~\ref{eq:DG-solvation-excess}, are s
 The simplest method for calculating free energy differences from simulations is the so-called \textit{Zwanzig
 relationship}~\cite{zwanzig1954hightemperature}, also called one-sided exponential re-weighting (EXP), or simply free energy perturbation, though this final term is sometimes used to encompass all ways of calculating free energy differences.
 
-The free energy difference $\Delta F_{01}$ between an initial state 0 and a final state 1 in a canonical ensemble defined by two Hamiltonians $H_0(\mathbf{q},\mathbf{p})$ and $H_1(\mathbf{q},\mathbf{p})$ can be calculated as:
+The reduced free energy difference $\Delta f_{01}$ between an initial state 0 and a final state 1 defined by two reduced Hamiltonians $\mathcal{H}_0(\mathbf{q},\mathbf{p})$ and $\mathcal{H}_1(\mathbf{q},\mathbf{p})$, where $\mathcal{H} \equiv \beta H$, can be calculated as:
 \begin{eqnarray}
-\Delta F_{01}  =  -\beta^{-1}\ln \expect{e^{-\beta (H_1(\mathbf{q},\mathbf{p}) - H_0(\mathbf{q},\mathbf{p}))}}_0 =  -\beta^{-1}\ln \expect{e^{-\beta \Delta H(\mathbf{q},\mathbf{p})} }_0
+\Delta f_{01}  =  -\ln \expect{e^{- (\mathcal{H}_1(\mathbf{q},\mathbf{p}) - \mathcal{H}_0(\mathbf{q},\mathbf{p}))}}_0 =  -\ln \expect{e^{- \Delta \mathcal{H}(\mathbf{q},\mathbf{p})} }_0
 \end{eqnarray}
-and the average is over all samples from the simulation performed with $H_0$.
+and the average is over all samples from the simulation performed with $\mathcal{H}_0$.
 The contribution to free energy difference due to the kinetic partition function can be factored out and cancels out in a thermodynamic cycle when calculating double free energy differences, as discussed in Sec~\ref{sec:chemical_potential}.
-This allows focusing on configurational partition function and express free energy estimator using potential energy $\Delta U(\mathbf{q})$
+This allows focusing on configurational partition function and express free energy estimator using the reduced potential energy difference $\Delta u(\mathbf{q})$
 \begin{eqnarray}
-\Delta F_{01}  =   -\beta^{-1}\ln \expect{e^{-\beta \Delta U(\mathbf{q})} }_0
+\Delta f_{01}  =   -\ln \expect{e^{- \Delta u(\mathbf{q})} }_0
 \end{eqnarray}\label{eqn.zwanzig_configurational}.
 
-Described in words, we take the samples generated during our run with the potential energy function $U_0(\mathbf{q})$ and calculate what the difference in energy would be if we switched instantaneously to the potential energy function $U_1(\mathbf{q})$, and average the exponential of the negative energy difference to get the negative of the exponential of the free energy difference. The original distributions, P($U_0$) as generated at $\lambda=0$ and P($U_1$) would look like those seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}-\textbf{C} on the right hand side. Reevaluating requires almost no extra code functionality to perform; one need only to save a full precision trajectory, and run an unmodified molecular simulation code using the $U_1$ in order to calculate the new energies of stored snapshots. The analysis can be written in a line of code.
+Described in words, we take the samples generated during our run with the reduced potential $u_0(\mathbf{q})$ and calculate what the difference in energy would be if we switched instantaneously to the reduced potential $u_1(\mathbf{q})$, and average the exponential of the negative energy difference to get the negative of the exponential of the free energy difference. The original distributions, P($u_0$) as generated at $\lambda=0$ and P($u_1$) would look like those seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}-\textbf{C} on the right hand side. Reevaluating requires almost no extra code functionality to perform; one need only to save a full precision trajectory, and run an unmodified molecular simulation code using the $u_1$ in order to calculate the new energies of stored snapshots. The analysis can be written in a line of code.
 
-Although the Zwanzig equation is formally correct as long as the two states considered sample the same phase space volume, which is true for standard molecular models, it has some very important numerical issues that mean that it often performs badly for standard free energy calculations, even for small molecules~\cite{shirts2005comparison,lu2003appropriate}. One can show that if the standard deviation of the difference $\Delta U(\mathbf{q}) = U_1(\mathbf{q})-U_2(\mathbf{q})$ over all sampled $\mathbf{q}$ is large, which in this case, means only several times $k_BT$, then very few samples contribute to the average, and the answer will be both biased and extremely noisy~\cite{lelievre2010free}. Essentially, the method is dominated by contributions of rare snapshots~\cite{jarzynski2006rare, wu2005phasespace, wu2005phasespacea}. 
+Although the Zwanzig equation is formally correct as long as the two states considered sample the same phase space volume, which is true for standard molecular models, it has some very important numerical issues that mean that it often performs badly for standard free energy calculations, even for small molecules~\cite{shirts2005comparison,lu2003appropriate}. One can show that if the standard deviation of the difference $\Delta u(\mathbf{q}) = u_1(\mathbf{q})-u_0(\mathbf{q})$ over all sampled $\mathbf{q}$ is large, which in this case means more than a few units (recall that $u$ is measured in units of $k_BT$), then very few samples contribute to the average, and the answer will be both biased and extremely noisy~\cite{lelievre2010free}. Essentially, the method is dominated by contributions of rare snapshots~\cite{jarzynski2006rare, wu2005phasespace, wu2005phasespacea}. 
 
  As a reminder, the estimators in this section are written in terms of the reduced potential $u$ and reduced free energy $f$ introduced in Eq.~\ref{eq:reduced-potential}, which keeps them valid in any ensemble; for canonical sampling one may simply read $u$ as $\beta U$ and $f$ as $\beta G$. See Sec.~\ref{sec:chemical_potential} for the relationship between $G$ and the Helmholtz free energy $A$.
  
-The Zwanzig formulation is general in that the instantaneous work to change the potential energy function from $U_0$ to $U_1$ can be replaced by the non-reversible work $W$ to make the same change beginning from the same equilibrium conditions at either end state~\cite{jarzynski1997nonequilibrium,jarzynski1998equilibrium,crooks2000pathensemble}, allowing for non-equilibrium free energy calculations, an alternate approach. 
+The Zwanzig formulation is general in that the instantaneous work to change the reduced potential from $u_0$ to $u_1$ can be replaced by the non-reversible work $W$ to make the same change beginning from the same equilibrium conditions at either end state~\cite{jarzynski1997nonequilibrium,jarzynski1998equilibrium,crooks2000pathensemble}, allowing for non-equilibrium free energy calculations, an alternate approach. 
 %We do not detail non-equilibrium transformations here, and refer the reader to more advanced treatments~\cite{maragakis2008bayesian,oberhofer2005biased,procacci2015unbiased,shirts2003equilibrium,ytreberg2004singleensemble, gapsys2020large}.
 
 \subsubsection{Jarzynski's Equality}
-Jarzynski's equality relates the work ($W$) obtained from a one-directional non-equilibrium transition to the free energy difference between the end states:
+Jarzynski's equality relates the reduced work ($w \equiv \beta W$) obtained from a one-directional non-equilibrium transition to the free energy difference between the end states:
 
 \begin{eqnarray}
-\langle e^{-\beta W} \rangle =e^{-\beta\Delta F}
+\langle e^{-w} \rangle =e^{-\Delta f}
 \end{eqnarray}\label{eqn.jarzynski}
 
-The work of an alchemical transition can be calculated by integrating $\partial H(\mathbf{q},\mathbf{p})/\partial(\lambda)$ over the transition path:
+The work of an alchemical transition can be calculated by integrating $\partial \mathcal{H}(\mathbf{q},\mathbf{p})/\partial\lambda$ over the transition path:
 
 \begin{equation}
-W   = \int_{0}^{1} \frac{\partial H(\mathbf{q},\mathbf{p})}{\partial\lambda} d\lambda.  
+w   = \int_{0}^{1} \frac{\partial \mathcal{H}(\mathbf{q},\mathbf{p})}{\partial\lambda} d\lambda.  
 \end{equation}\label{eqn.work_value}
 
-Expressing $\Delta F$ directly from Jarzynski's equality gives an estimator for the free energy difference, which is equivalent to Zwanzig's estimator when a transition is performed instantaneously:
+Expressing $\Delta f$ directly from Jarzynski's equality gives an estimator for the free energy difference, which is equivalent to Zwanzig's estimator when a transition is performed instantaneously:
 
 \begin{eqnarray}
-\Delta F = -\beta^{-1} \ln\langle e^{-\beta W} \rangle
+\Delta f = -\ln\langle e^{-w} \rangle
 \end{eqnarray}\label{eqn.jarzynski_estimator}
 
-This estimator, however, is biased, and the bias depends strongly on the dissipated work $W_{dis}=W-\Delta F$~\cite{gore2003bias}.
-The bias vanishes only for infinitely slow transitions where $\Delta F = \lim\limits_{\tau \to \infty} W$.
-When work distributions are Gaussian, $p(W) \sim \mathcal{N}(\overline{W},\sigma^2)$, the Jarzynski estimator becomes:
+This estimator, however, is biased, and the bias depends strongly on the reduced dissipated work $w_{\mathrm{dis}}=w-\Delta f$~\cite{gore2003bias}.
+The bias vanishes only for infinitely slow transitions where $\Delta f = \lim\limits_{\tau \to \infty} w$.
+When work distributions are Gaussian, $\pi(w) \sim \mathcal{N}(\overline{w},\sigma_w^2)$, the Jarzynski estimator becomes:
 
 \begin{eqnarray}
-\Delta F = \overline{W} - \frac{\beta\sigma^2}{2}
+\Delta f = \overline{w} - \frac{\sigma_w^2}{2}
 \end{eqnarray}\label{eqn.jarzynski_gaussian}
 
 The assumption of Gaussian work distributions usually holds only for slow switching that keeps the system close to equilibrium~\cite{jarzynski1997nonequilibrium}, so it's use should be carefully monitored.
 
 \subsubsection{The Bennett acceptance ratio (BAR)}
-If we have the differences in the potential energy sampled from the distribution defined by $U_0$ to the state defined by $U_1$, and we also have the differences in potential energies from the distribution sampled by $U_1$ to the state defined by $U_0$, we can obtain a significantly improved estimate of the
+If we have the differences in the potential energy sampled from the distribution defined by $u_0$ to the state defined by $u_1$, and we also have the differences in potential energies from the distribution sampled by $u_1$ to the state defined by $u_0$, we can obtain a significantly improved estimate of the
 free energy difference compared to that obtained by EXP. 
-This estimate was first derived by Bennett and is hence generally called the Bennett Acceptance Ratio (BAR). It is solved by finding the free energy difference $\Delta F$ that satisfies the following implicit equation:
+This estimate was first derived by Bennett and is hence generally called the Bennett Acceptance Ratio (BAR). It is solved by finding the reduced free energy difference $\Delta f$ that satisfies the following implicit equation:
 
 \begin{eqnarray}
- \sum_{k=1}^{n_i} \frac{1}{1 + \exp[\ln(\frac{n_i}{n_j}) + \beta \Delta U_{ij}(\mathbf{q}_k) - \beta \Delta F_{ij})
+ \sum_{k=1}^{n_i} \frac{1}{1 + \exp[\ln(\frac{n_i}{n_j}) + \Delta u_{ij}(\mathbf{q}_k) - \Delta f_{ij})
  ]} \nonumber \\
- =\sum_{l=1}^{n_j} \frac{1}{1 + \exp[\ln(\frac{n_j}{n_i}) - \beta \Delta U_{ij}(\mathbf{q}_l) + \beta \Delta F_{ij})]},
+ =\sum_{l=1}^{n_j} \frac{1}{1 + \exp[\ln(\frac{n_j}{n_i}) - \Delta u_{ij}(\mathbf{q}_l) + \Delta f_{ij})]},
 \end{eqnarray}\label{eq:bar}
 
 where $n_i$ and $n_j$ are the number of samples from each state. More recent derivations show that this formula is the maximum likelihood estimate of the free energy difference given sets of samples from the two states~\cite{shirts2003equilibrium}. 
-The equation does not have an explicit solution for $\Delta F$ and needs to be solved numerically to obtain the estimate for free energy difference.
+The equation does not have an explicit solution for $\Delta f$ and needs to be solved numerically to obtain the estimate for free energy difference.
 
 Many studies have demonstrated both the theoretical and practical superiority of BAR over EXP in molecular
 simulations~\cite{shirts2005comparison,lu2003appropriate}, and BAR converges to EXP in the limit that all samples are from a single state~\cite{bennett1976efficient,bennett1976efficient,shirts2003equilibrium}. BAR also requires significantly less overlap between the configurational space of each state to converge than EXP, though some overlap must still exist.
 
-The Bennett acceptance ratio is only defined between two states. Usually, the endpoints of interest in a free energy calculation are sufficiently different that we will need a chain of states that gradually change the potential energy function from $U_0$ to $U_1$, as discussed in Sec.~\ref{sec:important_path}. You can carry out a BAR estimate between each pair of states $\Delta F_{1 \rightarrow N} = \Delta {F_{1\rightarrow 2}} + \Delta {F_{2\rightarrow 3}} +  \ldots + \Delta F_{N-1\rightarrow N}$.
+The Bennett acceptance ratio is only defined between two states. Usually, the endpoints of interest in a free energy calculation are sufficiently different that we will need a chain of states that gradually change the reduced potential from $u_0$ to $u_1$, as discussed in Sec.~\ref{sec:important_path}. You can carry out a BAR estimate between each pair of states $\Delta f_{1 \rightarrow N} = \Delta {f_{1\rightarrow 2}} + \Delta {f_{2\rightarrow 3}} +  \ldots + \Delta f_{N-1\rightarrow N}$.
 
-There is one important thing to note about the uncertainty estimates when summing multiple free energy differences together to calculate an overall estimate of a free energy difference. Although BAR itself gives a free energy estimate that is asymptotically correct and is much less biased than the uncertainty estimate for EXP, the uncertainties in $\Delta {F_{i-1\rightarrow i}}$ and $\Delta {F_{i\rightarrow i+1}}$ are not uncorrelated, because they both involve the energies $U_i(\mathbf{q})$. The variances of each of the free energies cannot simply be summed together into the variance of the overall free energy. Instead, some other method for propagating the uncertainty, such as bootstrapping~\cite{grossfield2018best} must be used.
+There is one important thing to note about the uncertainty estimates when summing multiple free energy differences together to calculate an overall estimate of a free energy difference. Although BAR itself gives a free energy estimate that is asymptotically correct and is much less biased than the uncertainty estimate for EXP, the uncertainties in $\Delta {f_{i-1\rightarrow i}}$ and $\Delta {f_{i\rightarrow i+1}}$ are not uncorrelated, because they both involve the energies $u_i(\mathbf{q})$. The variances of each of the free energies cannot simply be summed together into the variance of the overall free energy. Instead, some other method for propagating the uncertainty, such as bootstrapping~\cite{grossfield2018best} must be used.
 
 \subsubsection{Bennett Acceptance Ratio for non-equilibrium transitions}
 Similarly to the analogy between Zwanzig's and Jarzynski's equations, Bennett Acceptance Ratio can be applied to estimate free energy differences from non-equilibrium transitions as well.
-Replacing $U_{ij}(\mathbf{q})$ in equation~\ref{eq:bar} by work values $W_k$ and $W_l$ corresponding to the work observed for the forward and reverse transitions, BAR can be written as follows~\cite{shirts2003equilibrium}:
+Replacing $\Delta u_{ij}(\mathbf{q})$ in equation~\ref{eq:bar} by reduced work values $w_k$ and $w_l$ corresponding to the work observed for the forward and reverse transitions, BAR can be written as follows~\cite{shirts2003equilibrium}:
 
 \begin{eqnarray}
- \sum_{k=1}^{n_F} \frac{1}{1 + \exp[\ln(\frac{n_F}{n_R}) + \beta W_{k} - \beta\Delta F)]} \nonumber \\
- =\sum_{l=1}^{n_R} \frac{1}{1 + \exp[\ln(\frac{n_R}{n_F}) - \beta W_{l} + \beta\Delta F]},
+ \sum_{k=1}^{n_F} \frac{1}{1 + \exp[\ln(\frac{n_F}{n_R}) + w_{k} - \Delta f)]} \nonumber \\
+ =\sum_{l=1}^{n_R} \frac{1}{1 + \exp[\ln(\frac{n_R}{n_F}) - w_{l} + \Delta f]},
 \end{eqnarray}\label{eq:bar_noneq}
 
 Another approach to estimate free energy from bi-directional transitions relies on the Gaussian approximation of work distributions similarly as described earlier for uni-directional transitions (eq.~\ref{eqn.jarzynski_gaussian})
-When work distributions for the forward and reverse transitions can be approximated by Gaussians $\mathcal{N}(\overline{W_f},\sigma_f)$ and $\mathcal{N}(-\overline{W_r},\sigma_r)$, respectively, the free energy difference between the states is defined as an intersection point between the distributions, hence, termed Crooks Gaussian Intersection (CGI)~\cite{goette2009accuracy}:
+When work distributions for the forward and reverse transitions can be approximated by Gaussians $\mathcal{N}(\overline{w_f},\sigma_f)$ and $\mathcal{N}(-\overline{w_r},\sigma_r)$, respectively, the free energy difference between the states is defined as an intersection point between the distributions, hence, termed Crooks Gaussian Intersection (CGI)~\cite{goette2009accuracy}:
 
 \begin{eqnarray}
- \Delta F = \frac{\frac{W_f}{\sigma_f^2}-\frac{-W_r}{\sigma_r^2}\pm\sqrt{\frac{1}{\sigma_f\sigma_r}(W_f+W_r)^2+2(\frac{1}{\sigma_f^2}-\frac{1}{\sigma_r^2})\ln{\frac{\sigma_r}{\sigma_f}}}}{\frac{1}{\sigma_f^2}-\frac{1}{\sigma_r^2}}
+ \Delta f = \frac{\frac{w_f}{\sigma_f^2}-\frac{-w_r}{\sigma_r^2}\pm\sqrt{\frac{1}{\sigma_f\sigma_r}(w_f+w_r)^2+2(\frac{1}{\sigma_f^2}-\frac{1}{\sigma_r^2})\ln{\frac{\sigma_r}{\sigma_f}}}}{\frac{1}{\sigma_f^2}-\frac{1}{\sigma_r^2}}
 \end{eqnarray}\label{eq:cgi_noneq}
 
 The estimate above holds for distributions where $\sigma_f \neq \sigma_r$.
-For the case of $\sigma_f=\sigma_r$, free energy difference is estimated as $\Delta F = (W_f-W_r)/2$.
+For the case of $\sigma_f=\sigma_r$, free energy difference is estimated as $\Delta f = (w_f-w_r)/2$.
 
 \subsubsection{Thermodynamic integration (TI)}
 By taking the derivative of the free energy with respect to the
 variable $\lambda$, we find that:
 \begin{equation}
-\frac{df}{d\lambda} = \frac{d}{d\lambda} \left[-\ln \int \frac{\exp^{-\beta U(\lambda,\mathbf{q})}}{Z(\lambda)} d\mathbf{q}\right] = \expect{\frac{dU(\lambda,\mathbf{q})}{d\lambda}\
+\frac{df}{d\lambda} = \frac{d}{d\lambda} \left[-\ln \int \frac{\exp^{-u(\lambda,\mathbf{q})}}{Z(\lambda)} d\mathbf{q}\right] = \expect{\frac{du(\lambda,\mathbf{q})}{d\lambda}\
 }_{\lambda} .
 \end{equation}
 And then we can numerically integrate $df/d\lambda$ over an alchemical transformation, using a range of different well-established techniques, to obtain:
 \begin{equation}
-\Delta f    = \int_{0}^{1} \expect{\frac{dU(\lambda,\mathbf{q})}{d\lambda}}_{\lambda}  d\lambda.    
+\Delta f    = \int_{0}^{1} \expect{\frac{du(\lambda,\mathbf{q})}{d\lambda}}_{\lambda}  d\lambda.    
 \end{equation}
 This approach to calculating the free energy is called thermodynamic integration (TI). Averaging over $\expect{\frac{du}{d\lambda}}$ requires fewer uncorrelated samples to reach a given level of relative error
-than averaging $e^{-U(\mathbf{q})}$, as the distribution of values is usually narrower, with a more Gaussian shape to the distribution. Rather than being limited by overlap, as in the case of BAR and MBAR (see below), we are instead limited by the bias in the numerical quadrature, which must be minimized sufficiently to be beneath the level of statistical noise.
+than averaging $e^{-u(\mathbf{q})}$, as the distribution of values is usually narrower, with a more Gaussian shape to the distribution. Rather than being limited by overlap, as in the case of BAR and MBAR (see below), we are instead limited by the bias in the numerical quadrature, which must be minimized sufficiently to be beneath the level of statistical noise.
 
 %Various numerical integration schemes are possible, but the trapezoid
 %rule provides a simple and robust scheme. 
 All types of numerical integration can be written as:
-\[ \Delta F \approx \sum_{k=1}^{K} w_k
-\expect{\frac{dU(\lambda,\mathbf{q})}{d\lambda}}_{k}, \] where the weights $w_k$ correspond to a particular choice of numerical integration.
-Researchers have tried different integration schemes~\cite{resat1993studies,jorge2010effect,shyu2009reducing,Bruckner2010}. Several of them, e.g., Gauss-Legendre quadrature, require specific choices of $\lambda$, i.e., one needs to calculate $\langle\partial u/\partial \lambda\rangle$ at the particular $\lambda$-values required by the integration method, making them inflexible. The trapezoidal rule is often recommended; it has the advantage of simplicity, both equidistant and non-equidistant $\lambda$-values can be used, and one can include simulations at additional $\lambda$-values if deemed necessary. However, considerably more $\lambda$-values than for more advanced integration methods may be needed. Simpson's rule gives higher accuracy and almost the same flexibility~\cite{Bruckner2010}. An alternative to these numerical integration schemes is to fit the  $\langle\partial U/\partial \lambda\rangle$ values to a piecewise continuous function, e.g., by cubic spline interpolation, and carry out the integration between $\lambda=0$ and 1 analytically. While certainly more complicated than the trapezoidal rule or Simpson integration,  this approach retains the flexibility with regard to choice of $\lambda$ values while giving accuracy comparable to more advanced integration methods. E.g., in recent work requiring very precise free energy calculations~\cite{Fleck_2021}, thermodynamic integration by cubic spline interpolation, followed by analytic integration  was used in parallel with Bennett's acceptance ratio method and gave equivalent results.
+\[ \Delta f \approx \sum_{k=1}^{K} c_k
+\expect{\frac{du(\lambda,\mathbf{q})}{d\lambda}}_{k}, \] where the weights $c_k$ correspond to a particular choice of numerical integration.
+Researchers have tried different integration schemes~\cite{resat1993studies,jorge2010effect,shyu2009reducing,Bruckner2010}. Several of them, e.g., Gauss-Legendre quadrature, require specific choices of $\lambda$, i.e., one needs to calculate $\langle\partial u/\partial \lambda\rangle$ at the particular $\lambda$-values required by the integration method, making them inflexible. The trapezoidal rule is often recommended; it has the advantage of simplicity, both equidistant and non-equidistant $\lambda$-values can be used, and one can include simulations at additional $\lambda$-values if deemed necessary. However, considerably more $\lambda$-values than for more advanced integration methods may be needed. Simpson's rule gives higher accuracy and almost the same flexibility~\cite{Bruckner2010}. An alternative to these numerical integration schemes is to fit the  $\langle\partial u/\partial \lambda\rangle$ values to a piecewise continuous function, e.g., by cubic spline interpolation, and carry out the integration between $\lambda=0$ and 1 analytically. While certainly more complicated than the trapezoidal rule or Simpson integration,  this approach retains the flexibility with regard to choice of $\lambda$ values while giving accuracy comparable to more advanced integration methods. E.g., in recent work requiring very precise free energy calculations~\cite{Fleck_2021}, thermodynamic integration by cubic spline interpolation, followed by analytic integration  was used in parallel with Bennett's acceptance ratio method and gave equivalent results.
 
-TI has two drawbacks: First, it requires derivatives with respect to $\lambda$ to be calculated directly in the code. Unfortunately, many problems of interest require using pathways (such as the soft-core pathways, for removing repulsive interactions) that are not linear, as we discuss, making this more complex. However, most programs contain the necessary code for the derivatives with respect to $\lambda$. Second, the difficulty of the numerical integration step is tied to the shape (i.e., variation) of the integrand $\langle\frac{dU(\lambda)}{d\lambda}\rangle$. Specifically, the shape depends on the nature of the alchemical transformation and the functional form of the soft-core potentials used. Both cannot be controlled by the user, so regions where the integrand varies rapidly cannot be avoided. If this is the case, TI typically requires more $\lambda$-states for accurate results than the BAR or MBAR estimators~\cite{Bruckner2010}.
+TI has two drawbacks: First, it requires derivatives with respect to $\lambda$ to be calculated directly in the code. Unfortunately, many problems of interest require using pathways (such as the soft-core pathways, for removing repulsive interactions) that are not linear, as we discuss, making this more complex. However, most programs contain the necessary code for the derivatives with respect to $\lambda$. Second, the difficulty of the numerical integration step is tied to the shape (i.e., variation) of the integrand $\langle\frac{du(\lambda)}{d\lambda}\rangle$. Specifically, the shape depends on the nature of the alchemical transformation and the functional form of the soft-core potentials used. Both cannot be controlled by the user, so regions where the integrand varies rapidly cannot be avoided. If this is the case, TI typically requires more $\lambda$-states for accurate results than the BAR or MBAR estimators~\cite{Bruckner2010}.
 
 \subsubsection{The multistate Bennett acceptance ratio (MBAR)}
 One can generalize Bennett's logic from two states to multiple states to obtain a free energy estimator that uses energy differences between configurations at all intermediate states to compute free energy differences between all states. MBAR gives a system of implicit equations for the free energies $f_i$:
 \begin{equation}
-f_i = - \ln \sum_{n=1}^{N} \frac{\exp(-\beta U_i(\mathbf{q}_n))}{\sum_{k=1}^K N_k \exp(\beta F_k-\beta U_k(\mathbf{q}_n))},
+f_i = - \ln \sum_{n=1}^{N} \frac{\exp(-u_i(\mathbf{q}_n))}{\sum_{k=1}^K N_k \exp(f_k-u_k(\mathbf{q}_n))},
 \end{equation}
-where there are $N_k$ samples from each of $K$ states, with $\sum_k N_k=N$ the total number of samples. Thus, we need to evaluate the energy function $U_i$ for all samples obtained at all states in the transformation. The equations can be solved by a number of different standard routines. We note that there are only $K-1$ independent equations, so only $K-1$ of the free energies are independent variables, and one of the $f_i$ must be specified (usually, without loss of generality, setting it to zero). Note that this equation assumes that all simulations are performed at the same $\beta$ (or temperature $T$), which is usually true for alchemical simulations.  One can also use this equation to estimate free energies between different temperatures by using the reduced potential $u_i = \beta_i U_i$ for each state, but this requires some additional bookkeeping, as one can only calculate $\Delta F_{binding}(T)$, not the free energy difference between two different phases at two arbitrary temperatures~\cite{schieber2018reweighting}. 
+where there are $N_k$ samples from each of $K$ states, with $\sum_k N_k=N$ the total number of samples. Thus, we need to evaluate the reduced potential $u_i$ for all samples obtained at all states in the transformation. The equations can be solved by a number of different standard routines. We note that there are only $K-1$ independent equations, so only $K-1$ of the free energies are independent variables, and one of the $f_i$ must be specified (usually, without loss of generality, setting it to zero). Because the equations are written in terms of the reduced potential, they also cover the case where states differ in temperature, taking $u_i = \beta_i U_i$ for each state; this requires some additional bookkeeping, as one can only calculate $\Delta f_{binding}(T)$, not the free energy difference between two different phases at two arbitrary temperatures~\cite{schieber2018reweighting}. 
 
 MBAR is probably the lowest variance asymptotically unbiased estimator of the free energy given the energies of the samples~\cite{tan2004likelihood}, which means that BAR is also the lowest variance estimator for the free energy difference between only 2 states, as it is mathematically exactly the same as MBAR in this case. MBAR also provides an uncertainty estimate, derived from standard error propagation methods for implicit functions, which has been shown to be highly accurate as long as there are sufficient samples at each state~\cite{paliwal2011benchmark}.
 
-MBAR can also be thought of as the Zwanzig estimator of the free energy to state $i$ from a sampled distribution referred to as the \textit{mixture distribution}, where one throws all the samples from all simulations together in one ``pot''. Mathematically, this is defined by $p_m(\mathbf{q}) = N^{-1} \sum_k N_k \exp(\beta F_k-\beta U_k\mathbf{q})$, which is the average, weighted by the number of samples drawn from each distribution, of all the individual normalized probability distributions from the simulations that are performed~\cite{shirts2017reweighting}.
+MBAR can also be thought of as the Zwanzig estimator of the free energy to state $i$ from a sampled distribution referred to as the \textit{mixture distribution}, where one throws all the samples from all simulations together in one ``pot''. Mathematically, this is defined by $p_m(\mathbf{q}) = N^{-1} \sum_k N_k \exp(f_k-u_k(\mathbf{q}))$, which is the average, weighted by the number of samples drawn from each distribution, of all the individual normalized probability distributions from the simulations that are performed~\cite{shirts2017reweighting}.
 
 All of the estimators above have uncertainty estimates associated with them. These estimators of uncertainty are all derived from propagation of error formulae resulting from the estimators themselves.  In the limit of sufficiently large data, perhaps several hundred or thousand independent points, exhaustive analyses of model data has shown that the error estimates of BAR, MBAR, and TI are all quite reliable when there is good overlap between intermediate states. For example, for a series of hydration free energy calculations of model systems of various sizes analytical estimates of the error, bootstrap estimates, and standard deviations over 100 independent simulations started at different locations along a long initial simulations all agreed within a 5---10\%~\cite{paliwal2011benchmark}. For EXP, however, the number of samples required for the uncertainty estimates to become reliable is significantly higher, especially if overlap between intermediate states is lower. 
 
@@ -1922,7 +1923,7 @@ One important point is that the bootstrap samples used to estimate the standard 
 \subsubsection{Recommendations}
 \begin{itemize}
 \item We recommend MBAR if all energy differences are available. It is the lowest variance unbiased free energy estimate given samples from multiple states.
-\item However, BAR is essentially just as good as MBAR for highly optimized $\lambda$ intermediates. Specifically, if the $\lambda$s are chosen such that intermediate states have moderate but not large overlap with their neighbors (i.e. overlap between $i$ and $i+1$ and between $i$ and $i-1$), they will \textit{not} have significant overlap with their next nearest neighbors $i+2$ and $i-2$. Thus MBAR does not actually get significant information from these energy differences, so one might as well not even calculate them, and just perform BAR between nearest neighbors~\cite{paliwal2011benchmark}.  If the data is bootstrapped over all of the samples, then issues with the correlations $\Delta F_{i,i+1}$ and $\Delta F_{i+1,i+2}$ both using samples from state $i$ vanish.
+\item However, BAR is essentially just as good as MBAR for highly optimized $\lambda$ intermediates. Specifically, if the $\lambda$s are chosen such that intermediate states have moderate but not large overlap with their neighbors (i.e. overlap between $i$ and $i+1$ and between $i$ and $i-1$), they will \textit{not} have significant overlap with their next nearest neighbors $i+2$ and $i-2$. Thus MBAR does not actually get significant information from these energy differences, so one might as well not even calculate them, and just perform BAR between nearest neighbors~\cite{paliwal2011benchmark}.  If the data is bootstrapped over all of the samples, then issues with the correlations $\Delta f_{i,i+1}$ and $\Delta f_{i+1,i+2}$ both using samples from state $i$ vanish.
 \item TI usually gives similar values as MBAR implemented with sufficient numbers of intermediates, but quadrature errors that are hard to estimate beforehand  can occur if one does not carefully select $\lambda$ values such that the overlap between states is sufficiently high~\cite{paliwal2011benchmark}.
 \item WHAM is an approximation to MBAR, and there are no compelling reasons it should be used. If bin widths are carefully chosen and there are sufficient samples, it can give similar quality results to the other methods, but it always introduces some degree of binning error, and determining when errors might occur can be challenging. 
 \item Other variants, especially ones that adaptively determine the free energies can be useful in certain circumstances but beyond the scope of a Best Practices article.
@@ -2021,7 +2022,7 @@ One important point is that the bootstrap samples used to estimate the standard 
 \label{subsec:uncertainty}
 % this first paragraph needs work -- I basically I want to say that, for the most part, when replicates are well-behaved, it doesn't matter much what one does to estimate errors (so long as it's sane); when they're not -- which is the usual case -- no amount of statistical sophistication will save you. 
 
-Uncertainty estimate is both one of the most confusing parts of any simulation calculation, and one of the most crucial, and so deserves more explanation.  We first outline the basic principles of uncertainty estimation, in a framework based on Markov process theory. In all of these ways of estimating uncertainty, we assume that the underlying dynamics are sufficiently ``mixing'', which roughly means the simulation explores configuration space effectively. As has been widely noted in the literature [\textbf{cite}], this assumption is not always satisfied in practice. 
+Uncertainty estimate is both one of the most confusing parts of any simulation calculation, and one of the most crucial, and so deserves more explanation.  We first outline the basic principles of uncertainty estimation, in a framework based on Markov process theory. As in Sec.~\ref{subsec:estimators}, free energies here are the dimensionless $\Delta f$ of Eq.~\ref{eq:reduced-potential}; an uncertainty computed below is converted to the units used for reporting by multiplying by $k_B T$. In all of these ways of estimating uncertainty, we assume that the underlying dynamics are sufficiently ``mixing'', which roughly means the simulation explores configuration space effectively. As has been widely noted in the literature [\textbf{cite}], this assumption is not always satisfied in practice. 
 
 One consistent principle is that when a simulation is well-behaved, most reasonable uncertainty estimates tend to agree, and the specific choice of how to estimate is not that important.  In contrast, when a simulation is poorly converged---a situation that is common in biomolecular systems---different error estimation methods can yield substantially different results, all of which may be poor, and more sophisticated statistical analysis alone is unlikely to resolve the discrepancy. In such cases, all available uncertainty estimates should be expected to underestimate the true statistical error. The determination of when a simulation is or isn't ``well-behaved" is an active research problem.'' %MS: It may be worthwhile to note that various groups may advocate for different statistical procedures, highlighting the value of many individual trials ("replicates") over one long simulation. This same discussion has played out many times within the Markov Chain Monte Carlo community.; see e.g. https://besjournals.onlinelibrary.wiley.com/doi/10.1111/j.2041-210X.2011.00131.x
 
@@ -2076,43 +2077,43 @@ We define an \textbf{ensemble} to be a set of $N_{\mathrm{rep}} \geqslant 1$ tra
 
 \subsubsection{Ensemble error estimates}
 
-This section describes the simplest and, in many cases, the most robust procedure for estimating uncertainties in free energy calculations. For most practical applications, we recommend this approach when reporting statistical error bars. The procedure consists of simulating an ensemble $\{X^{(1)},\ldots,X^{(N_{\mathrm{rep}})}\}$ of $N_{\mathrm{rep}}$ molecular dynamics trajectories initialized at $\mathbf{q}_0$, and using the resulting free energy estimates $\{\Delta G^{(1)},\ldots,\Delta G^{(N_{\mathrm{rep}})}\}$ to quantify uncertainty. The trajectories $\Delta
-G^{(i)} (\cdot)$ are identically distributed and conditionally independent given $\mathbf{q}_0$. For any time $\mathcal{T} > 0$, the variance of any $\Delta G^{(i)} (\mathcal{T})$ can be estimated with the sample variance $S^2 (\mathcal{T})$,
+This section describes the simplest and, in many cases, the most robust procedure for estimating uncertainties in free energy calculations. For most practical applications, we recommend this approach when reporting statistical error bars. The procedure consists of simulating an ensemble $\{X^{(1)},\ldots,X^{(N_{\mathrm{rep}})}\}$ of $N_{\mathrm{rep}}$ molecular dynamics trajectories initialized at $\mathbf{q}_0$, and using the resulting free energy estimates $\{\Delta f^{(1)},\ldots,\Delta f^{(N_{\mathrm{rep}})}\}$ to quantify uncertainty. The trajectories $\Delta
+G^{(i)} (\cdot)$ are identically distributed and conditionally independent given $\mathbf{q}_0$. For any time $\mathcal{T} > 0$, the variance of any $\Delta f^{(i)} (\mathcal{T})$ can be estimated with the sample variance $S^2 (\mathcal{T})$,
 \begin{equation}\label{eq:sample-variance-definition}
-  S^2 (\mathcal{T}) = \frac{1}{N_{\mathrm{rep}} - 1} \sum_{i = 1}^{N_{\mathrm{rep}}} (\Delta G^{(i)} (\mathcal{T}) -
-  \overline{\Delta G (\mathcal{T})})^2, \qquad \overline{\Delta G (\mathcal{T})} = \frac{1}{N_{\mathrm{rep}}}
-  \sum_{i = 1}^{N_{\mathrm{rep}}} \Delta G^{(i)} (\mathcal{T}) .
+  S^2 (\mathcal{T}) = \frac{1}{N_{\mathrm{rep}} - 1} \sum_{i = 1}^{N_{\mathrm{rep}}} (\Delta f^{(i)} (\mathcal{T}) -
+  \overline{\Delta f (\mathcal{T})})^2, \qquad \overline{\Delta f (\mathcal{T})} = \frac{1}{N_{\mathrm{rep}}}
+  \sum_{i = 1}^{N_{\mathrm{rep}}} \Delta f^{(i)} (\mathcal{T}) .
 \end{equation}
-In the notation of Eq.~\ref{eqn:empirical-average}, $Y_i = \Delta G^{(i)}(\mathcal{T})$; conditioned on $\mathbf{q}_0$, the $Y_i$ are independent and identically distributed and are trivially a Markov process, with stationary distribution given by the distribution of $\Delta G^{(1)}(\mathcal{T})$. By direct calculation, we have (conditionally on $\mathbf{q}_0$)
+In the notation of Eq.~\ref{eqn:empirical-average}, $Y_i = \Delta f^{(i)}(\mathcal{T})$; conditioned on $\mathbf{q}_0$, the $Y_i$ are independent and identically distributed and are trivially a Markov process, with stationary distribution given by the distribution of $\Delta f^{(1)}(\mathcal{T})$. By direct calculation, we have (conditionally on $\mathbf{q}_0$)
 \begin{equation}
-    \mathbb{E}_{\mathbf{q}_0}[S^2(\mathcal{T})] = \mathrm{Var}_{\mathbf{q}_0}(\Delta G^{(1)}(\mathcal{T}))
+    \mathbb{E}_{\mathbf{q}_0}[S^2(\mathcal{T})] = \mathrm{Var}_{\mathbf{q}_0}(\Delta f^{(1)}(\mathcal{T}))
 \end{equation}
-The above equation says that $S^2(\mathcal{T})$ is an unbiased estimator of the variance of $\Delta G^{(1)}(\mathcal{T})$, conditioned on $\mathbf{q}_0$. By the Law of Large Numbers, as $N_{\mathrm{rep}} \rightarrow \infty$, we have $S^2 (\mathcal{T}) \rightarrow \mathrm{Var} _{\mathbf{q}_0}(\Delta
-G^{(1)} (\mathcal{T})) = \sigma^2 (\mathcal{T} ; \mathbf{q}_0)$. Furthermore, by conditional independence of the $\Delta G^{(i)}(\mathcal{T})$, for sufficiently large $N_{\mathrm{rep}}$ and any $\mathcal{T}>0$ for which the variance is finite, we have
+The above equation says that $S^2(\mathcal{T})$ is an unbiased estimator of the variance of $\Delta f^{(1)}(\mathcal{T})$, conditioned on $\mathbf{q}_0$. By the Law of Large Numbers, as $N_{\mathrm{rep}} \rightarrow \infty$, we have $S^2 (\mathcal{T}) \rightarrow \mathrm{Var} _{\mathbf{q}_0}(\Delta
+G^{(1)} (\mathcal{T})) = \sigma^2 (\mathcal{T} ; \mathbf{q}_0)$. Furthermore, by conditional independence of the $\Delta f^{(i)}(\mathcal{T})$, for sufficiently large $N_{\mathrm{rep}}$ and any $\mathcal{T}>0$ for which the variance is finite, we have
 \begin{equation}\label{eqn:variance-of-empirical-mean}
-\mathrm{Var}_{\mathbf{q}_0}(\overline{\Delta G(\mathcal{T})}) = \frac{\mathrm{Var}_{\mathbf{q}_0}(\Delta G^{(1)}(\mathcal{T}))}{N_{\mathrm{rep}}} \approx \frac{S^2(\mathcal{T})}{N_{\mathrm{rep}}}
+\mathrm{Var}_{\mathbf{q}_0}(\overline{\Delta f(\mathcal{T})}) = \frac{\mathrm{Var}_{\mathbf{q}_0}(\Delta f^{(1)}(\mathcal{T}))}{N_{\mathrm{rep}}} \approx \frac{S^2(\mathcal{T})}{N_{\mathrm{rep}}}
 \end{equation}
 %% Should we say what kind of LLN (weak/strong) ? Do we provide a reference (standard: Durrett or Chung)? 
 Taking square roots, we obtain the standard error
 \begin{equation}
   \mathrm{SE} (\mathcal{T} ; \mathbf{q}_0) = \sqrt{\frac{S^2(\mathcal{T})}{N_{\mathrm{rep}}}},
 \end{equation}
-which is the gold standard for reporting the error of a free energy estimate $\overline{\Delta G (\mathcal{T})} $ when a single initial condition $\mathbf{q}_0$ is used. Note that $\mathrm{SE}
-(\mathcal{T} ; \mathbf{q}_0) \rightarrow 0$ as $N_{\mathrm{rep}} \rightarrow \infty$ so long as $\mathrm{Var}_{\mathbf{q}_0}(\Delta G^{(1)}(\mathcal{T}))$ is finite, which is true if the $\Delta G^{(1)}(\mathcal{T})$ are bounded. Thus the variance can be made arbitrarily small simply by running enough replicates, but we note critically this does \textit{not} mean that we will have estimated the free energy to arbitrary precision: $\Delta G^{(1)}(\mathcal{T})$ in general will not be normally distributed, its value may vary greatly with both $\mathcal{T}$ and $\mathbf{q}_0$, and the variance may not be a good statistic to capture the error, as the distribution may be multi-modal, heavy-tailed and be sensitive to rare events. For example, one replicate out of many might explore a different mode of an important torsional angle, leading to a drastically different free energy estimate. 
+which is the gold standard for reporting the error of a free energy estimate $\overline{\Delta f (\mathcal{T})} $ when a single initial condition $\mathbf{q}_0$ is used. Note that $\mathrm{SE}
+(\mathcal{T} ; \mathbf{q}_0) \rightarrow 0$ as $N_{\mathrm{rep}} \rightarrow \infty$ so long as $\mathrm{Var}_{\mathbf{q}_0}(\Delta f^{(1)}(\mathcal{T}))$ is finite, which is true if the $\Delta f^{(1)}(\mathcal{T})$ are bounded. Thus the variance can be made arbitrarily small simply by running enough replicates, but we note critically this does \textit{not} mean that we will have estimated the free energy to arbitrary precision: $\Delta f^{(1)}(\mathcal{T})$ in general will not be normally distributed, its value may vary greatly with both $\mathcal{T}$ and $\mathbf{q}_0$, and the variance may not be a good statistic to capture the error, as the distribution may be multi-modal, heavy-tailed and be sensitive to rare events. For example, one replicate out of many might explore a different mode of an important torsional angle, leading to a drastically different free energy estimate. 
 %% MS: The rare event problem is a serious one, simulating even N_{\mathrm{rep}} = 100 replicates may not be "enough", depending on the purposes. Should we say this?
 %% Should we also state the central limit theorem? 
 In principle, the most robust error estimates can be obtained by starting from many different initial conditions $\mathbf{q}_0, \mathbf{q}_1, \dots$, and computing means and standard errors, but as mentioned in Section \ref{sec:timescales}, the value of this approach is limited by the user's ability to choose a suitable initial density $\rho_0(\mathbf{q})$.
 
 \subsubsection{Per-replicate error estimates}
 
-In the preceding case, we used minimal assumptions on the distribution of $\Delta G^{(i)}(\mathcal{T})$ to obtain estimates on $\sigma^2(\mathcal{T};\mathbf{q}_0)$ by simulating conditionally independent replicates and using the sample variance Eq.~\ref{eq:sample-variance-definition}. To obtain per-replicate (i.e., per-$i$) error estimates, we impose much stricter assumptions on the distribution of $\Delta G^{(i)}(\mathcal{T})$,  namely that they satisfy a Central Limit Theorem (CLT) as $\mathcal{T}\rightarrow \infty$, for each $i=1,\dots,N_{\mathrm{rep}}$:
-$$ \sqrt{\mathcal{T}} ( \Delta G^{(i)}(\mathcal{T}) - \Delta G^\star) \Rightarrow N(0, \sigma^2_{\mathrm{asym}}(\mathbf{q}_0))$$
-where $\Delta G^\star$ denotes the true free energy difference, $\sigma_{\mathrm{asym}}^2(\mathbf{q}_0)>0$ denotes the so-called "asymptotic variance", $ N(0, \sigma^2_{\mathrm{asym}}(\mathbf{q}_0))$ is a Gaussian distribution with mean 0 and variance $\sigma_{\mathrm{asym}}^2(\mathbf{q}_0)>0$, and $\Rightarrow$ denotes convergence in distribution. %% Should we define this? Might be a little too technical for the audience. Again, Durrett is one of the standard references. 
+In the preceding case, we used minimal assumptions on the distribution of $\Delta f^{(i)}(\mathcal{T})$ to obtain estimates on $\sigma^2(\mathcal{T};\mathbf{q}_0)$ by simulating conditionally independent replicates and using the sample variance Eq.~\ref{eq:sample-variance-definition}. To obtain per-replicate (i.e., per-$i$) error estimates, we impose much stricter assumptions on the distribution of $\Delta f^{(i)}(\mathcal{T})$,  namely that they satisfy a Central Limit Theorem (CLT) as $\mathcal{T}\rightarrow \infty$, for each $i=1,\dots,N_{\mathrm{rep}}$:
+$$ \sqrt{\mathcal{T}} ( \Delta f^{(i)}(\mathcal{T}) - \Delta f^\star) \Rightarrow N(0, \sigma^2_{\mathrm{asym}}(\mathbf{q}_0))$$
+where $\Delta f^\star$ denotes the true free energy difference, $\sigma_{\mathrm{asym}}^2(\mathbf{q}_0)>0$ denotes the so-called "asymptotic variance", $ N(0, \sigma^2_{\mathrm{asym}}(\mathbf{q}_0))$ is a Gaussian distribution with mean 0 and variance $\sigma_{\mathrm{asym}}^2(\mathbf{q}_0)>0$, and $\Rightarrow$ denotes convergence in distribution. %% Should we define this? Might be a little too technical for the audience. Again, Durrett is one of the standard references. 
 The CLT assumption implies that 
 $$\sigma^2(\mathcal{T};\mathbf{q}_0)\approx\frac{\sigma^2_{\mathrm{asym}}(\mathbf{q}_0)}{\mathcal{T}}.$$
 In practice, it may not be the case that $\sigma^2(\mathcal{T};\mathbf{q}_0)\propto \mathcal{T}^{-1}$, nor even that $\sigma^2(\mathcal{T};\mathbf{q}_0)$ is monotonically decreasing with $\mathcal{T}$. In such a case, we are not in a regime where the CLT is satisfied and the remainder of this subsection does not apply.
 
-To understand the difficulty of estimating $\mathrm{Var}_{\mathbf{q}_0}(\Delta G^{(i)}(\mathcal{T}))$ using only samples from replicate $i$, it is helpful to recall the empirical mean Eq.~\ref{eqn:empirical-average} as the canonical estimator. Suppose that $\{Y_i\}_{i\ge 0}$ is an ergodic Markov chain with stationary distribution $\pi$, that $Y_0 \sim \pi$, and that $t_{N-1}=\mathcal{T}$. Let $a$ be a fixed observable. 
+To understand the difficulty of estimating $\mathrm{Var}_{\mathbf{q}_0}(\Delta f^{(i)}(\mathcal{T}))$ using only samples from replicate $i$, it is helpful to recall the empirical mean Eq.~\ref{eqn:empirical-average} as the canonical estimator. Suppose that $\{Y_i\}_{i\ge 0}$ is an ergodic Markov chain with stationary distribution $\pi$, that $Y_0 \sim \pi$, and that $t_{N-1}=\mathcal{T}$. Let $a$ be a fixed observable. 
 \begin{align}
 \sigma^2(\mathcal{T};\mathbf{q}_0) &= \mathrm{Var}_{\pi}\!\left(\frac{1}{N}\sum_{i=0}^{N-1} a(Y_i) \right) \\
 &= \frac{1}{N^2}\sum_{i,j=0}^{N-1}
@@ -2136,19 +2137,19 @@ For the remainder of the section we focus on a single replicate. The simplest ge
 
 Partition the $N$ sequential samples of this single replicate into $N_{\mathrm{b}}$ consecutive batches of equal size $M$, so that $N = BM$. Batch $k$ consists of the samples $\{X(t_{kM}),\dots,X(t_{(k+1)M-1})\}, k=0,\dots,N_{\mathrm{b}}-1$, with $X(t_0) = \mathbf{q}_0$. Let
 \[
-\Delta G_k = \Delta G(t_{kM}:t_{(k+1)M})
+\Delta f_k = \Delta f(t_{kM}:t_{(k+1)M})
 \]
 denote the estimator obtained using only the samples in batch $k$, and define the batch mean
 \[
-\overline{\Delta G} \equiv \frac{1}{N_{\mathrm{b}}}\sum_{k=0}^{N_{\mathrm{b}}-1} \Delta G_k .
+\overline{\Delta f} \equiv \frac{1}{N_{\mathrm{b}}}\sum_{k=0}^{N_{\mathrm{b}}-1} \Delta f_k .
 \]
 The non-overlapping batch means estimator is then
 \[
 \hat\sigma_{N_{\mathrm{b}}}^2(\mathcal{T};\mathbf{q}_0)
 = \frac{1}{N_{\mathrm{b}}(N_{\mathrm{b}}-1)}\sum_{k=0}^{N_{\mathrm{b}}-1}
-\left(\Delta G_k - \overline{\Delta G}\right)^2 .
+\left(\Delta f_k - \overline{\Delta f}\right)^2 .
 \]
-This estimator may look complicated, but it is just the application of the sample variance to the estimates on  $N_{\mathrm{b}}$ non-overlapping time blocks of length $M$, which gives the variance using $M$ samples. The sample variance across $\Delta G_k$ estimates $\mathrm{Var}_{\mathbf{q}_0}(\Delta G_k)$, and the additional factor of $1/N_{\mathrm{b}}$ yields an estimate of $\mathrm{Var}_{\mathbf{q}_0}(\overline{\Delta G})$.
+This estimator may look complicated, but it is just the application of the sample variance to the estimates on  $N_{\mathrm{b}}$ non-overlapping time blocks of length $M$, which gives the variance using $M$ samples. The sample variance across $\Delta f_k$ estimates $\mathrm{Var}_{\mathbf{q}_0}(\Delta f_k)$, and the additional factor of $1/N_{\mathrm{b}}$ yields an estimate of $\mathrm{Var}_{\mathbf{q}_0}(\overline{\Delta f})$.
 
 If the final time $\mathcal{T}=t_{N-1}$ and the block length $M$ are well-chosen, then with enough replicates $N_{\mathrm{rep}}\geqslant 1$, we should find that
 $$ \hat\sigma_{N_{\mathrm{b}}}^2(\mathcal{T}; \mathbf{q}_0) \approx S^2(\mathcal{T} ; \mathbf{q}_0) .$$
@@ -2271,9 +2272,9 @@ If identifying an equilibration time that is only a fraction of the total time i
 
 A related practical question concerns how a fixed computational budget should be allocated between the number of independent replicates $N_{\mathrm{rep}}$ and the length of each trajectory $\mathcal{T}$. This question is inherently problem dependent, as it presumes some knowledge of how statistical error evolves with simulation time. 
 
-Let $\Delta G^{(i)}(t)$ denote the free energy estimate obtained from replicate $i$ after simulation time $t$, and suppose that, for fixed $t$, the conditional variance 
+Let $\Delta f^{(i)}(t)$ denote the free energy estimate obtained from replicate $i$ after simulation time $t$, and suppose that, for fixed $t$, the conditional variance 
 \[
-E(t)^2 \;\equiv\; \mathrm{Var}_{\mathbf{q}_0}\!\bigl(\Delta G^{(i)}(t)\bigr)
+E(t)^2 \;\equiv\; \mathrm{Var}_{\mathbf{q}_0}\!\bigl(\Delta f^{(i)}(t)\bigr)
 \]
 is finite. Given a fixed computational budget $\mathcal{B}$, we may consider simple allocation schemes in which $\mathcal{B} = N_{\mathrm{rep}}\mathcal{T}$, where $N_{\mathrm{rep}}$ replicates are each run for time $\mathcal{T}$. Under this constraint, the conditional error scales as
 \[
@@ -2285,9 +2286,9 @@ is finite. Given a fixed computational budget $\mathcal{B}$, we may consider sim
 The function $J(\mathcal{T})$ thus quantifies the tradeoff between trajectory length and the number of replicates. In practice, one might observe that $J(\mathcal{T})$ is minimized at very small values of $\mathcal{T}$. If $\mathcal{T}$ is very small -- say, less than 1 ns -- the finding is questionable and suggests the error is not being properly estimated. 
 
 
-% While one might hope for the asymptotic scaling $E(t)\sim t^{-1/2}$, such behavior is rarely observed at practically accessible timescales. Nevertheless, conditioned on their initial states, the estimates $\{\Delta G^{(i)}(t)\}_{i=1}^{N_{\mathrm{rep}}}$ obtained from different replicates are conditionally independent and identically distributed. Consequently, the conditional variance of the averaged estimator
+% While one might hope for the asymptotic scaling $E(t)\sim t^{-1/2}$, such behavior is rarely observed at practically accessible timescales. Nevertheless, conditioned on their initial states, the estimates $\{\Delta f^{(i)}(t)\}_{i=1}^{N_{\mathrm{rep}}}$ obtained from different replicates are conditionally independent and identically distributed. Consequently, the conditional variance of the averaged estimator
 % \[
-% \frac{1}{N_{\mathrm{rep}}}\sum_{i=1}^{N_{\mathrm{rep}}} \Delta G^{(i)}(t)
+% \frac{1}{N_{\mathrm{rep}}}\sum_{i=1}^{N_{\mathrm{rep}}} \Delta f^{(i)}(t)
 % \]
 % scales as $E(t)^2/N_{\mathrm{rep}}$, and the corresponding conditional error scales as $E(t)/\sqrt{N_{\mathrm{rep}}}$.
 
