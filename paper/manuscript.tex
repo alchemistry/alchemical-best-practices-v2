@@ -354,7 +354,7 @@ For convenience, we have also compiled a list of common acronyms and common symb
 \begin{tcolorbox}[title=List of Symbols, colback=green!10!white]
 $A$ --- Helmholtz free energy (free energy in the canonical ensemble) or Helmholtz function, with Helmholtz free energy used in the text.\\
 %$b$ --- reduced binding energy function \\
-$C^{\circ}$, $C_u$ --- standard and actual molar solute concentrations \\
+$C^{\circ}$, $C_s$ --- standard and actual molar solute concentrations \\
 $C_t$ --- discrete-time-normalized fluctuation auto-correlation function\\
 $f$ --- reduced (dimensionless) free energy \\
 $G$ --- Gibbs free energy (free energy in the isothermal isobaric ensemble), Gibbs function, or free enthalpy, though the most common term Gibbs free energy is used in the text\\
@@ -369,23 +369,24 @@ $\mathcal{O}$ --- overlap matrix between alchemical states\\
 $P^{\circ}$ --- standard pressure \\
 $p$ --- pressure \\
 $\mathbf{q}$ --- a single configuration of the system, i.e. the collection of degrees of freedom that completely specifies it\\
+$q'_s$ --- molecular partition function of the solute at rest \\
 $\mathbf{r}_A$, $\mathbf{r}_v$ --- positions of the solute and of the solvent molecules\\
-$q'_u$ --- molecular partition function of the solute at rest \\
+$s$, $v$ --- subscripts labelling the solute and the solvent; in Sec.~\ref{sec:theory-partitioning} the two solvents are $v_1$ and $v_2$. Not to be confused with the reduced potential $u$ or the reduced work $w$ below\\
 $T$ --- temperature \\
 $t_0$ --- equilibration time \\
 $U$ --- potential energy\\
 $u$ --- reduced (dimensionless) potential capturing all of the features of a thermodynamic state that change the probability of that state\\
 $w(b, \lambda)$ --- perturbation energy function \\
-$x_u$ --- internal coordinates of the solute \\
-$z_u$ --- intramolecular configurational partition function of the solute \\
+$x_s$ --- internal coordinates of the solute \\
+$z_s$ --- intramolecular configurational partition function of the solute \\
 $Z$ --- partition function \\
 $\beta$ --- inverse thermal energy $(k_B T)^{-1}$ \\
 $\Gamma$ --- configurational space accessible by simulations \\
 $\Delta \hat{f}$ --- estimate from an estimator for the reduced free energy difference between two states\\
 $\lambda$ --- alchemical progress parameter, which may be multidimensional if there are multiple dimensions along which the system is changing \\
-$\lambda_i$, $\Lambda_u$ --- atomic and molecular thermal de Broglie wavelengths \\
+$\lambda_i$, $\Lambda_s$ --- atomic and molecular thermal de Broglie wavelengths \\
 $\mu^\circ$, $\mu$ --- standard and actual solute chemical potential \\
-$\Psi_u$ --- potential of mean force of the solute \\
+$\Psi_v$ --- solvent-averaged potential of mean force of the solute \\
 $\tau _{eq}$ --- integrated auto-correlation time\\
 $\zeta$ --- external coordinates of the solute
 \end{tcolorbox}
@@ -404,26 +405,26 @@ In this section, we introduce the necessary thermodynamic and statistical mechan
 \label{sec:chemical_potential}
 Since chemical equilibria are governed by the chemical potentials of the species involved, we begin by considering a statistical mechanics expression for the chemical potential of a solute in a solvent. We will then combine chemical potentials to develop equations for each of the processes.
 
-The chemical potential of a solute $u$ in an ideally diluted solution in a solvent $v$ can be written as~\cite{guggenheim1952mixtures504,gilson1997statisticalthermodynamic,gilson2007calculation}
+The chemical potential of a solute $s$ in an ideally diluted solution in a solvent $v$ can be written as~\cite{guggenheim1952mixtures504,gilson1997statisticalthermodynamic,gilson2007calculation}
 \begin{equation}
-  \mu_u = -k_B T \ln \frac{q'_u}{C_u \Lambda_u^3}
+  \mu_s = -k_B T \ln \frac{q'_s}{C_s \Lambda_s^3}
   \label{eq:chemical-potential-definition}
 \end{equation}
-where $k_B$ is Boltzmann's constant, $T$ is the absolute temperature, $C_u = N_u/V$ is the number concentration of the solute, $\Lambda_u = h/\sqrt{2 \pi M_u k_B T}$ is the thermal de Broglie wavelength of the solute, where $h$ is Planck's constant and $M_u$ is the solute's total mass. 
+where $k_B$ is Boltzmann's constant, $T$ is the absolute temperature, $C_s = N_s/V$ is the number concentration of the solute, $\Lambda_s = h/\sqrt{2 \pi M_s k_B T}$ is the thermal de Broglie wavelength of the solute, where $h$ is Planck's constant and $M_s$ is the solute's total mass. 
 An ideally dilute solution is a potentially non-physically realizable solution in which solute molecules interact only with the solvent, and solute-solute interactions are negligible~\cite{levine2009physicalchemistrybook6ed}.
 
-The quantity $q'_u$ in Eq.~\ref{eq:chemical-potential-definition} is the molecular partition function of the solute at rest in the solvent
+The quantity $q'_s$ in Eq.~\ref{eq:chemical-potential-definition} is the molecular partition function of the solute at rest in the solvent
 \begin{equation}
-  q'_u = \frac{\Lambda_u^3}{\prod_i \lambda_i^3} 8 \pi^2 z_u
+  q'_s = \frac{\Lambda_s^3}{\prod_i \lambda_i^3} 8 \pi^2 z_s
   \label{eq:intra-qpu-def}
 \end{equation}
-where $\beta = (k_B T)^{-1}$, $\lambda_i$ is the thermal De Broglie wavelength of the $i$-th atom of the solute (not the alchemical parameter as used elsewhere in this document), and $z_u$ is the intramolecular configurational partition function of the solute. See a more complete definition of $z_u$ in Sec.~\ref{sec:derivations}.
+where $\beta = (k_B T)^{-1}$, $\lambda_i$ is the thermal De Broglie wavelength of the $i$-th atom of the solute (not the alchemical parameter as used elsewhere in this document), and $z_s$ is the intramolecular configurational partition function of the solute. See a more complete definition of $z_s$ in Sec.~\ref{sec:derivations}.
 
 Eq.~\ref{eq:chemical-potential-definition} is derived using \textit{classical} statistical mechanics theory~\cite{hill1986statthermo}. Classical mechanics is considered an excellent approximation for the room temperature, aqueous processes studied here, which involve only changes in intermolecular interactions. A quantum-mechanical treatment is necessary for processes not covered here, such as covalent binding, or protonation/deprotonation that involve breaking and forming chemical bonds. At a classical level, equilibrium thermodynamic properties, such as gas solubilities and binding constants, do not depend on atomic masses. Hence, while they are included in Eqs.~\ref{eq:chemical-potential-definition} and~\ref{eq:intra-qpu-def} for completeness, the thermal De Broglie wavelength terms coming from the partition functions of the momenta cancel in the resulting expressions below, and we need not consider them.
 
 The standard chemical potential of a solute in an ideally dilute solution is obtained from Eq.~\ref{eq:chemical-potential-definition} by setting the concentration to the standard concentration $C^\circ$, generally $1$ mol/L equivalent to $1/1661$ particles/\AA$^{3}$, 
 \begin{equation}
-  \mu_u^\circ = -k_B T \ln \frac{q'_u}{C^\circ \Lambda_u^3} \, .
+  \mu_s^\circ = -k_B T \ln \frac{q'_s}{C^\circ \Lambda_s^3} \, .
   \label{eq:chemical-potential-standard}
 \end{equation}
 The standard state of a solution is defined as an ideally dilute solution at concentration $C^\circ$~\cite{levine2009physicalchemistrybook6ed}. 
@@ -464,19 +465,19 @@ Eq.~\ref{eq:DG-solvation-excess}, which involves only intramolecular partition f
 
 \subsection{Free energy of solvent partitioning}\label{sec:theory-partitioning}
 
-The standard molar Gibbs free energy of transfer of a solute species $A$ from a  solvent $s$ to a solvent $v$, 
+The standard molar Gibbs free energy of transfer of a solute species $A$ from a  solvent $v_1$ to a solvent $v_2$, 
 \begin{equation}
-A(s)  \leftrightharpoons A(v)
+A(v_1)  \leftrightharpoons A(v_2)
 \end{equation}
 pictured in Fig.~\ref{fig:fig_what_is_alchemy}, is
 \begin{equation}
-  \Delta G^\circ_{\mathrm{part}} = -k_B T \ln P_{sv} = \mu^\circ_{A(v)}  - \mu^\circ_{A(s)} = -k_B T \ln \frac{z_{A(v)}}{z_{A(s)}}
+  \Delta G^\circ_{\mathrm{part}} = -k_B T \ln P_{12} = \mu^\circ_{A(v_2)}  - \mu^\circ_{A(v_1)} = -k_B T \ln \frac{z_{A(v_2)}}{z_{A(v_1)}}
   \label{eq:DG0-partitioning-def}
 \end{equation}
-where $P_{sv} = C_{A(v)}/C_{A(s)}$ is the partition coefficient of $A$ for the two solvents~\cite{rustenburg2016measuring}. Eq.~\ref{eq:DG0-partitioning-def} 
+where $P_{12} = C_{A(v_2)}/C_{A(v_1)}$ is the partition coefficient of $A$ for the two solvents~\cite{rustenburg2016measuring}. Eq.~\ref{eq:DG0-partitioning-def} 
 immediately identifies the partition coefficient with the ratio of intramolecular configurational partition functions of solute $A$ in the two solvents:
 \begin{equation}
-  P_{sv} = \frac{z_{A(v)}}{z_{A(s)}} \, .
+  P_{12} = \frac{z_{A(v_2)}}{z_{A(v_1)}} \, .
   \label{eq:partition-coefficient}
 \end{equation}
 Again, this relation connects calculated ratios of partition functions to experimental partition coefficients. Similarly to Eq.~\ref{eq:DG-solvation-excess}, Eq.~\ref{eq:partition-coefficient} corresponds to the process of transferring the solute from a fixed position and orientation in one solvent to a fixed position and orientation in the other. Again, because in a bulk solvent, the solvent is the same in all translational and rotational directions, this is the same as the free energy of transfer of a freely tumbling and moving ligand.
@@ -2397,38 +2398,38 @@ Here, we derive free energy expressions that form the basis of alchemical comput
 \subsection{The chemical potential}
 \label{sec:chemical_potential-app}
 
-As described before in~\ref{sec:theory}, the chemical potential of a solute $u$ in an ideally diluted solution in a solvent $v$ can be written as~\cite{guggenheim1952mixtures504,gilson1997statisticalthermodynamic,gilson2007calculation}
+As described before in~\ref{sec:theory}, the chemical potential of a solute $s$ in an ideally diluted solution in a solvent $v$ can be written as~\cite{guggenheim1952mixtures504,gilson1997statisticalthermodynamic,gilson2007calculation}
 \begin{equation}
-  \mu_u = -k_B T \ln \frac{q'_u}{C_u \Lambda_u^3}
+  \mu_s = -k_B T \ln \frac{q'_s}{C_s \Lambda_s^3}
   \label{eq:chemical-potential-definition-app}
 \end{equation}
-where $k_B$ is Boltzmann's constant, $T$ is the absolute temperature, $C_u = N_u/V$ is the number concentration of the solute, $\Lambda_u = h/\sqrt{2 \pi M_u k_B T}$ is the thermal de Broglie wavelength of the solute, where $h$ is Planck's constant and $M_u$ is the solute's total mass. 
+where $k_B$ is Boltzmann's constant, $T$ is the absolute temperature, $C_s = N_s/V$ is the number concentration of the solute, $\Lambda_s = h/\sqrt{2 \pi M_s k_B T}$ is the thermal de Broglie wavelength of the solute, where $h$ is Planck's constant and $M_s$ is the solute's total mass. 
 An ideally dilute solution is a potentially non-physically realizable solution in which solute molecules interact only with the solvent, and solute-solute interactions are negligible~\cite{levine2009physicalchemistrybook6ed}.
 
-The quantity $q'_u$ in Eq.~\ref{eq:chemical-potential-definition-app} is the molecular partition function of the solute at rest in the solvent
+The quantity $q'_s$ in Eq.~\ref{eq:chemical-potential-definition-app} is the molecular partition function of the solute at rest in the solvent
 \begin{equation}
-  q'_u = \frac{\Lambda_u^3}{\prod_i \lambda_i^3} 8 \pi^2 z_u
+  q'_s = \frac{\Lambda_s^3}{\prod_i \lambda_i^3} 8 \pi^2 z_s
   \label{eq:intra-qpu-def-app}
 \end{equation}
-where $\beta = (k_B T)^{-1}$, $\lambda_i$ is the thermal De Broglie wavelength of the $i$-th atom of the solute (not the alchemical parameter as used elsewhere in this document), and $z_u$ is the intramolecular configurational partition function of the solute.  As described in Sec.~\ref{sec:theory}, masses do not enter the classical statistical mechanical potentials, so the thermal De Broglie wavelength terms coming from the partition functions of the momenta cancel in the resulting expressions below, and we will no longer consider them.  Up to this point, we are merely recapitulating what was presented in Sec.~\ref{sec:theory}; indeed, Eqs.~\ref{eq:chemical-potential-definition-app} and \ref{eq:intra-qpu-def-app} are the same as Eqs. ~\ref{eq:chemical-potential-definition} and \ref{eq:intra-qpu-def} and are included here again for completeness (similar repetitions will occur throughout this section).
+where $\beta = (k_B T)^{-1}$, $\lambda_i$ is the thermal De Broglie wavelength of the $i$-th atom of the solute (not the alchemical parameter as used elsewhere in this document), and $z_s$ is the intramolecular configurational partition function of the solute.  As described in Sec.~\ref{sec:theory}, masses do not enter the classical statistical mechanical potentials, so the thermal De Broglie wavelength terms coming from the partition functions of the momenta cancel in the resulting expressions below, and we will no longer consider them.  Up to this point, we are merely recapitulating what was presented in Sec.~\ref{sec:theory}; indeed, Eqs.~\ref{eq:chemical-potential-definition-app} and \ref{eq:intra-qpu-def-app} are the same as Eqs. ~\ref{eq:chemical-potential-definition} and \ref{eq:intra-qpu-def} and are included here again for completeness (similar repetitions will occur throughout this section).
 
 However, in contrast to Sec.~\ref{sec:theory} We define this intramolecular partition function more precisely here, as:
 \begin{equation}
-  z_u = \int dx_u e^{-\beta \Psi_v(x_u)}
+  z_s = \int dx_s e^{-\beta \Psi_v(x_s)}
   \label{eq:intra-zu-def}
 \end{equation}
-where $x_u$ represents the collection of internal degrees of freedom of the solute (bond lengths, bond angles, and dihedral angles) with the corresponding volume element $dx_u$ assumed to include the appropriate Jacobian factors. The function $\Psi_v(x_u)$ in Eq.~\ref{eq:intra-zu-def} is the solvent-averaged potential of mean force of the solute in conformation $x_u$ in solvent $v$~\cite{rouxandsimonson1999solventmodels} 
+where $x_s$ represents the collection of internal degrees of freedom of the solute (bond lengths, bond angles, and dihedral angles) with the corresponding volume element $dx_s$ assumed to include the appropriate Jacobian factors. The function $\Psi_v(x_s)$ in Eq.~\ref{eq:intra-zu-def} is the solvent-averaged potential of mean force of the solute in conformation $x_s$ in solvent $v$~\cite{rouxandsimonson1999solventmodels} 
 \begin{equation}
-  e^{-\beta \Psi_v(x_u)} = \frac{1}{Z_{N_v}} \int d\mathbf{r}_v e^{-\beta U(x_u, \mathbf{r}_v)}
+  e^{-\beta \Psi_v(x_s)} = \frac{1}{Z_{N_v}} \int d\mathbf{r}_v e^{-\beta U(x_s, \mathbf{r}_v)}
   \label{eq:solvent-pmf-def}
 \end{equation}
-where $\mathbf{r}_v$ represents the collection of Cartesian coordinates of the atoms of $N_v$ solvent molecules, $U(x_u, \mathbf{r}_v)$ is the potential energy of the solvent with one solute molecule in conformation $x_u$ placed in an arbitrary position in a volume $V$. When the potential energy function of the solution is separable into an intramolecular potential energy of the solute $U(x_u)$ and a solute-solvent non-bonded interaction energy, the potential of mean force can be written as the sum $\Psi_v(x_u) = U(x_u) + W_v(x_u)$ where $W_u(x_u)$ is the solvent potential of mean force, the solvation free energy of the solute fixed in configuration $x_u$~\cite{gilson2007calculation}. However, the potential of mean force definition Eq.~\ref{eq:solvent-pmf-def} is valid in general. Finally, $Z_{N_v}$ is the configurational partition function of the pure solvent
+where $\mathbf{r}_v$ represents the collection of Cartesian coordinates of the atoms of $N_v$ solvent molecules, $U(x_s, \mathbf{r}_v)$ is the potential energy of the solvent with one solute molecule in conformation $x_s$ placed in an arbitrary position in a volume $V$. When the potential energy function of the solution is separable into an intramolecular potential energy of the solute $U(x_s)$ and a solute-solvent non-bonded interaction energy, the potential of mean force can be written as the sum $\Psi_v(x_s) = U(x_s) + W_v(x_s)$ where $W_v(x_s)$ is the solvent potential of mean force, the solvation free energy of the solute fixed in configuration $x_s$~\cite{gilson2007calculation}. However, the potential of mean force definition Eq.~\ref{eq:solvent-pmf-def} is valid in general. Finally, $Z_{N_v}$ is the configurational partition function of the pure solvent
 \begin{equation}
   Z_{N_v} = \int d\mathbf{r}_v e^{-\beta U(\mathbf{r}_v)} \, .
   \label{eq:Z-pure-solvent}
 \end{equation}
 
-Eq.~\ref{eq:chemical-potential-definition-app} is derived by writing the classical canonical configurational partition function $Z(N_u = 1, N_v)$ of one solute molecule in a solvent of $N_v$ molecules in a volume $V$ and multiplying and dividing it by configurational partition function of the pure solvent [Eq.~\ref{eq:Z-pure-solvent}], and then separating out the integration over the external degrees of freedom of the solute (translations and rotations) giving an $8 \pi^2 V$ term to yield $Z(N_u = 1, N_v) = Z_{N_v} 8 \pi^2 V z_u$ where $z_u$ is defined by Eqs.~\ref{eq:intra-zu-def} and (\ref{eq:solvent-pmf-def}). The canonical configurational partition function of $N_u$ independent solute molecules in a solvent is then obtained by considering the product of the solute terms $Z(N_u, N_v) = Z_{N_v} (8 \pi^2 V z_u)^{N_u}/N_u!$,~\cite{guggenheim1952mixtures504,simonson2016physical} where the factorial term accounts for indistinguishability. Finally, the canonical partition function $Q(N_u, N_v)$ of the solution is obtained by including the appropriate terms coming from the momenta and differentiating the resulting Helmholtz free energy $A(N_u, N_v) = -k_B T \ln Q(N_u, Nv)$ with respect to $N_u$ to obtain Eq.~\ref{eq:chemical-potential-definition}.
+Eq.~\ref{eq:chemical-potential-definition-app} is derived by writing the classical canonical configurational partition function $Z(N_s = 1, N_v)$ of one solute molecule in a solvent of $N_v$ molecules in a volume $V$ and multiplying and dividing it by configurational partition function of the pure solvent [Eq.~\ref{eq:Z-pure-solvent}], and then separating out the integration over the external degrees of freedom of the solute (translations and rotations) giving an $8 \pi^2 V$ term to yield $Z(N_s = 1, N_v) = Z_{N_v} 8 \pi^2 V z_s$ where $z_s$ is defined by Eqs.~\ref{eq:intra-zu-def} and (\ref{eq:solvent-pmf-def}). The canonical configurational partition function of $N_s$ independent solute molecules in a solvent is then obtained by considering the product of the solute terms $Z(N_s, N_v) = Z_{N_v} (8 \pi^2 V z_s)^{N_s}/N_s!$,~\cite{guggenheim1952mixtures504,simonson2016physical} where the factorial term accounts for indistinguishability. Finally, the canonical partition function $Q(N_s, N_v)$ of the solution is obtained by including the appropriate terms coming from the momenta and differentiating the resulting Helmholtz free energy $A(N_s, N_v) = -k_B T \ln Q(N_s, Nv)$ with respect to $N_s$ to obtain Eq.~\ref{eq:chemical-potential-definition}.
 
 The form Eq.~\ref{eq:chemical-potential-definition-app} for the solute chemical potential using the potential of mean force description is useful, as we will see, because it separates the solute's translational motion, which leads to the concentration dependence, from the intramolecular contributions. The potential of mean force description does not introduce approximations. With the exception of the use of classical statistical mechanics and the assumption  that solute-solute interactions are negligible, Eq.~\ref{eq:chemical-potential-definition-app} is rigorous. Due to rotation-vibration couplings, the separation of the solute's overall rotational motion leading to the $8 \pi^2$ term in Eq.~\ref{eq:intra-qpu-def} is not exact. While it is not a strict theoretical requirement, the separation of rotational degrees of freedom is adopted here because it is considered an excellent approximation at room temperature and a useful simplification.
 
@@ -2436,7 +2437,7 @@ We derived Eq.~\ref{eq:chemical-potential-definition-app} using the canonical (c
 
 The standard chemical potential of a solute in an ideally dilute solution is obtained from Eq.~\ref{eq:chemical-potential-definition-app} by setting the concentration to the standard concentration $C^\circ$, generally $1$ mol/L equivalent to $1/1661$ particles/\AA$^{3}$, 
 \begin{equation}
-  \mu_u^\circ = -k_B T \ln \frac{q'_u}{C^\circ \Lambda_u^3} \, .
+  \mu_s^\circ = -k_B T \ln \frac{q'_s}{C^\circ \Lambda_s^3} \, .
   \label{eq:chemical-potential-standard-app}
 \end{equation}
 The standard state of a solution is defined as an ideally dilute solution at concentration $C^\circ$.~\cite{levine2009physicalchemistrybook6ed} Hence, Eq.~\ref{eq:chemical-potential-standard-app} is formally correct for real solutions.
@@ -2492,19 +2493,19 @@ As discussed earlier, alchemical solvation free energy calculations implement Eq
 
 \subsection{Free energy of solvent partitioning}\label{sec:derivations-partitioning}
 
-The standard molar Gibbs free energy of transfer of a solute species $A$ from a  solvent $s$ to a solvent $v$
+The standard molar Gibbs free energy of transfer of a solute species $A$ from a  solvent $v_1$ to a solvent $v_2$
 \begin{equation}
-A(s)  \leftrightharpoons A(v)
+A(v_1)  \leftrightharpoons A(v_2)
 \end{equation}
 is
 \begin{equation}
-  \Delta G^\circ_{\mathrm{part}} = -k_B T \ln P_{sv} = \mu^\circ_{A(v)}  - \mu^\circ_{A(s)} = -k_B T \ln \frac{z_{A(v)}}{z_{A(s)}}
+  \Delta G^\circ_{\mathrm{part}} = -k_B T \ln P_{12} = \mu^\circ_{A(v_2)}  - \mu^\circ_{A(v_1)} = -k_B T \ln \frac{z_{A(v_2)}}{z_{A(v_1)}}
   \label{eq:DG0-partitioning-def-app}
 \end{equation}
-where $P_{sv} = C_{A(v)}/C_{A(s)}$ is the partition coefficient of $A$ for the two solvents~\cite{rustenburg2016measuring}. Eq.~\ref{eq:DG0-partitioning-def-app} 
+where $P_{12} = C_{A(v_2)}/C_{A(v_1)}$ is the partition coefficient of $A$ for the two solvents~\cite{rustenburg2016measuring}. Eq.~\ref{eq:DG0-partitioning-def-app} 
 immediately identifies the partition coefficient with the ratio of intramolecular configurational partition functions of solute $A$ in the two solvents:
 \begin{equation}
-  P_{sv} = \frac{z_{A(v)}}{z_{A(s)}} \, .
+  P_{12} = \frac{z_{A(v_2)}}{z_{A(v_1)}} \, .
   \label{eq:partition-coefficient-app}
 \end{equation}
 This relation connects calculated ratios of partition functions to experimental partition coefficients. Similarly to Eq.~\ref{eq:DG-solvation-excess}, Eq.~\ref{eq:partition-coefficient-app} corresponds to the process of transferring the solute from a fixed position and orientation in one solvent to a fixed position and orientation in the other.
