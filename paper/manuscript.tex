@@ -382,7 +382,7 @@ $\mathbf{r}_A$, $\mathbf{r}_v$ --- positions of the solute and of the solvent mo
 $s$, $v$ --- subscripts labelling the solute and the solvent (the two solvents of Sec.~\ref{sec:theory-partitioning} being $v_1$, $v_2$); distinct from the reduced $u$ and $w$ below\\
 $S^2$ --- sample variance of the free energy estimates across replicates\\
 $T$ --- temperature \\
-$\mathcal{T}$ --- length (chemical time) of a single trajectory\\
+$\mathcal{T}$ --- length of a single trajectory\\
 $t_0$ --- equilibration time, i.e. the boundary between the equilibration and production regions \\
 $U$ --- potential energy\\
 $u$ --- reduced (dimensionless) potential capturing all of the features of a thermodynamic state that change the probability of that state\\
@@ -1911,7 +1911,7 @@ One can generalize Bennett's logic from two states to multiple states to obtain 
 \begin{equation}
 f_i = - \ln \sum_{n=1}^{N} \frac{\exp(-u_i(\mathbf{q}_n))}{\sum_{k=1}^K N_k \exp(f_k-u_k(\mathbf{q}_n))},
 \end{equation}
-where there are $N_k$ samples from each of $K$ states, with $\sum_k N_k=N$ the total number of samples. Thus, we need to evaluate the reduced potential $u_i$ for all samples obtained at all states in the transformation. The equations can be solved by a number of different standard routines. We note that there are only $K-1$ independent equations, so only $K-1$ of the free energies are independent variables, and one of the $f_i$ must be specified (usually, without loss of generality, setting it to zero). Because the equations are written in terms of the reduced potential, they also cover the case where states differ in temperature, taking $u_i = \beta_i U_i$ for each state; this requires some additional bookkeeping, as one can only calculate $\Delta f_{binding}(T)$, not the free energy difference between two different phases at two arbitrary temperatures~\cite{schieber2018reweighting}. 
+where there are $N_k$ samples from each of $K$ states, with $\sum_k N_k=N$ the total number of samples. Thus, we need to evaluate the reduced potential $u_i$ for all samples obtained at all states in the transformation. The equations can be solved by a number of different standard routines. We note that there are only $K-1$ independent equations, so only $K-1$ of the free energies are independent variables, and one of the $f_i$ must be specified (usually, without loss of generality, setting it to zero). Because the equations are written in terms of the reduced potential, they also cover the case where states differ in temperature, taking $u_i = \beta_i U_i$ for each state, though this requires some additional bookkeeping, as one can only calculate $\Delta f_{binding}(T)$, not the free energy difference between two different phases at two arbitrary temperatures~\cite{schieber2018reweighting}. 
 
 MBAR is probably the lowest variance asymptotically unbiased estimator of the free energy given the energies of the samples~\cite{tan2004likelihood}, which means that BAR is also the lowest variance estimator for the free energy difference between only 2 states, as it is mathematically exactly the same as MBAR in this case. MBAR also provides an uncertainty estimate, derived from standard error propagation methods for implicit functions, which has been shown to be highly accurate as long as there are sufficient samples at each state~\cite{paliwal2011benchmark}.
 
@@ -2095,7 +2095,7 @@ In the notation of Eq.~\ref{eqn:empirical-average}, $Y_i = \Delta f^{(i)}(\mathc
     \mathbb{E}_{\mathbf{q}_0}[S^2(\mathcal{T})] = \mathrm{Var}_{\mathbf{q}_0}(\Delta f^{(1)}(\mathcal{T}))
 \end{equation}
 The above equation says that $S^2(\mathcal{T})$ is an unbiased estimator of the variance of $\Delta f^{(1)}(\mathcal{T})$, conditioned on $\mathbf{q}_0$. By the Law of Large Numbers, as $N_{\mathrm{rep}} \rightarrow \infty$, we have $S^2 (\mathcal{T}) \rightarrow \mathrm{Var} _{\mathbf{q}_0}(\Delta
-G^{(1)} (\mathcal{T})) = \sigma^2 (\mathcal{T} ; \mathbf{q}_0)$. Furthermore, by conditional independence of the $\Delta f^{(i)}(\mathcal{T})$, for sufficiently large $N_{\mathrm{rep}}$ and any $\mathcal{T}>0$ for which the variance is finite, we have
+f^{(1)} (\mathcal{T})) = \sigma^2 (\mathcal{T} ; \mathbf{q}_0)$. Furthermore, by conditional independence of the $\Delta f^{(i)}(\mathcal{T})$, for sufficiently large $N_{\mathrm{rep}}$ and any $\mathcal{T}>0$ for which the variance is finite, we have
 \begin{equation}\label{eqn:variance-of-empirical-mean}
 \mathrm{Var}_{\mathbf{q}_0}(\overline{\Delta f(\mathcal{T})}) = \frac{\mathrm{Var}_{\mathbf{q}_0}(\Delta f^{(1)}(\mathcal{T}))}{N_{\mathrm{rep}}} \approx \frac{S^2(\mathcal{T})}{N_{\mathrm{rep}}}
 \end{equation}
