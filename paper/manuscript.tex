@@ -2142,7 +2142,7 @@ The expression for the variance contains cross-terms which would vanish if $Y_0$
 %% should we describe the atch means estiamtor? maybe not...
 For the remainder of the section we focus on a single replicate. The simplest generalization of Eq.~\ref{eq:sample-variance-definition} to the case of time-correlated samples is the non-overlapping batch means estimator. Let $\{t_0,\dots,t_{N-1}\}$ be a discretization of $[t_0,\mathcal{T}]$ with $t_{N-1}=\mathcal{T}$, where $t_0$ is the equilibration boundary;  we discuss the choices of discretization width $t_{i+1} - t_i$ and initial time $t_0$ in later subsections. 
 
-Partition the $N$ sequential samples of this single replicate into $N_{\mathrm{b}}$ consecutive batches of equal size $M$, so that $N = N_{\mathrm{b}}M$. Batch $k$ consists of the samples $\{X(t_{kM}),\dots,X(t_{(k+1)M-1})\}, k=0,\dots,N_{\mathrm{b}}-1$, with $X(t_0) = q_0$. Let
+Partition the $N$ sequential samples of this single replicate into $N_{\mathrm{b}}$ consecutive batches of equal size $M$, so that $N = N_{\mathrm{b}}M$. Batch $k$ consists of the samples $\{X(t_{kM}),\dots,X(t_{(k+1)M-1})\}, k=0,\dots,N_{\mathrm{b}}-1$. Let
 \[
 \Delta f_k = \Delta f(t_{kM}:t_{(k+1)M})
 \]
