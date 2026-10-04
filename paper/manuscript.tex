@@ -376,7 +376,7 @@ $\mathcal{O}$ --- overlap matrix between alchemical states\\
 $P^{\circ}$ --- standard pressure \\
 $P_{12}$ --- partition coefficient of a solute between the two solvents $v_1$ and $v_2$\\
 $p$ --- pressure; also, in $\mathcal{H}(q,p)$, the momenta conjugate to $q$ \\
-$q$ --- a single configuration of the system, i.e. the collection of degrees of freedom that completely specifies it\\
+$q$ --- the collection of degrees of freedom that completely specifies a single configuration of the system\\
 $q'_s$ --- molecular partition function of the solute at rest \\
 $r_A$, $r_v$ --- Cartesian coordinates of the atoms of the solute and of the solvent molecules\\
 $s$, $v$ --- subscripts labelling the solute and the solvent (the two solvents of Sec.~\ref{sec:theory-partitioning} being $v_1$, $v_2$); distinct from the reduced $u$ and $w$ below\\
@@ -580,8 +580,9 @@ When we carry out a properly run molecular dynamics or Monte Carlo
 simulation in, for example, the canonical (constant particle number
 $N$, constant temperature $T$, constant volume $V$) ensemble, then we
 are generating samples consistent with the Boltzmann distribution
-$p(q) \propto e^{-U(q)/k_BT}$ (or equivalently $e^{-\beta U(q)}$), where $U$ is the total
-energy of the system (including both potential and kinetic energies).
+$p(q) \propto e^{-U(q)/k_BT}$ (or equivalently $e^{-\beta U(q)}$), where $q$ is the
+collection of degrees of freedom that completely specifies a single configuration
+of the system, and $U(q)$ is its potential energy.
 Note that this probability distribution leaves out the constant
 needed to make this a true probability distribution, i.e. one that
 integrates to 1, also termed a \textit{normalized} probability
@@ -717,7 +718,7 @@ the ratio of partition functions $\frac{z_{A(v)}}{z_{A(\mathrm{g})}}$
   &=& \langle e^{-\Delta u(r_A, r_v)} \rangle_0
   \label{eq:zratio-solv-average}
 \end{eqnarray}
-where $dr_A$ are the positions of the solute, and $dr_v$ the positions of all solvent molecules, and $\Delta u =  u(r_A , r_v) -  [ u(r_v) + u(r_A ) ]$ the change in the system's potential energy for coupling the solute to the solvent. $\langle \ldots \rangle_0$ is this case is an average in the \textit{decoupled} ensemble, where the probability distribution we are using is the Boltzmann distribution for a box containing the solvent and solute, but where there is no interaction between the two. 
+where $r_A$ are the Cartesian coordinates of the atoms of the solute, and $r_v$ those of all solvent molecules, and $\Delta u =  u(r_A , r_v) -  [ u(r_v) + u(r_A ) ]$ the change in the system's potential energy for coupling the solute to the solvent. $\langle \ldots \rangle_0$ is this case is an average in the \textit{decoupled} ensemble, where the probability distribution we are using is the Boltzmann distribution for a box containing the solvent and solute, but where there is no interaction between the two. 
 
 As above, we can consider the reciprocal of Eq.~\ref{eq:zratio-solv-average} and express it in terms of an ensemble average $\langle \ldots \rangle_1$ in the coupled ensemble:
 \begin{equation}
@@ -1033,7 +1034,7 @@ where
 \begin{equation}\label{eq:partfunct-ratio-explsolv-2}
 Z_{N_v, RL} = \int dr_v dx_R dx_L d\zeta I(\zeta) e^{-\beta U(x_R, x_L, \zeta, r_v)}
 \end{equation}
-is the configurational partition function of the complex in a fixed position and orientation in $N_v$ solvent molecules, and $Z_{N_v}$ is the configurational partition function of the pure solvent. This process leads to an expression for the binding constant in terms of products of ratios of partition functions analogous to those encountered in Section \ref{sec:theory-solvation} to model solvation
+is the configurational partition function of the complex in a fixed position and orientation in $N_v$ solvent molecules, where $x_R$ and $x_L$ are the internal coordinates of the receptor and ligand, $\zeta$ gives the position and orientation of the ligand relative to the receptor, and $r_v$ the Cartesian coordinates of the atoms of the solvent. $Z_{N_v}$ is the configurational partition function of the pure solvent. This process leads to an expression for the binding constant in terms of products of ratios of partition functions analogous to those encountered in Section \ref{sec:theory-solvation} to model solvation
 \begin{equation}
   K_b = \frac{C^\circ}{8 \pi^2} \frac{Z_{N_v,RL}}{Z_{N_v,R} z_{L(g)}} \frac{Z_{N_v} z_{L(g)}}{Z_{N_v,L}}
   \label{eq:ddm-ratios-1}
