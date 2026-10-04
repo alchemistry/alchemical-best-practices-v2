@@ -1801,9 +1801,9 @@ The reduced free energy difference $\Delta f_{01}$ between an initial state 0 an
 and the average is over all samples from the simulation performed with $\mathcal{H}_0$.
 The contribution to free energy difference due to the kinetic partition function can be factored out and cancels out in a thermodynamic cycle when calculating double free energy differences, as discussed in Sec~\ref{sec:chemical_potential}.
 This allows focusing on configurational partition function and express free energy estimator using the reduced potential energy difference $\Delta u(q)$
-\begin{eqnarray}
+\begin{eqnarray}\label{eqn.zwanzig_configurational}
 \Delta f_{01}  =   -\ln \expect{e^{- \Delta u(q)} }_0
-\end{eqnarray}\label{eqn.zwanzig_configurational}.
+\end{eqnarray}
 
 Described in words, we take the samples generated during our run with the reduced potential $u_0(q)$ and calculate what the difference in energy would be if we switched instantaneously to the reduced potential $u_1(q)$, and average the exponential of the negative energy difference to get the negative of the exponential of the free energy difference. The original distributions, P($u_0$) as generated at $\lambda=0$ and P($u_1$) would look like those seen in Fig.~\ref{fig:fig_sampling_scheme}\textbf{A}-\textbf{C} on the right hand side. Reevaluating requires almost no extra code functionality to perform; one need only to save a full precision trajectory, and run an unmodified molecular simulation code using the $u_1$ in order to calculate the new energies of stored snapshots. The analysis can be written in a line of code.
 
@@ -1817,29 +1817,29 @@ The Zwanzig formulation is general in that the instantaneous work to change the 
 \subsubsection{Jarzynski's Equality}
 Jarzynski's equality relates the reduced work ($w \equiv \beta W$) obtained from a one-directional non-equilibrium transition to the free energy difference between the end states:
 
-\begin{eqnarray}
+\begin{eqnarray}\label{eqn.jarzynski}
 \langle e^{-w} \rangle =e^{-\Delta f}
-\end{eqnarray}\label{eqn.jarzynski}
+\end{eqnarray}
 
 The work of an alchemical transition can be calculated by integrating $\partial \mathcal{H}(q,p)/\partial\lambda$ over the transition path:
 
-\begin{equation}
+\begin{equation}\label{eqn.work_value}
 w   = \int_{0}^{1} \frac{\partial \mathcal{H}(q,p)}{\partial\lambda} d\lambda.  
-\end{equation}\label{eqn.work_value}
+\end{equation}
 
 Expressing $\Delta f$ directly from Jarzynski's equality gives an estimator for the free energy difference, which is equivalent to Zwanzig's estimator when a transition is performed instantaneously:
 
-\begin{eqnarray}
+\begin{eqnarray}\label{eqn.jarzynski_estimator}
 \Delta f = -\ln\langle e^{-w} \rangle
-\end{eqnarray}\label{eqn.jarzynski_estimator}
+\end{eqnarray}
 
 This estimator, however, is biased, and the bias depends strongly on the reduced dissipated work $w_{\mathrm{dis}}=w-\Delta f$~\cite{gore2003bias}.
 The bias vanishes only for infinitely slow transitions where $\Delta f = \lim\limits_{\tau \to \infty} w$.
 When work distributions are Gaussian, $\pi(w) \sim \mathcal{N}(\overline{w},\sigma_w^2)$, the Jarzynski estimator becomes:
 
-\begin{eqnarray}
+\begin{eqnarray}\label{eqn.jarzynski_gaussian}
 \Delta f = \overline{w} - \frac{\sigma_w^2}{2}
-\end{eqnarray}\label{eqn.jarzynski_gaussian}
+\end{eqnarray}
 
 The assumption of Gaussian work distributions usually holds only for slow switching that keeps the system close to equilibrium~\cite{jarzynski1997nonequilibrium}, so it's use should be carefully monitored.
 
@@ -1849,10 +1849,10 @@ free energy difference compared to that obtained by EXP.
 This estimate was first derived by Bennett and is hence generally called the Bennett Acceptance Ratio (BAR). It is solved by finding the reduced free energy difference $\Delta f$ that satisfies the following implicit equation:
 
 \begin{eqnarray}
- \sum_{k=1}^{n_i} \frac{1}{1 + \exp[\ln(\frac{n_i}{n_j}) + \Delta u_{ij}(q_k) - \Delta f_{ij})
+ \sum_{k=1}^{n_i} \frac{1}{1 + \exp[\ln(\frac{n_i}{n_j}) + \Delta u_{ij}(q_k) - \Delta f_{ij}
  ]} \nonumber \\
- =\sum_{l=1}^{n_j} \frac{1}{1 + \exp[\ln(\frac{n_j}{n_i}) - \Delta u_{ij}(q_l) + \Delta f_{ij})]},
-\end{eqnarray}\label{eq:bar}
+ =\sum_{l=1}^{n_j} \frac{1}{1 + \exp[\ln(\frac{n_j}{n_i}) - \Delta u_{ij}(q_l) + \Delta f_{ij}]}, \label{eq:bar}
+\end{eqnarray}
 
 where $n_i$ and $n_j$ are the number of samples from each state. More recent derivations show that this formula is the maximum likelihood estimate of the free energy difference given sets of samples from the two states~\cite{shirts2003equilibrium}. 
 The equation does not have an explicit solution for $\Delta f$ and needs to be solved numerically to obtain the estimate for free energy difference.
@@ -1869,16 +1869,16 @@ Similarly to the analogy between Zwanzig's and Jarzynski's equations, Bennett Ac
 Replacing $\Delta u_{ij}(q)$ in equation~\ref{eq:bar} by reduced work values $w_k$ and $w_l$ corresponding to the work observed for the forward and reverse transitions, BAR can be written as follows~\cite{shirts2003equilibrium}:
 
 \begin{eqnarray}
- \sum_{k=1}^{n_F} \frac{1}{1 + \exp[\ln(\frac{n_F}{n_R}) + w_{k} - \Delta f)]} \nonumber \\
- =\sum_{l=1}^{n_R} \frac{1}{1 + \exp[\ln(\frac{n_R}{n_F}) - w_{l} + \Delta f]},
-\end{eqnarray}\label{eq:bar_noneq}
+ \sum_{k=1}^{n_F} \frac{1}{1 + \exp[\ln(\frac{n_F}{n_R}) + w_{k} - \Delta f]} \nonumber \\
+ =\sum_{l=1}^{n_R} \frac{1}{1 + \exp[\ln(\frac{n_R}{n_F}) - w_{l} + \Delta f]}, \label{eq:bar_noneq}
+\end{eqnarray}
 
 Another approach to estimate free energy from bi-directional transitions relies on the Gaussian approximation of work distributions similarly as described earlier for uni-directional transitions (eq.~\ref{eqn.jarzynski_gaussian})
 When work distributions for the forward and reverse transitions can be approximated by Gaussians $\mathcal{N}(\overline{w_f},\sigma_f)$ and $\mathcal{N}(-\overline{w_r},\sigma_r)$, respectively, the free energy difference between the states is defined as an intersection point between the distributions, hence, termed Crooks Gaussian Intersection (CGI)~\cite{goette2009accuracy}:
 
-\begin{eqnarray}
+\begin{eqnarray}\label{eq:cgi_noneq}
  \Delta f = \frac{\frac{w_f}{\sigma_f^2}-\frac{-w_r}{\sigma_r^2}\pm\sqrt{\frac{1}{\sigma_f\sigma_r}(w_f+w_r)^2+2(\frac{1}{\sigma_f^2}-\frac{1}{\sigma_r^2})\ln{\frac{\sigma_r}{\sigma_f}}}}{\frac{1}{\sigma_f^2}-\frac{1}{\sigma_r^2}}
-\end{eqnarray}\label{eq:cgi_noneq}
+\end{eqnarray}
 
 The estimate above holds for distributions where $\sigma_f \neq \sigma_r$.
 For the case of $\sigma_f=\sigma_r$, free energy difference is estimated as $\Delta f = (w_f-w_r)/2$.
