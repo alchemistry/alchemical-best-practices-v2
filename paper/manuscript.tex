@@ -822,7 +822,11 @@ Furthermore, perturbations for the same chemotype in different pockets of the BA
 
 \subsection{How reproducible are alchemical free energy calculations?}
 \label{subsec:reproducible}
-We restrict our analysis here to repetitions of the same calculation performed with precisely the same force field, as different force fields used to describe the same molecule can lead to wide differences in free energies in some cases.  
+Generally errors for an estimated free energy fall into two broad classes. A statistical, or aleatoric error arises because a simulation can only sample a finite number of configurations, meaning that repeating the same calculation with
+a different random seed will give a slightly different result. This error decreases as sampling increases. A systematic o epistemic error is any deviation that does not decrease with more sampling, for example limitations
+of the force field, an incorrect protonation state or binding mode, or a flawed protocol. It determines how close a fully converged result would be to experiment.
+
+Here we will look at statistical errors and will look at calculations using the same software and forcefield.
 
 % I am ok with this paragraph. 
 Simulations carried out with molecular dynamics or Monte Carlo techniques are fundamentally stochastic calculations, and two simulations can never match exactly~\cite{caves1998locally, coveney2016, mdbook2025}.  Even though Newton's equations of motion are deterministic, molecular systems are chaotic, and very small changes, even as small as the  differences in rounding of floating point numbers due to different software versions or architectures, let alone different random number seeds used to initialize the velocities, will lead to very different results obtained with each repetition of a simulation. Any sort of agreement will only be up to this stochastic source of uncertainty, and any researcher needs to understand before starting to perform any calculations how little statistical noise a calculation is needed to draw a scientific conclusion. This also means that proper handling of statistics to decide if differences in simulations are statistically significant or not.  
@@ -861,7 +865,11 @@ same system show substantial spread in computed properties~\cite{bhati2023}.
 %CHECK this - all references from the same group?  TIES shouldn't be here, as it focus on one group - this isn't a review. 
 %However, again, for complex systems, the reproducibility can be significantly worse, as two simulations of the same system can explore very different configurational ensembles~\cite{bhati2017, bhati2018, bhati2019, bhati2022, bhati2023, bhati2025} in even small systems.  If the timescales of the slow scales of motion are comparable to or longer than the timescales of the simulation, then differences of up to multiple kcal/mol can be possible for absolute and even relative free energy calculations. To alleviate such issues and make free energy predictions robust, Bhati et al. developed the TIES method~\cite{bhati2017, bhati2022, bhati2025} which is based on the use of ensemble methods, where the ensemble size can be adjusted based on available computational resource and required precision~\cite{wan2023}. Further, this method is extremely flexible and adaptive. For example, one can simply add additional ensemble members as necessary or desired, without having to re-run anything done initially. It should also be noted that ensemble simulations are computationally more effective than long simulations. On a large supercomputer, all the sampling can be done concurrently obtaining the statistical results in the time it takes to run a single simulation. Studies have shown that, in general, an ensemble size of 5 and 10 members is a reasonable starting point for alchemical RBFE and ABFE calculations, respectively, but recommendations are provided to adjust them based on some rules of thumb~\cite{bhati2022, bhati2025}.
 
-In fact, the amount of reproducibility between repeated calculations is an important measure of whether a particular choice of simulation methods and approaches are appropriate.  Large differences between results carried out with different initial velocities, or better yet, started from points along a single initial long simulations can indicate that the sampling of the system is particularly hard and will require additional simulation and/or advanced sampling methods.  In fact, journals such as the \textit{Journal of Chemical Information and Modeling require} and \textit{Communications Biology} that any results be confirmed by simulations run in at least triplicate~\cite{soares2023guidelines, wan2023}. The question of how to combine results from ensembles of simulations for lowest bias and best reporting of statistical uncertainty are discussed in section~\ref{subsec:uncertainty}.
+
+For more complex systems the reproducibility can be significantly worse, as two simulations of the same system can explore very different configurational ensembles~\cite{lim2016sensitivity, suruzhon2021sensitivity, bhati2018, bhati2019, wan2021uq, vassaux2021}. If the timescales of the slow degrees of freedom are comparable to or longer than the simulation, differences of up to several kcal/mol are possible for both absolute and relative free energy calculations~\cite{lim2016sensitivity, zhang2023sampling, bhati2023}. Longer simulations do not necessarily remove this variability though. Ensembles of microsecond-length trajectories of the same system can still show substantial
+spread in computed properties~\cite{bhati2023}. In other cases, identifying the slow degrees of freedom and targeting them with enhanced sampling, or running sufficiently long simulations, has resolved such discrepancies~\cite{lim2016sensitivity, zhang2023sampling}.
+
+%In fact, the amount of reproducibility between repeated calculations is an important measure of whether a particular choice of simulation methods and approaches are appropriate.  Large differences between results carried out with different initial velocities, or better yet, started from points along a single initial long simulations can indicate that the sampling of the system is particularly hard and will require additional simulation and/or advanced sampling methods.  In fact, journals such as the \textit{Journal of Chemical Information and Modeling require} and \textit{Communications Biology} that any results be confirmed by simulations run in at least triplicate~\cite{soares2023guidelines, wan2023}. The question of how to combine results from ensembles of simulations for lowest bias and best reporting of statistical uncertainty are discussed in section~\ref{subsec:uncertainty}.
 
 %MRS: some good points here below, but this isn't the right place, since this is explicitly talking about reproducibility between simulations, i.e. if you run a simulation, how different do you expect it to be. This MOTIVATES a discusion of ensemble averaging in some other section for robustness, but should be  separate sections discussing ensembles vs. simgle trajectories, putting all these differences in the same place, rather than sprinkled throughout.  Also, some of the claims are too broad as stated, and it included information about free energy calculation methods that doesn't fit here. 
 
@@ -884,33 +892,97 @@ Before even planning free energy calculations to study binding to a
 particular target, it is important to assess what is known about the
 system and its timescales and its suitability for free energy
 calculations, as well as the \emph{purpose} of the calculations and
-the amount of available computer resources. In some cases, predicting accurate binding free energies for a particular target might be
-\emph{more} challenging than simply measuring them experimentally! This is
-often the case when dealing with database screening problems, where
-compounds might be easily and quickly available commercially for
-testing and free energy calculations could consume far more resources. Free energy calculations typically only
-appeal when (slow or costly) synthesis would be required or experiments are otherwise cost-prohibitive or unavailable.
+the amount of available computer resources. The following covers the main questions to look at before making the decision of running a free energy campaign:
+\begin{itemize}
+
+\item \textbf{Is a reliable structure of the complex available?}
+Relative binding free energy calculations typically start from an experimental
+structure of the target with a closely related ligand bound. If only an apo,
+homology or predicted structure is available, results will be more sensitive
+to the starting configuration~\cite{lim2016sensitivity, suruzhon2021sensitivity};
+consider running from several starting structures and treat the results with
+more caution (Sec.~\ref{subsec:binding}). Complexes predicted by co-folding
+methods can be useful starting points~\cite{furui2025helixfold3}, but their accuracy
+drops for ligands and binding sites unlike those in the training
+data~\cite{skrinjar2026cofolding}, so they should be checked against any
+available experimental information.
+
+\item \textbf{Is the binding mode known, and is it conserved across the series?}
+Relative calculations assume that ligands share a common binding mode, which is
+usually, but not always, the case within a congeneric
+series~\cite{wacker2010conserved, brandt2011congeneric}. If binding modes are
+unknown, taken from docking, or likely to change across the series (e.g.\
+fragments, ring flips, or substituents that can occupy different
+sub-pockets), the starting pose can bias the result. Consider modeling
+alternative binding modes explicitly or using absolute calculations
+(Sec.~\ref{sec:multiple_binding_modes}).
+
+\item \textbf{Are there slow motions relevant to binding?}
+Loop or domain rearrangements, side-chain or ring flips, and changes in buried
+water that are slow compared with the simulation time can leave each
+simulation trapped near its starting configuration, giving results that depend
+on the starting structure by several kcal/mol~\cite{lim2016sensitivity,
+zhang2023sampling}. If such motions are known or suspected, plan for longer
+simulations, replicates started from different configurations, or enhanced
+sampling (Sec.~\ref{sec:configurational_sampling}), and expect the reported
+uncertainties to be underestimates (Sec.~\ref{sec:timescales}).
+
+\item \textbf{Does the system involve chemistry that is difficult to model?}
+Changes in net charge (Sec.~\ref{subsec:net charge}), ligands or residues whose
+protonation or tautomeric state may change on binding
+(Sec.~\ref{sec:multiple-chemical-states}), metal ions or cofactors near the
+ligand, membrane environments, and chemistry poorly covered by the force field
+all require additional care and are more likely to produce unreliable results.
+Some cases, such as covalent inhibitors or systems requiring a quantum
+mechanical treatment, are beyond the scope of this guide
+(Sec.~\ref{sec:unsettled}). If such features are present, check that suitable
+parameters and protocols exist before committing resources, and expect larger
+errors than for standard benchmark systems.
+
+\item \textbf{What precision and accuracy does the question require?}
+Typical errors relative to experiment are 1--2~kcal/mol for well-behaved
+benchmark systems, and often larger in practice (Sec.~\ref{subsec:expectation}).
+If the decision depends on differences smaller than this, for example ranking
+close analogues, free energy calculations may not be able to resolve them.
+
+\item \textbf{Are the available resources sufficient?}
+The cost of a campaign scales with the number of transformations, the number of
+$\lambda$ states, the simulation length and the number of replicates, and
+difficult systems (see above) may need substantially more of each. Estimate the
+total cost for the precision you need before starting, including time for
+setup, analysis and checking results, and compare it with the cost of simply
+synthesizing and measuring the compounds. If resources are limited, it is
+usually better to run fewer calculations well than many poorly
+(Sec.~\ref{subsec:uncertainty}).
+
+\end{itemize}
+
+%In some cases, predicting accurate binding free energies for a particular target might be
+%\emph{more} challenging than simply measuring them experimentally! This is
+%often the case when dealing with database screening problems, where
+%compounds might be easily and quickly available commercially for
+%testing and free energy calculations could consume far more resources. Free energy calculations typically only
+%appeal when (slow or costly) synthesis would be required or experiments are otherwise cost-prohibitive or unavailable.
 
 % Is this too detailed example for best practices?
-Sometimes, however, free energy calculations can provide answers that are not
-readily available from experiments. For example, type II kinase
-inhibitors selectively bind to different kinases in the so-called
-DFG-out conformations~\cite{schindler2000structural}. The selectivity of such
-inhibitors may be attributed either to their differential binding to
-different kinases in the DFG-out conformations, or to different
-stability of the DFG-out conformations of different kinases. 
+%Sometimes, however, free energy calculations can provide answers that are not
+%readily available from experiments. For example, type II kinase
+%inhibitors selectively bind to different kinases in the so-called
+%DFG-out conformations~\cite{schindler2000structural}. The selectivity of such
+%inhibitors may be attributed either to their differential binding to
+%different kinases in the DFG-out conformations, or to different
+%stability of the DFG-out conformations of different kinases. 
 
-Let
-$K_C$ be the equilibrium constant between DFG-in and DFG-out
-conformations of one kinase, and $K_D^\ast$ be the dissociation
-constant of a type II inhibitor against this kinase, the apparent
-binding constant of this inhibitor against this kinase is then
-\begin{equation}
-  K_D = K_D^\ast \frac{1 + K_C}{K_C}
-  \label{eqn:conformational-binding}
-\end{equation}
+%Let$K_C$ be the equilibrium constant between DFG-in and DFG-out
+%conformations of one kinase, and $K_D^\ast$ be the dissociation
+%constant of a type II inhibitor against this kinase, the apparent
+%binding constant of this inhibitor against this kinase is then
+%\begin{equation}
+%  K_D = K_D^\ast \frac{1 + K_C}{K_C}
+%  \label{eqn:conformational-binding}
+%\end{equation}
 
-Since binding experiments cannot resolve $K_D^\ast$ and $K_C$ individually, such experiments cannot address the basis of selectivity of the type II inhibitors. Absolute binding free energy calculations, in contrast, can take advantage of the slow kinetics of DFG-in/out conversion, and estimate the conformation-specific binding constant $K_D^\ast$, thus yielding clues as to the source of selectivity.
+%Since binding experiments cannot resolve $K_D^\ast$ and $K_C$ individually, such experiments cannot address the basis of selectivity of the type II inhibitors. Absolute binding free energy calculations, in contrast, can take advantage of the slow kinetics of DFG-in/out conversion, and estimate the conformation-specific binding constant $K_D^\ast$, thus yielding clues as to the source of selectivity.
 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1709,6 +1781,47 @@ The non-equilibrium approach is available in GROMACS and AMBER. A closely relate
 % The second of which is "what information should be saved - that should really be separated. 
 % The first one should be perhaps, " How much simulation data should I collect" and THIS is where we should put discussions of ensembles versus long siulations.  I think the question "how long should I run?" is not the right questions, because as Agastya points out, how to break them up between MULTIPLE runs is an important discussion we should have.
 
+%ASJSM: attempting a reshuffel
+\subsection{How much simulation data should I collect?}
+\label{sec:sim_length_information_kept}
+Before launching alchemical free energy calculations it is wise to consider how convergence and completion will be assessed. Different conditions on when to stop alchemical free energy calculations should be determined, and this may require several iterative checks and therefore modifications to the calculation protocol.
+One useful metric to use for termination is the expected or desired uncertainty of a desired free energy estimate, though care must be exercised should the uncertainty estimate prove unreliable.
+In particular, if the rate of change in the free energy estimate is significant when this condition is met, the simulation may not be locally converged, and more sampling may be necessary to determine a stable free energy estimate which is no longer changing significantly over time. 
+
+However, this is not the only metric which can or should be used, as the uncertainty only captures the information about the sampled phase space, not necessarily the entirety of the phase space.
+For example, convergence of relative free energy calculations in predictive simulations where the entire phase space is not known in advance requires sampling the different kinetically stable states~\cite{mobley2012perspective}.
+This highlights the importance of choosing the correct thermodynamic path to ensure you sample the required thermodynamic states as discussed in Sec.~\ref{sec:important_path}.
+
+The condition of minimizing the statistical uncertainty of different free energy estimators below a sufficient threshold should be one metric monitored over the simulation. This can be done through the uncertainty estimator built into certain analysis tools such as MBAR, or through more general statistical tools like bootstrap sampling. It should be noted however, that uncertainty estimates have the same limitations as other metrics of convergence, as they are only an uncertainty based on the phase space sampled so far in a simulation, and cannot account for states not sampled, and it is worth considering that they will be an underestimation of the true uncertainty~\cite{wan2020fep+, wan2021uq, vassaux2021, gapsys2020large, wade2022, bhati2017, bhati2022, bhati2025, wan2023eqvsneq, bhati2018, bhati2019, cournia2017relative, gapsys2021accurate, baumann2021challenges, caves1998locally}.
+A target statistical uncertainty should be chosen at the onset of the simulation to avoid excessively long simulations, or falling into the trap of running until the free energy estimate is "good enough," which is subjective and has no defined criteria. This could be a fixed value such as $0.20$ kcal/mol, or a functional quantity such as "below $0.5$ kcal/mol and $10\%$ of the free energy estimate." The user does not need to monitor this information in real-time and can choose to run simulations for fixed duration (either time or number of samples) and run analysis on the data collected thus far. If more samples are needed, the simulations can be resumed, or, started again in different initial conditions enlarging the overall simulation ensemble.
+Bhati et al. recommended such a scheme for RBFE and ABFE calculations using TIES~\cite{bhati2022, bhati2025, wan2023eqvsneq, coveney2022corners}. They suggest a set of optimal parameters (ensemble size, simulation length, number of lambda-states, number and length of NEQ transitions, etc.) to be used initially and suggest pre-defined criteria (uncertainties below 0.5 kcal/mol and overlap between forward and reverse work values in case of NEQ calculations) to decide on the need of additional calculations (in the way suggested) until these criteria are met.
+
+In general, uncertainties can be assumed to decrease as $N^{-\frac{1}{2}}$ where $N$ is the number of uncorrelated samples (not the number of atoms!), for all standard free energy calculation methods~\cite{shirts2005comparison}. However, this carries the notable caveat that such estimates require accurate estimation of the correlation time which, if important motions are slow compared to simulation timescales, can be difficult. Still, this metric provides a good rule of thumb, and as long as conformational transitions are captured by the simulation, increasing the aggregate simulation time by a factor of $T$ will reduce the uncertainty by a factor of approximately $\sqrt{T}$.
+
+\subsubsection{Allocation of sampling resources between replicates and simulation time}
+
+A related practical question concerns how a fixed computational budget should be allocated between the number of independent replicates $N_{\mathrm{rep}}$ and the length of each trajectory $\mathcal{T}$. This question is inherently problem dependent (see Sec.~\ref{subsec:uncertainty} for the notation used below), as it presumes some knowledge of how statistical error evolves with simulation time.
+
+Let $\Delta f^{(i)}(t)$ denote the free energy estimate obtained from replicate $i$ after simulation time $t$, and suppose that, for fixed $t$, the conditional variance
+\[
+E(t)^2 \;\equiv\; \mathrm{Var}_{q_0}\!\bigl(\Delta f^{(i)}(t)\bigr)
+\]
+is finite. Given a fixed computational budget $\mathcal{B}$, we may consider simple allocation schemes in which $\mathcal{B} = N_{\mathrm{rep}}\mathcal{T}$, where $N_{\mathrm{rep}}$ replicates are each run for time $\mathcal{T}$. Under this constraint, the conditional error scales as
+\[
+\frac{E(\mathcal{T})}{\sqrt{N_{\mathrm{rep}}}}
+= \frac{E(\mathcal{T})}{\sqrt{\mathcal{B}/\mathcal{T}}}
+= \frac{\sqrt{\mathcal{T}}\,E(\mathcal{T})}{\sqrt{\mathcal{B}}}
+\;\equiv\; \frac{J(\mathcal{T})}{\sqrt{\mathcal{B}}}.
+\]
+The function $J(\mathcal{T})$ thus quantifies the tradeoff between trajectory length and the number of replicates. In practice, one might observe that $J(\mathcal{T})$ is minimized at very small values of $\mathcal{T}$. If $\mathcal{T}$ is very small -- say, less than 1 ns -- the finding is questionable and suggests the error is not being properly estimated.
+
+A few studies reported systematic variation of simulation lengths using ensemble simulations over an extended range to provide recommendations on appropriate values applicable for most protein-ligand systems. The authors suggest using 4 ns and 10 ns for RBFE~\cite{bhati2017, bhati2022, wan2023eqvsneq} and ABFE~\cite{bhati2025} calculations respectively. These values may be used as a general guideline in cases where the goal is to determine binding affinity for a given starting structure. However, these guidelines do not hold if one is interested in studying the kinetics and/or the starting structure available is not representative of the equilibrium structure.
+                                                                                                                                                                                              
+
+
+
+
+
 \subsection{How long should I run my simulation for and what information should be saved?}
 \label{sec:sim_length_information_kept}
 Before launching alchemical free energy calculations it is wise to consider how convergence and completion will be assessed. Different conditions on when to stop alchemical free energy calculations should be determined, and this may require several iterative checks and therefore modifications to the calculation protocol.
@@ -1723,23 +1836,6 @@ This highlights the importance of choosing the correct thermodynamic path to ens
 The condition of minimizing the statistical uncertainty of different free energy estimators below a sufficient threshold should be one metric monitored over the simulation. This can be done through the uncertainty estimator built into certain analysis tools such as MBAR, or through more general statistical tools like bootstrap sampling. It should be noted however, that uncertainty estimates have the same limitations as other metrics of convergence, as they are only an uncertainty based on the phase space sampled so far in a simulation, and cannot account for states not sampled, and it is worth considering that they will be an underestimation of the true uncertainty~\cite{wan2020fep+, wan2021uq, vassaux2021, gapsys2020large, wade2022, bhati2017, bhati2022, bhati2025, wan2023eqvsneq, bhati2018, bhati2019, cournia2017relative, gapsys2021accurate, baumann2021challenges, caves1998locally}.
 A target statistical uncertainty should be chosen at the onset of the simulation to avoid excessively long simulations, or falling into the trap of running until the free energy estimate is "good enough," which is subjective and has no defined criteria. This could be a fixed value such as $0.20$ kcal/mol, or a functional quantity such as "below $0.5$ kcal/mol and $10\%$ of the free energy estimate." The user does not need to monitor this information in real-time and can choose to run simulations for fixed duration (either time or number of samples) and run analysis on the data collected thus far. If more samples are needed, the simulations can be resumed, or, started again in different initial conditions enlarging the overall simulation ensemble. 
 Bhati et al. recommended such a scheme for RBFE and ABFE calculations using TIES~\cite{bhati2022, bhati2025, wan2023eqvsneq, coveney2022corners}. They suggest a set of optimal parameters (ensemble size, simulation length, number of lambda-states, number and length of NEQ transitions, etc.) to be used initially and suggest pre-defined criteria (uncertainties below 0.5 kcal/mol and overlap between forward and reverse work values in case of NEQ calculations) to decide on the need of additional calculations (in the way suggested) until these criteria are met.
-
-Convergence in other alchemical observables should also be monitored to determine if the defined phase space has been sufficiently sampled and enough decorrelated samples have been drawn. These additional observables include, but are not limited to, the variance in $\frac{dU}{d\lambda}$ across all $\lambda$ values, calculating the variance in free energy using bootstrap analysis, and comparing differences in free energies calculated using different percentages of the simulation in both the forward and reverse directions~\cite{klimovich2015guidelines} (see Fig.~\ref{fig:convergence_forward_reverse}).
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.95\linewidth]{figures/fig10_forward_reverse/Figure.pdf}
-    \caption{\textbf{Free energy (in $k_{B}T$) for two different relative binding free energy perturbations.} 
-    Each plot shows the estimated free energy change using a varying fraction of total simulation time (up to 5 ns total). 
-    Subplots (\textbf{A}), (\textbf{C}), and (\textbf{E}) show a three step protocol for a perturbation involving 3 perturbed atoms, while (\textbf{B}), (\textbf{D}), and (\textbf{F}) shows the same protocol for a perturbation involving 10 perturbed atoms. The first step of the protocol is the decharging then removing van der Waals interactions and then recharging. The difference in energy between the forward (blue) and reverse (red) free energy calculations at the midpoint of the simulation time gives an indication of the overall convergence of the simulation, with differences over 1 $k_{B}T$ indicating poor convergence.}
-    \label{fig:convergence_forward_reverse}
-\end{figure}
-
-Each of these metrics shows some promise for diagnosing when a simulation has a convergence issue beyond simple convergence of uncertainty estimates. 
-Results obtained from calculations with convergence issues should be checked for errors or run for longer before any confidence should be placed in conclusions drawn from their analysis.
-For example, in relative calculations ligands that share similar binding modes and do not induce large conformational changes when in complex with protein, the need to sample exhaustively to converge estimates in free energy differences is often minimal due to the locality of sampling changes in the molecular topology and shared phase space of the core atoms.
-However, even subtle induced changes in protein binding configuration will require more sampling or cause local convergence to a free energy estimate that has high error.
-The confidence a user should have in a free energy estimate is significantly improved when both the uncertainty of the free energy estimate is low, and when other observables have reached a convergence.
 
 \begin{figure}
     \centering
@@ -2349,6 +2445,27 @@ There are different easily measurable indicators that can test how well converge
 Fig.~\ref{fig:freeenergytrajectories} illustrates how looking at the convergence of your data may be important. The CB8 host with guest G3 has a longer correlation time than the G6 guest in the octa acid (OA) host. In some cases, slow correlation time may not be expected and therefore not a feature known in advance. To this end, you should always look at all simulation data available and check convergence behavior for each free energy estimate.
 Comparing the free energy trajectories as a function of the simulation time in the forward and reverse time direction is a useful convergence test~\cite{klimovich2015guidelines}.
 As shown in Fig.~\ref{fig:freeenergytrajectories}, disagreements larger than 1~$k_{B}T$ in the final part of the forward and reverse trajectories can be useful to detect unconverged results (see also Fig.~\ref{fig:convergence_forward_reverse}).
+
+
+Convergence in other alchemical observables should also be monitored to determine if the defined phase space has been sufficiently sampled and enough decorrelated samples have been drawn. These additional observables include, but are not limited to, the variance in $\frac{dU}{d\lambda}$ across all $\lambda$ values, calculating the variance in free energy using bootstrap analysis, and comparing differences in free energies calculated using different percentages of the simulation in both the forward and reverse directions~\cite{klimovich2015guidelines} (see Fig.~\ref{fig:convergence_forward_reverse}).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/fig10_forward_reverse/Figure.pdf}
+    \caption{\textbf{Free energy (in $k_{B}T$) for two different relative binding free energy perturbations.} 
+    Each plot shows the estimated free energy change using a varying fraction of total simulation time (up to 5 ns total). 
+    Subplots (\textbf{A}), (\textbf{C}), and (\textbf{E}) show a three step protocol for a perturbation involving 3 perturbed atoms, while (\textbf{B}), (\textbf{D}), and (\textbf{F}) shows the same protocol for a perturbation involving 10 perturbed atoms. The first step of the protocol is the decharging then removing van der Waals interactions and then recharging. The difference in energy between the forward (blue) and reverse (red) free energy calculations at the midpoint of the simulation time gives an indication of the overall convergence of the simulation, with differences over 1 $k_{B}T$ indicating poor convergence.}
+    \label{fig:convergence_forward_reverse}
+\end{figure}
+
+Each of these metrics shows some promise for diagnosing when a simulation has a convergence issue beyond simple convergence of uncertainty estimates. 
+Results obtained from calculations with convergence issues should be checked for errors or run for longer before any confidence should be placed in conclusions drawn from their analysis.
+For example, in relative calculations ligands that share similar binding modes and do not induce large conformational changes when in complex with protein, the need to sample exhaustively to converge estimates in free energy differences is often minimal due to the locality of sampling changes in the molecular topology and shared phase space of the core atoms.
+However, even subtle induced changes in protein binding configuration will require more sampling or cause local convergence to a free energy estimate that has high error.
+The confidence a user should have in a free energy estimate is significantly improved when both the uncertainty of the free energy estimate is low, and when other observables have reached a convergence.
+
+
+
 In this case, one can extend the simulations or try an approach that requires simulations in two separate binding modes where they interconvert at very slow timescales.  
 \begin{figure}
     \includegraphics[width=0.90\linewidth]{figures/fig9_convergence/Figure.pdf}
