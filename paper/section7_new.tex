@@ -67,7 +67,7 @@ Free energy information should generally be saved more frequently than coordinat
 The on-disk size of the data for free energy estimation is often significantly smaller than full atomic coordinates, so the information can easily be collected frequently. 
 However, the information should not be collected \textit{every} time step, as most free energy techniques are operated at equilibrium, and need equilibrated \textit{and decorrelated} samples for an unbiased estimate.
 Samples collected every time step will likely result in most samples being discarded due to the detection of correlation in the time series by decorrelation routines in the analysis. However, if it is computationally cheap and disk space is plentiful, do save often. One may safely assume that the correlation time is greater than 100-200 fs even for relatively simple systems such as small molecules in solvent, so saving no more frequently than every 50-100 steps is recommended. 
-How decorrelation impacts calculations, and how to compute it is discussed in Sec.~\ref{sec:subsampling}. Estimators that work with correlated ensembles do exist~\cite{mey2014xtram,wu2014dtram,wu2016tram }, but have not seen much application to alchemical free energy methods to date. 
+How decorrelation impacts calculations, and how to compute it is discussed in Sec.~\ref{sec:subsampling}. Estimators that work with correlated ensembles do exist~\cite{mey2014xtram,wu2014statistically,wu2016multiensemble}, but have not seen much application to alchemical free energy methods to date. 
 
 
 Once data has been collected from alchemical intermediates, it must be analyzed to produce an estimate of the free energy change (and its associated statistical uncertainty) for each leg of the thermodynamic cycle.
